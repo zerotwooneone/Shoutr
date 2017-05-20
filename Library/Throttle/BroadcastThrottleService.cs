@@ -17,7 +17,7 @@ namespace Library.Throttle
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public void AddCount()
+        public void Record()
         {
             throw new System.NotImplementedException();
         }

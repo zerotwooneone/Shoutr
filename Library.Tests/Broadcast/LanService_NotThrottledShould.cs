@@ -22,7 +22,7 @@ namespace Library.Tests.Broadcast
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
-                .Setup(bs => bs.AddCount());
+                .Setup(bs => bs.Record());
             _mockBroadcastThrottleService
                 .SetupGet(bs => bs.Paused)
                 .Returns(false);
@@ -43,7 +43,7 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void CallSaveAttempt()
+        public void CallRecord()
         {
             //assemble
 
@@ -53,7 +53,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(ignoredBytes);
 
             //assert
-            _mockBroadcastThrottleService.Verify(bs => bs.AddCount());
+            _mockBroadcastThrottleService.Verify(bs => bs.Record());
         }
 
         [Fact]

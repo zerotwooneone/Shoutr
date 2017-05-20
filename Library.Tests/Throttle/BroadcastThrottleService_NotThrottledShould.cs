@@ -45,7 +45,7 @@ namespace Library.Tests.Throttle
                 (object sender, System.ComponentModel.PropertyChangedEventArgs e) => { actual = e.PropertyName; };
 
             //act
-            _broadcastThrottleService.AddCount();
+            _broadcastThrottleService.Record();
 
             //assert
             Assert.Equal(expected,actual);
@@ -57,7 +57,7 @@ namespace Library.Tests.Throttle
             const bool expected = true;
 
             //act
-            _broadcastThrottleService.AddCount();
+            _broadcastThrottleService.Record();
             var actual = _broadcastThrottleService.Paused;
             
             //assert

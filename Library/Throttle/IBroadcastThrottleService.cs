@@ -4,7 +4,7 @@ namespace Library.Throttle
 {
     public interface IBroadcastThrottleService : INotifyPropertyChanged
     {
-        void AddCount();
+        void Record();
         bool Paused { get; }
     }
 }
