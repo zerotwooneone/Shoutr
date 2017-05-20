@@ -17,33 +17,33 @@ namespace Library.Tests.Broadcast
         public LanService_NotThrottledShould()
         {
             _mockLanRepository = new Mock<ILanRepository>();
+            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<Byte[]>()))
+                .Returns(Task.CompletedTask);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
-                .Setup(bs => bs.TryBroadcast(It.IsAny<int>()))
-                .Returns(true);
+                .Setup(bs => bs.AddCount());
+            _mockBroadcastThrottleService
+                .SetupGet(bs => bs.Paused)
+                .Returns(false);
             _lanService = new LanService(_mockLanRepository.Object, _mockBroadcastThrottleService.Object);
         }
 
         [Fact]
-        public void ReturnTaskGivenBytes()
+        public void ReturnTask()
         {
             //assemble
-            var expected = Task.CompletedTask;
-            _mockLanRepository
-                    .Setup(lr => lr.Broadcast(It.IsAny<Byte[]>()))
-                .Returns(expected);
-
+            
             //act
             byte[] ignoredBytes = { };
             var actual = _lanService.Broadcast(ignoredBytes);
 
             //assert
-            Assert.Equal(expected, actual);
+            Assert.NotNull(actual);
         }
 
         [Fact]
-        public void CallTryBroadcast()
+        public void CallSaveAttempt()
         {
             //assemble
 
@@ -53,7 +53,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(ignoredBytes);
 
             //assert
-            _mockBroadcastThrottleService.Verify(bs => bs.TryBroadcast(It.IsAny<int>()));
+            _mockBroadcastThrottleService.Verify(bs => bs.AddCount());
         }
 
         [Fact]
@@ -70,8 +70,4 @@ namespace Library.Tests.Broadcast
             _mockLanRepository.Verify(bs => bs.Broadcast(It.IsAny<byte[]>()));
         }
     }
-}
-
-namespace Library.Tests.Throttle
-{
 }

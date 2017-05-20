@@ -1,7 +1,10 @@
-﻿namespace Library.Throttle
+﻿using System.ComponentModel;
+
+namespace Library.Throttle
 {
-    public interface IBroadcastThrottleService
+    public interface IBroadcastThrottleService : INotifyPropertyChanged
     {
-        bool TryBroadcast(int port);
+        void AddCount();
+        bool Paused { get; }
     }
 }

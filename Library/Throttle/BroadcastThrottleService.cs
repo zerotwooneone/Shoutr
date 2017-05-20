@@ -1,18 +1,27 @@
-﻿using Library.Broadcast;
+﻿using System.ComponentModel;
+using Library.Broadcast;
+using Library.Configuration;
 
 namespace Library.Throttle
 {
     public class BroadcastThrottleService : IBroadcastThrottleService
     {
-        private readonly IBroadcastThrottleRepository _broadcastThrottleRepository;
-        public BroadcastThrottleService(IBroadcastThrottleRepository broadcastThrottleRepository)
+        private readonly IThrottleStateFactory _throttleStateFactory;
+        private readonly IConfigurationService _configurationService;
+
+        public BroadcastThrottleService(IThrottleStateFactory throttleStateFactory,
+            IConfigurationService configurationService)
         {
-            _broadcastThrottleRepository = broadcastThrottleRepository;
+            _throttleStateFactory = throttleStateFactory;
+            _configurationService = configurationService;
         }
 
-        public bool TryBroadcast(int port)
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void AddCount()
         {
             throw new System.NotImplementedException();
         }
+
+        public bool Paused { get; }
     }
 }

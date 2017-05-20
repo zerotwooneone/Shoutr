@@ -17,11 +17,15 @@ namespace Library.Tests.Broadcast
         public LanService_ThrottledShould()
         {
             _mockLanRepository = new Mock<ILanRepository>();
+            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<Byte[]>()))
+                .Returns(Task.CompletedTask);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
-                .Setup(bs => bs.TryBroadcast(It.IsAny<int>()))
-                .Returns(false);
+                .Setup(bs => bs.AddCount());
+            _mockBroadcastThrottleService
+                .SetupGet(bs => bs.Paused)
+                .Returns(true);
             _lanService = new LanService(_mockLanRepository.Object, _mockBroadcastThrottleService.Object);
         }
 
@@ -43,7 +47,7 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void CallTryBroadcast()
+        public void CallSaveAttempt()
         {
             //assemble
 
@@ -53,7 +57,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(ignoredBytes);
 
             //assert
-            _mockBroadcastThrottleService.Verify(bs => bs.TryBroadcast(It.IsAny<int>()));
+            _mockBroadcastThrottleService.Verify(bs => bs.AddCount());
         }
 
         [Fact]

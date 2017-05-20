@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+using System;
 
 namespace Library.Throttle
 {
     public class BroadcastAttempt
     {
-        public Task Timeout { get; set; }
+        public int Port { get; set; }
+        public DateTime TimeStamp { get; set; }
     }
 }
