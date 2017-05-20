@@ -6,7 +6,7 @@ namespace Library.Broadcast
 {
     public interface ILanRepository
     {
-        Task Broadcast(Byte[] data);
+        Task Broadcast(byte[] data);
         EventHandler<UdpReceiveResult> OnReceived();
     }
 }

@@ -17,7 +17,7 @@ namespace Library.Tests.Broadcast
         public LanService_ThrottledShould()
         {
             _mockLanRepository = new Mock<ILanRepository>();
-            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<Byte[]>()))
+            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<byte []>()))
                 .Returns(Task.CompletedTask);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
