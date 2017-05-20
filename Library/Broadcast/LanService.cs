@@ -14,7 +14,7 @@ namespace Library.Broadcast
             _broadcastThrottleService = broadcastThrottleService;
         }
 
-        public Task Broadcast(byte[] ignoredBytes)
+        public Task Broadcast(byte[] bytes)
         {
             throw new System.NotImplementedException();
         }

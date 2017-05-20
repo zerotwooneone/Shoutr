@@ -30,21 +30,7 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void CallRecord()
-        {
-            //assemble
-
-
-            //act
-            byte[] ignoredBytes = { };
-            _lanService.Broadcast(ignoredBytes);
-
-            //assert
-            _mockBroadcastThrottleService.Verify(bs => bs.Record());
-        }
-
-        [Fact]
-        public void NotCallBroadcast()
+        public void Broadcast_NotCallBroadcast()
         {
             //assemble
 
@@ -55,6 +41,20 @@ namespace Library.Tests.Broadcast
 
             //assert
             _mockLanRepository.Verify(bs => bs.Broadcast(It.IsAny<byte[]>()), Times.Never);
+        }
+
+        [Fact]
+        public void Broadcast_GetsQueued()
+        {
+            //assemble
+
+
+            //act
+            byte[] ignoredBytes = { };
+            _lanService.Broadcast(ignoredBytes);
+
+            //assert
+            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<byte[]>()));
         }
     }
 }
