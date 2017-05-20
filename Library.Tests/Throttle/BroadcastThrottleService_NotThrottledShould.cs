@@ -36,6 +36,7 @@ namespace Library.Tests.Throttle
                 _mockConfigurationService.Object);
         }
 
+        [Fact]
         public void RaisePausedWhenTooManyAttemptsPerSecond()
         {
             //assemble
@@ -51,6 +52,7 @@ namespace Library.Tests.Throttle
             Assert.Equal(expected,actual);
         }
 
+        [Fact]
         public void PauseWhenTooManyAttemptsPerSecond()
         {
             //assemble
