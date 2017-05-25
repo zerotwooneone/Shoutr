@@ -6,13 +6,13 @@ namespace Library.Throttle
 {
     public class BroadcastThrottleService : IBroadcastThrottleService
     {
-        private readonly IThrottleStateFactory _throttleStateFactory;
+        private readonly IThrottleStateRepository _throttleStateRepository;
         private readonly IConfigurationService _configurationService;
 
-        public BroadcastThrottleService(IThrottleStateFactory throttleStateFactory,
+        public BroadcastThrottleService(IThrottleStateRepository throttleStateRepository,
             IConfigurationService configurationService)
         {
-            _throttleStateFactory = throttleStateFactory;
+            _throttleStateRepository = throttleStateRepository;
             _configurationService = configurationService;
         }
 

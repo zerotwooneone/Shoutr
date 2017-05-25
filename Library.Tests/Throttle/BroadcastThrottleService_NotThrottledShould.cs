@@ -8,7 +8,7 @@ namespace Library.Tests.Throttle
 {
     public class BroadcastThrottleService_AlmostThrottledShould
     {
-        private readonly Mock<IThrottleStateFactory> _mockThrottleStateFactory;
+        private readonly Mock<IThrottleStateRepository> _mockThrottleStateRepository;
         private readonly BroadcastThrottleService _broadcastThrottleService;
         private readonly Mock<IConfigurationService> _mockConfigurationService;
 
@@ -16,13 +16,16 @@ namespace Library.Tests.Throttle
         {
             const int maxBroadcastsPerSecond = 2;
 
-            _mockThrottleStateFactory = new Mock<IThrottleStateFactory>();
-            _mockThrottleStateFactory
-                .Setup(br => br.GeThrottleState())
-                .Returns(new ThrottleState
+            _mockThrottleStateRepository = new Mock<IThrottleStateRepository>();
+            DateTime now = DateTime.FromBinary(1297380023295);
+            _mockThrottleStateRepository
+                .Setup(tr => tr.GetDateTime())
+                .Returns(now);
+            _mockThrottleStateRepository
+                .Setup(br => br.GetRecords())
+                .Returns(new []
                 {
-                    BroadcastsCountFromPreviousSecond = maxBroadcastsPerSecond - 1,
-                    Paused = false
+                    now
                 });
 
             _mockConfigurationService = new Mock<IConfigurationService>();
@@ -32,7 +35,7 @@ namespace Library.Tests.Throttle
                 .Returns(maxBroadcastsPerSecond);
 
 
-            _broadcastThrottleService = new BroadcastThrottleService(_mockThrottleStateFactory.Object,
+            _broadcastThrottleService = new BroadcastThrottleService(_mockThrottleStateRepository.Object,
                 _mockConfigurationService.Object);
         }
 
