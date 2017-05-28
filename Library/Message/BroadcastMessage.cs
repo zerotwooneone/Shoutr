@@ -1,63 +1,48 @@
 using System;
-using System.Linq;
 using System.Numerics;
 
 namespace Library.Message
 {
-    public class BroadcastMessage
+    public abstract class BroadcastMessage : IBroadcastMessage
     {
-        public Guid BroadcastId { get; set; }
-        
-        public BigInteger? ChunkId { get; set; }
-        public BigInteger? PayloadId { get; set; }
-        public byte[] Payload { get; set; }
-        public bool? IsLast { get; set; }
-        public ushort? ChunkSizeInBytes { get; set; }
-        public string FileName { get; set; }
-        public BigInteger? ChunkCount { get; set; }
-        
-        public override bool Equals(object obj)
+        protected BroadcastMessage(Guid broadcastId)
         {
-            var other = obj as BroadcastMessage;
-            return Equals(other);
+            BroadcastId = broadcastId;
         }
 
-        public bool Equals(BroadcastMessage other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-            return BroadcastId == other.BroadcastId
-                && ChunkId == other.ChunkId
-                && PayloadId == other.PayloadId
-                && ((Payload == null && other.Payload == null) || (Payload != null && Payload.SequenceEqual(other.Payload)))
-                && IsLast == other.IsLast
-                && ChunkSizeInBytes == other.ChunkSizeInBytes
-                && FileName == other.FileName
-                && ChunkCount == other.ChunkCount;
-        }
+        public Guid BroadcastId { get; }
 
         public override int GetHashCode()
         {
-            unchecked // disable overflow, for the unlikely possibility that you
-            {         // are compiling with overflow-checking enabled
-                BigInteger hash = 27;
-                hash = (13 * hash) + new BigInteger(BroadcastId.ToByteArray());
-                hash = OptionalHash(ChunkId, hash);
-                hash = OptionalHash(PayloadId, hash);
-
-                return (int)(hash % int.MaxValue);
-            }
+            return GetHashCode(BroadcastId);
         }
 
-        private static BigInteger OptionalHash(BigInteger? bigInt, BigInteger hash)
+        public static int GetHashCode(Guid guid)
         {
-            if (bigInt.HasValue)
-            {
-                hash = (13 * hash) + bigInt.Value;
-            }
-            return hash;
+            const int baseHash = 27;
+            return GetHashCode(guid.ToByteArray(), baseHash);
+        }
+
+        public static int GetHashCode(byte[] bytes, int baseHash)
+        {
+            var bigInt = new BigInteger(bytes);
+            return GetHashCode(bigInt, baseHash);
+        }
+
+        public static int GetHashCode(BigInteger bigInt, int baseHash)
+        {
+            return GetHashCode((int)bigInt,baseHash);
+        }
+
+        public static int GetHashCode(string str, int baseHash)
+        {
+            return GetHashCode(str.GetHashCode(), baseHash);
+        }
+
+        public static int GetHashCode(int integer, int baseHash)
+        {
+            const int hashFactor = 13;
+            return (hashFactor * baseHash) + integer;
         }
     }
 }

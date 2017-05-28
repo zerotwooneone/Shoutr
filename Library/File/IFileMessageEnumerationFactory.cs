@@ -6,6 +6,6 @@ namespace Library.File
 {
     public interface IFileMessageEnumerationFactory
     {
-        IEnumerable<BroadcastMessage> Create(string fileName, Guid broadcastId);
+        IEnumerable<IBroadcastMessage> Create(string fileName, Guid broadcastId);
     }
 }

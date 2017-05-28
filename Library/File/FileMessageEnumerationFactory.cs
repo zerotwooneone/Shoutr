@@ -14,7 +14,7 @@ namespace Library.File
             _fileDataFactory = fileDataFactory;
         }
 
-        public IEnumerable<BroadcastMessage> Create(string fileName, Guid broadcastId)
+        public IEnumerable<IBroadcastMessage> Create(string fileName, Guid broadcastId)
         {
             throw new System.NotImplementedException();
         }

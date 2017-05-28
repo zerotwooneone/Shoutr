@@ -1,10 +1,11 @@
-using Library.Message;
-
-namespace Library.File
+namespace Library.Message
 {
     public interface IBroadcastMessageConversionService
     {
-        byte[] Convert(BroadcastMessage broadcastMessage);
-        BroadcastMessage Convert(byte[] bytes);
+        byte[] Convert(IBroadcastHeader broadcastHeader);
+        byte[] Convert(IFileHeader fileHeader);
+        byte[] Convert(IChunkHeader chunkHeader);
+        byte[] Convert(IPayloadMessage payloadMessage);
+        Messages Convert(byte[] bytes);
     }
 }
