@@ -20,4 +20,5 @@ We intend the default method of "filling in the gaps" (missing or bad data) is g
 * Listeners begin listening
   - Ideally all listeners would all begin listening before the broadcast, but the application should handle late listeners as best as possible.
 * One broadcaster broadcasts the entirety of her message
-* Listeners aquire and download a .torrent which is seeded by the broadcaster
+* Listeners acquire and download a .torrent which is seeded by the broadcaster
+  - BitTorrent will handle identifying missing or bad data. It will also take advantage of the fact that different listeners might have successfully received different parts of the broadcast.
