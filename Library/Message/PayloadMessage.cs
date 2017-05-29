@@ -5,20 +5,20 @@ namespace Library.Message
 {
     public class PayloadMessage : BroadcastMessage, IPayloadMessage
     {
-        public PayloadMessage(Guid broadcastId, BigInteger payloadId, byte[] payload, BigInteger chunkId) : base(broadcastId)
+        public PayloadMessage(Guid broadcastId, BigInteger payloadIndex, byte[] payload, BigInteger chunkIndex) : base(broadcastId)
         {
-            PayloadId = payloadId;
+            PayloadIndex = payloadIndex;
             Payload = payload;
-            ChunkId = chunkId;
+            ChunkIndex = chunkIndex;
         }
 
-        public BigInteger ChunkId { get; }
-        public BigInteger PayloadId { get; }
+        public BigInteger ChunkIndex { get; }
+        public BigInteger PayloadIndex { get; }
         public byte[] Payload { get; }
 
         public override int GetHashCode()
         {
-            return GetHashCode(PayloadId, GetHashCode(ChunkId, base.GetHashCode()));
+            return GetHashCode(PayloadIndex, GetHashCode(ChunkIndex, base.GetHashCode()));
         }
     }
 }

@@ -23,10 +23,10 @@ namespace Library.Tests.Message
             const string fileName = "fileName";
             const int chunkCount = 1;
             _fileHeader = new FileHeader(broadcastId, isLast, fileName, chunkCount);
-            const int payloadId = 0;
+            const int payloadIndex = 0;
             var payload = new byte[]{1};
-            const int chunkId = 0;
-            _payloadMessage = new PayloadMessage(broadcastId, payloadId, payload,chunkId);
+            const int chunkIndex = 0;
+            _payloadMessage = new PayloadMessage(broadcastId, payloadIndex, payload,chunkIndex);
             _broadcastMessageConversionService = new BroadcastMessageConversionService();
         }
 
@@ -41,9 +41,9 @@ namespace Library.Tests.Message
             var actual = messages.PayloadMessage;
 
             //assert
-            Assert.Equal(_payloadMessage.ChunkId, actual.ChunkId);
+            Assert.Equal(_payloadMessage.ChunkIndex, actual.ChunkIndex);
             Assert.True(_payloadMessage.Payload.SequenceEqual(actual.Payload));
-            Assert.Equal(_payloadMessage.PayloadId, actual.PayloadId);
+            Assert.Equal(_payloadMessage.PayloadIndex, actual.PayloadIndex);
             Assert.Equal(_payloadMessage.BroadcastId, actual.BroadcastId);
         }
     }

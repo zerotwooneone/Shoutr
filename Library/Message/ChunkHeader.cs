@@ -6,18 +6,18 @@ namespace Library.Message
     public class ChunkHeader : MessageHeader, IChunkHeader
     {
         public ChunkHeader(Guid broadcastId, 
-            BigInteger chunkId, 
+            BigInteger chunkIndex, 
             bool? isLast = null) : base(broadcastId, isLast)
         {
-            ChunkId = chunkId;
+            ChunkIndex = chunkIndex;
         }
 
-        public BigInteger ChunkId { get; }
+        public BigInteger ChunkIndex { get; }
         
 
         public override int GetHashCode()
         {
-            return GetHashCode(ChunkId, base.GetHashCode());
+            return GetHashCode(ChunkIndex, base.GetHashCode());
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Library.Message
         public static ProtoMessage ConvertToProtoMessage(IChunkHeader chunkHeader)
         {
             return new ProtoMessage(chunkHeader.BroadcastId,
-                chunkId: chunkHeader.ChunkId,
+                chunkIndex: chunkHeader.ChunkIndex,
                 isLast: chunkHeader.IsLast);
         }
 
@@ -71,8 +71,8 @@ namespace Library.Message
         public static ProtoMessage ConvertToProtoMessage(IPayloadMessage payloadMessage)
         {
             return new ProtoMessage(payloadMessage.BroadcastId,
-                chunkId: payloadMessage.ChunkId,
-                payloadId: payloadMessage.PayloadId,
+                chunkIndex: payloadMessage.ChunkIndex,
+                payloadIndex: payloadMessage.PayloadIndex,
                 payload: payloadMessage.Payload);
         }
 
@@ -81,25 +81,25 @@ namespace Library.Message
             using (var stream = new MemoryStream(bytes))
             {
                 var protoMessage = Serializer.Deserialize<ProtoMessage>(stream);
-                var chunkId = protoMessage.GetChunkId();
-                var payloadId = protoMessage.GetPayloadId();
+                var chunkIndex = protoMessage.GetChunkIndex();
+                var payloadIndex = protoMessage.GetPayloadIndex();
 
-                if (payloadId != null)
+                if (payloadIndex != null)
                 {
                     return new Messages
                     {
                         PayloadMessage = new PayloadMessage(protoMessage.BroadcastId,
-                            payloadId.Value,
+                            payloadIndex.Value,
                             protoMessage.Payload,
-                            chunkId.Value)
+                            chunkIndex.Value)
                     };
                 }
-                if (chunkId != null)
+                if (chunkIndex != null)
                 {
                     return new Messages
                     {
                         ChunkHeader = new ChunkHeader(protoMessage.BroadcastId,
-                        chunkId.Value,
+                        chunkIndex.Value,
                             protoMessage.IsLast)
                     };
                 }
@@ -131,9 +131,9 @@ namespace Library.Message
             [ProtoMember(1)]
             public Guid BroadcastId { get; set; }
             [ProtoMember(2)]
-            public byte[] ChunkId { get; set; }
+            public byte[] ChunkIndex { get; set; }
             [ProtoMember(3)]
-            public byte[] PayloadId { get; set; }
+            public byte[] PayloadIndex { get; set; }
             [ProtoMember(4)]
             public byte[] Payload { get; set; }
             [ProtoMember(5)]
@@ -145,8 +145,8 @@ namespace Library.Message
             [ProtoMember(8)]
             public byte[] ChunkCountInBytes { get; set; }
 
-            public BigInteger? GetChunkId() => GetNullable(ChunkId);
-            public BigInteger? GetPayloadId() => GetNullable(PayloadId);
+            public BigInteger? GetChunkIndex() => GetNullable(ChunkIndex);
+            public BigInteger? GetPayloadIndex() => GetNullable(PayloadIndex);
             public BigInteger? GetChunkCountInBytes() => GetNullable(ChunkCountInBytes);
 
             /// <summary>
@@ -158,8 +158,8 @@ namespace Library.Message
             }
 
             public ProtoMessage(Guid broadcastId,
-                BigInteger? chunkId = null,
-                BigInteger? payloadId = null,
+                BigInteger? chunkIndex = null,
+                BigInteger? payloadIndex = null,
                  byte[] payload = null,
                 bool? isLast = null,
                 ushort? chunkSizeInBytes = null,
@@ -167,8 +167,8 @@ namespace Library.Message
                 BigInteger? chunkCount = null)
             {
                 BroadcastId = broadcastId;
-                ChunkId = chunkId?.ToByteArray();
-                PayloadId = payloadId?.ToByteArray();
+                ChunkIndex = chunkIndex?.ToByteArray();
+                PayloadIndex = payloadIndex?.ToByteArray();
                 Payload = payload;
                 IsLast = isLast.HasValue && isLast.Value;
                 ChunkSizeInBytes = chunkSizeInBytes;
@@ -184,13 +184,13 @@ namespace Library.Message
 
         public byte[] Convert(IBroadcastMessage broadcastMessage)
         {
-            var bcId = broadcastMessage.BroadcastId;
-            var il = (broadcastMessage as IMessageHeader)?.IsLast;
-            var plo = broadcastMessage as IPayloadMessage;
-            var pli = plo?.PayloadId;
-            var pl = plo?.Payload;
+            var broadcastId = broadcastMessage.BroadcastId;
+            var isLast = (broadcastMessage as IMessageHeader)?.IsLast;
+            var payloadMessage = broadcastMessage as IPayloadMessage;
+            var payloadIndex = payloadMessage?.PayloadIndex;
+            var payload = payloadMessage?.Payload;
 
-            var protoMessage = new ProtoMessage(bcId, chunkId: null, payloadId: pli, payload: pl, isLast: il,
+            var protoMessage = new ProtoMessage(broadcastId, chunkIndex: null, payloadIndex: payloadIndex, payload: payload, isLast: isLast,
                 chunkSizeInBytes: null, fileName: null, chunkCount: null);
             return Convert(protoMessage);
         }

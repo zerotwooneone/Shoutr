@@ -4,7 +4,7 @@ namespace Library.File
 {
     public class FilePayload
     {
-        public BigInteger PayloadId { get; set; }
+        public BigInteger PayloadIndex { get; set; }
         public byte[] Bytes { get; set; }
     }
 }

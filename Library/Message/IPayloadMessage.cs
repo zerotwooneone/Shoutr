@@ -4,8 +4,8 @@ namespace Library.Message
 {
     public interface IPayloadMessage : IBroadcastMessage
     {
-        BigInteger ChunkId { get; }
-        BigInteger PayloadId { get; }
+        BigInteger ChunkIndex { get; }
+        BigInteger PayloadIndex { get; }
         byte[] Payload { get; }
     }
 }

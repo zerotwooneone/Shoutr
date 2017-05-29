@@ -5,7 +5,7 @@ namespace Library.File
 {
     public class FileChunk
     {
-        public BigInteger ChunkId { get; set; }
+        public BigInteger ChunkIndex { get; set; }
         public IEnumerable<FilePayload> Payloads { get; set; }
     }
 }
