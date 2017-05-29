@@ -40,6 +40,17 @@ namespace Library.Tests.File
         }
 
         [Fact]
+        public void GetBroadcastHeader_ReturnOneByteChunkSize()
+        {
+            string ingnoredFileName = "filename";
+            Guid ignoredId = Guid.Empty; 
+            var actual = _fileMessageService.GetBroadcastHeader(ingnoredFileName, ignoredId).ChunkSizeInBytes;
+            const ushort expected = 1;
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
         public void GetPayloadByChunkIndex_ReturnOnePayload()
         {
             string ingnoredFileName = "filename";
@@ -67,6 +78,17 @@ namespace Library.Tests.File
             int expected = 1;
 
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void GetFileHeader_ReturnLazyLoadedPayloads()
+        {
+            var payloads = _fileMessageService
+                .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<BigInteger>());
+
+            _mockFIleDataFactory
+                .Verify(dr => dr.GetPage(It.IsAny<string>(), It.IsAny<uint>(), It.IsAny<BigInteger>()),
+                    Times.Never);
         }
     }
 }

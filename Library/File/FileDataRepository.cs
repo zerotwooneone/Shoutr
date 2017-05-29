@@ -17,7 +17,7 @@ namespace Library.File
             throw new System.NotImplementedException();
         }
 
-        public byte[] GetPage(string fileName, ushort pageSize, BigInteger pageIndex)
+        public byte[] GetPage(string fileName, uint pageSize, BigInteger pageIndex)
         {
             throw new System.NotImplementedException();
         }
