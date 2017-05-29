@@ -8,12 +8,12 @@ namespace Library.Tests.File
     public class FileBroadcastEnumerationFactory_OneByteFileShould
     {
         private readonly FileBroadcastEnumerationFactory _fileBroadcastEnumerationFactory;
-        private readonly Mock<IFileMessageEnumerationFactory> _mockFileEnumerationFactory;
+        private readonly Mock<IFileMessageService> _mockFileEnumerationFactory;
         private readonly Mock<IBroadcastMessageConversionService> _mockBroadcastMessageConversionService;
 
         public FileBroadcastEnumerationFactory_OneByteFileShould()
         {
-            _mockFileEnumerationFactory = new Mock<IFileMessageEnumerationFactory>();
+            _mockFileEnumerationFactory = new Mock<IFileMessageService>();
             _mockBroadcastMessageConversionService = new Mock<IBroadcastMessageConversionService>();
             _fileBroadcastEnumerationFactory = new FileBroadcastEnumerationFactory(_mockFileEnumerationFactory.Object, _mockBroadcastMessageConversionService.Object);
         }

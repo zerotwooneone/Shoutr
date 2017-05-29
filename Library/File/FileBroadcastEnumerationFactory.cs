@@ -5,13 +5,13 @@ namespace Library.File
 {
     public class FileBroadcastEnumerationFactory
     {
-        private readonly IFileMessageEnumerationFactory _fileMessageEnumerationFactory;
+        private readonly IFileMessageService _fileMessageService;
         private readonly IBroadcastMessageConversionService _broadcastMessageConversionService;
 
-        public FileBroadcastEnumerationFactory(IFileMessageEnumerationFactory fileMessageEnumerationFactory,
+        public FileBroadcastEnumerationFactory(IFileMessageService fileMessageService,
             IBroadcastMessageConversionService broadcastMessageConversionService)
         {
-            _fileMessageEnumerationFactory = fileMessageEnumerationFactory;
+            _fileMessageService = fileMessageService;
             _broadcastMessageConversionService = broadcastMessageConversionService;
         }
         public IEnumerable<byte[]> GetEnumeration(string fileName)

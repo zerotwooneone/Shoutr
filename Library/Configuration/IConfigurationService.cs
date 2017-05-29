@@ -4,5 +4,6 @@ namespace Library.Configuration
     {
         int BroadcastPort { get; }
         int? MaxBroadcastsPerSecond { get; }
+        int PageSize { get; }
     }
 }
