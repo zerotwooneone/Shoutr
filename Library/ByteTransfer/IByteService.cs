@@ -11,5 +11,8 @@ namespace Library.ByteTransfer
         byte[] GetBytes(BigInteger bigInteger);
         byte[] GetBytes(Guid guid);
         byte[] GetBytes(BigInteger? payloadIndex);
+        BigInteger GetBigInteger(byte[] bytes);
+        Guid GetGuid(byte[] bytes);
+        BigInteger? GetNullableBigInteger(byte[] bytes);
     }
 }

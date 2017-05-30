@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using Library.ByteTransfer;
 using Library.Message;
+using Moq;
 using Xunit;
 
 namespace Library.Tests.Message
@@ -13,6 +13,7 @@ namespace Library.Tests.Message
         private IBroadcastHeader _broadcastHeader;
         private IFileHeader _fileHeader;
         private IPayloadMessage _payloadMessage;
+        private readonly Mock<IByteService> _byteService;
 
         public BroadcastMessageConversionService_OneByteFileShould()
         {
@@ -24,27 +25,13 @@ namespace Library.Tests.Message
             const int chunkCount = 1;
             _fileHeader = new FileHeader(broadcastId, isLast, fileName, chunkCount);
             const int payloadIndex = 0;
-            var payload = new byte[]{1};
+            var payload = new byte[] { 1 };
             const int chunkIndex = 0;
-            _payloadMessage = new PayloadMessage(broadcastId, payloadIndex, payload,chunkIndex);
-            _broadcastMessageConversionService = new BroadcastMessageConversionService();
+            _payloadMessage = new PayloadMessage(broadcastId, payloadIndex, payload, chunkIndex);
+            _byteService = new Mock<IByteService>();
+            _broadcastMessageConversionService = new BroadcastMessageConversionService(_byteService.Object);
         }
 
-        [Fact]
-        public void Convert_EqualsForwardsAndBackwards()
-        {
-            //assemble
-            var bytes = _broadcastMessageConversionService.Convert(_payloadMessage);
-
-            //act
-            var messages = _broadcastMessageConversionService.Convert(bytes);
-            var actual = messages.PayloadMessage;
-
-            //assert
-            Assert.Equal(_payloadMessage.ChunkIndex, actual.ChunkIndex);
-            Assert.True(_payloadMessage.Payload.SequenceEqual(actual.Payload));
-            Assert.Equal(_payloadMessage.PayloadIndex, actual.PayloadIndex);
-            Assert.Equal(_payloadMessage.BroadcastId, actual.BroadcastId);
-        }
+        
     }
 }

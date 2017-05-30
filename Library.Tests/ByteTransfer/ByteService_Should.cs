@@ -60,5 +60,33 @@ namespace Library.Tests.ByteTransfer
             //assert
             Assert.Equal(expected, actual);
         }
+
+        [Fact]
+        public void GetBigIntegerBytes_EqualAfterConvertingBothWays()
+        {
+            //assemble
+            var expected = new BigInteger(20170529);
+
+            //act
+            var bytes = _byteService.GetBytes(expected);
+            var actual = _byteService.GetBigInteger(bytes);
+
+            //assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void GetGuidBytes_EqualAfterConvertingBothWays()
+        {
+            //assemble
+            var expected = Guid.NewGuid();
+
+            //act
+            var bytes = _byteService.GetBytes(expected);
+            var actual = _byteService.GetGuid(bytes);
+
+            //assert
+            Assert.Equal(expected, actual);
+        }
     }
 }

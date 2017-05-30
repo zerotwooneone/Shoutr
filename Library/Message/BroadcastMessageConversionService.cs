@@ -89,8 +89,8 @@ namespace Library.Message
             using (var stream = new MemoryStream(bytes))
             {
                 var protoMessage = Serializer.Deserialize<ProtoMessage>(stream);
-                var chunkIndex = protoMessage.GetChunkIndex();
-                var payloadIndex = protoMessage.GetPayloadIndex();
+                var chunkIndex = _byteService.GetNullableBigInteger(protoMessage.ChunkIndex);
+                var payloadIndex = _byteService.GetNullableBigInteger(protoMessage.PayloadIndex);
 
                 if (payloadIndex != null)
                 {
@@ -114,13 +114,13 @@ namespace Library.Message
 
                 if (protoMessage.FileName != null)
                 {
-                    var chunkCount = protoMessage.GetChunkCountInBytes();
+                    var chunkCount = _byteService.GetBigInteger(protoMessage.ChunkCountInBytes);
                     return new Messages
                     {
                         FileHeader = new FileHeader(protoMessage.BroadcastId,
                         protoMessage.IsLast,
                         protoMessage.FileName,
-                        chunkCount.Value)
+                        chunkCount)
                     };
                 }
 
@@ -131,6 +131,23 @@ namespace Library.Message
                     protoMessage.ChunkSizeInBytes.Value)
                 };
             }
+        }
+
+        public byte[] Convert(IBroadcastMessage broadcastMessage)
+        {
+            var broadcastId = broadcastMessage.BroadcastId;
+            var isLast = (broadcastMessage as IMessageHeader)?.IsLast;
+            var payloadMessage = broadcastMessage as IPayloadMessage;
+            var payloadIndex = payloadMessage?.PayloadIndex;
+            var payload = payloadMessage?.Payload;
+
+            var protoMessage = new ProtoMessage(broadcastId,
+                chunkIndex: null,
+                payloadIndex: _byteService.GetBytes(payloadIndex),
+                payload: payload,
+                isLast: isLast,
+                chunkSizeInBytes: null, fileName: null, chunkCount: null);
+            return Convert(protoMessage);
         }
 
         /// <summary>
@@ -155,13 +172,9 @@ namespace Library.Message
             public string FileName { get; set; }
             [ProtoMember(8)]
             public byte[] ChunkCountInBytes { get; set; }
-
-            public BigInteger? GetChunkIndex() => GetNullable(ChunkIndex);
-            public BigInteger? GetPayloadIndex() => GetNullable(PayloadIndex);
-            public BigInteger? GetChunkCountInBytes() => GetNullable(ChunkCountInBytes);
-
+            
             /// <summary>
-            /// Parameterless constructory required for deserialization
+            /// Parameterless constructor required for protocol buffer deserialization
             /// </summary>
             public ProtoMessage()
             {
@@ -186,28 +199,6 @@ namespace Library.Message
                 FileName = fileName;
                 ChunkCountInBytes = chunkCount;
             }
-
-            public static BigInteger? GetNullable(byte[] bytes)
-            {
-                return bytes == null ? (BigInteger?)null : new BigInteger(bytes);
-            }
-        }
-
-        public byte[] Convert(IBroadcastMessage broadcastMessage)
-        {
-            var broadcastId = broadcastMessage.BroadcastId;
-            var isLast = (broadcastMessage as IMessageHeader)?.IsLast;
-            var payloadMessage = broadcastMessage as IPayloadMessage;
-            var payloadIndex = payloadMessage?.PayloadIndex;
-            var payload = payloadMessage?.Payload;
-
-            var protoMessage = new ProtoMessage(broadcastId, 
-                chunkIndex: null, 
-                payloadIndex: _byteService.GetBytes(payloadIndex), 
-                payload: payload, 
-                isLast: isLast,
-                chunkSizeInBytes: null, fileName: null, chunkCount: null);
-            return Convert(protoMessage);
         }
     }
 }
