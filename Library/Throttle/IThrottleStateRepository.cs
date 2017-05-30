@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Library.Throttle
 {
+    /// <summary>
+    /// Represents the data we track related to throttling
+    /// </summary>
     public interface IThrottleStateRepository
     {
         DateTime GetDateTime();

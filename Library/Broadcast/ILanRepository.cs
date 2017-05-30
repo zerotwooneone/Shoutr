@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Library.Broadcast
 {
+    /// <summary>
+    /// Represents access to read and write local area network data
+    /// </summary>
     public interface ILanRepository
     {
         Task Broadcast(byte[] data);

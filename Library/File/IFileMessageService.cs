@@ -5,6 +5,9 @@ using Library.Message;
 
 namespace Library.File
 {
+    /// <summary>
+    /// Converts between the raw bytes from files and the messages for transmission
+    /// </summary>
     public interface IFileMessageService
     {
         IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId);

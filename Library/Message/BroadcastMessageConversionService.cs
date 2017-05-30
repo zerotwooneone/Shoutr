@@ -1,12 +1,20 @@
 using System;
 using System.IO;
 using System.Numerics;
+using Library.ByteTransfer;
 using ProtoBuf;
 
 namespace Library.Message
 {
     public class BroadcastMessageConversionService : IBroadcastMessageConversionService
     {
+        private readonly IByteService _byteService;
+
+        public BroadcastMessageConversionService(IByteService byteService)
+        {
+            _byteService = byteService;
+        }
+
         public static byte[] Convert(ProtoMessage protoMessage)
         {
             using (var stream = new MemoryStream())
@@ -38,12 +46,12 @@ namespace Library.Message
             return Convert(protoMessage);
         }
 
-        public static ProtoMessage ConvertToProtoMessage(IFileHeader fileHeader)
+        public ProtoMessage ConvertToProtoMessage(IFileHeader fileHeader)
         {
             return new ProtoMessage
             (
                 broadcastId: fileHeader.BroadcastId,
-                chunkCount: fileHeader.ChunkCount,
+                chunkCount: _byteService.GetBytes(fileHeader.ChunkCount),
                 fileName: fileHeader.FileName,
                 isLast: fileHeader.IsLast
             );
@@ -55,10 +63,10 @@ namespace Library.Message
             return Convert(protoMessage);
         }
 
-        public static ProtoMessage ConvertToProtoMessage(IChunkHeader chunkHeader)
+        public ProtoMessage ConvertToProtoMessage(IChunkHeader chunkHeader)
         {
             return new ProtoMessage(chunkHeader.BroadcastId,
-                chunkIndex: chunkHeader.ChunkIndex,
+                chunkIndex: _byteService.GetBytes(chunkHeader.ChunkIndex),
                 isLast: chunkHeader.IsLast);
         }
 
@@ -68,11 +76,11 @@ namespace Library.Message
             return Convert(protoMessage);
         }
 
-        public static ProtoMessage ConvertToProtoMessage(IPayloadMessage payloadMessage)
+        public ProtoMessage ConvertToProtoMessage(IPayloadMessage payloadMessage)
         {
             return new ProtoMessage(payloadMessage.BroadcastId,
-                chunkIndex: payloadMessage.ChunkIndex,
-                payloadIndex: payloadMessage.PayloadIndex,
+                chunkIndex: _byteService.GetBytes(payloadMessage.ChunkIndex),
+                payloadIndex: _byteService.GetBytes(payloadMessage.PayloadIndex),
                 payload: payloadMessage.Payload);
         }
 
@@ -125,6 +133,9 @@ namespace Library.Message
             }
         }
 
+        /// <summary>
+        /// This message class is specific to the serialization library being used in this service, ProtocolBuffers. This represents the shape of the data that is actually sent as bytes over the network.
+        /// </summary>
         [ProtoContract]
         public class ProtoMessage
         {
@@ -158,22 +169,22 @@ namespace Library.Message
             }
 
             public ProtoMessage(Guid broadcastId,
-                BigInteger? chunkIndex = null,
-                BigInteger? payloadIndex = null,
+                byte[] chunkIndex = null,
+                byte[] payloadIndex = null,
                  byte[] payload = null,
                 bool? isLast = null,
                 ushort? chunkSizeInBytes = null,
                 string fileName = null,
-                BigInteger? chunkCount = null)
+                byte[] chunkCount = null)
             {
                 BroadcastId = broadcastId;
-                ChunkIndex = chunkIndex?.ToByteArray();
-                PayloadIndex = payloadIndex?.ToByteArray();
+                ChunkIndex = chunkIndex;
+                PayloadIndex = payloadIndex;
                 Payload = payload;
                 IsLast = isLast.HasValue && isLast.Value;
                 ChunkSizeInBytes = chunkSizeInBytes;
                 FileName = fileName;
-                ChunkCountInBytes = chunkCount?.ToByteArray();
+                ChunkCountInBytes = chunkCount;
             }
 
             public static BigInteger? GetNullable(byte[] bytes)
@@ -190,7 +201,11 @@ namespace Library.Message
             var payloadIndex = payloadMessage?.PayloadIndex;
             var payload = payloadMessage?.Payload;
 
-            var protoMessage = new ProtoMessage(broadcastId, chunkIndex: null, payloadIndex: payloadIndex, payload: payload, isLast: isLast,
+            var protoMessage = new ProtoMessage(broadcastId, 
+                chunkIndex: null, 
+                payloadIndex: _byteService.GetBytes(payloadIndex), 
+                payload: payload, 
+                isLast: isLast,
                 chunkSizeInBytes: null, fileName: null, chunkCount: null);
             return Convert(protoMessage);
         }

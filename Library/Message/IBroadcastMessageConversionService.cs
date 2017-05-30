@@ -1,5 +1,8 @@
 namespace Library.Message
 {
+    /// <summary>
+    /// Converts between messages and the bytes that will be transmitted
+    /// </summary>
     public interface IBroadcastMessageConversionService
     {
         byte[] Convert(IBroadcastHeader broadcastHeader);

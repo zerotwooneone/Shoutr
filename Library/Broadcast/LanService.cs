@@ -3,7 +3,7 @@ using Library.Throttle;
 
 namespace Library.Broadcast
 {
-    public class LanService
+    public class LanService: ILanService
     {
         private readonly ILanRepository _lanRepository;
         private readonly IBroadcastThrottleService _broadcastThrottleService;
