@@ -13,7 +13,7 @@ It is trivial to forge UDP packets. Therefore, do not run the listener on a netw
 #### Listen
 `shoutr.exe --listen`
 #### Broadcast one file
-`soutr.exe --file="full\path\to\file"`
+`shoutr.exe --file="full\path\to\file"`
 ## Remaining issues
 We intend the default method of "filling in the gaps" (missing or bad data) is going to use the BitTorrent protocol. This will be handled outside and separately from this program.
 ### (Tentative) Workflow for broadcasting
