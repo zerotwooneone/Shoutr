@@ -16,7 +16,8 @@ namespace Library.Broadcast
 
         public Task Broadcast(byte[] bytes)
         {
-            throw new System.NotImplementedException();
+            _broadcastThrottleService.Record();
+            return _lanRepository.Broadcast(bytes);
         }
     }
 }

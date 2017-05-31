@@ -3,7 +3,7 @@
 namespace Library.Broadcast
 {
     /// <summary>
-    /// Provides logic around the boradcasting and listening for data on the LAN
+    /// Provides logic around the broadcasting and listening for data on the LAN
     /// </summary>
     public interface ILanService
     {
