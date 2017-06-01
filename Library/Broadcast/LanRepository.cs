@@ -18,6 +18,13 @@ namespace Library.Broadcast
             q.Enqueue(data);
         }
 
+        public byte[] PopQueue()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool QueueIsEmpty { get; }
+
         public Task Broadcast(byte[] data)
         {
             //throw new NotImplementedException();

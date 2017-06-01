@@ -1,3 +1,5 @@
+using System;
+
 namespace Library.Configuration
 {
     /// <summary>
@@ -8,5 +10,6 @@ namespace Library.Configuration
         int BroadcastPort { get; }
         int? MaxBroadcastsPerSecond { get; }
         uint PageSize { get; }
+        TimeSpan? TimeBetweenBroadcasts { get; }
     }
 }
