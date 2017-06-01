@@ -14,7 +14,6 @@ namespace Library.Broadcast
 
         public void AddToQueue(byte[] data)
         {
-            //throw new NotImplementedException();
             q.Enqueue(data);
         }
 
@@ -27,7 +26,6 @@ namespace Library.Broadcast
 
         public Task Broadcast(byte[] data)
         {
-            //throw new NotImplementedException();
             UdpClient udp = new UdpClient();
             IPEndPoint ip = new IPEndPoint(IPAddress.Any, port);
             udp.EnableBroadcast = true;
@@ -36,14 +34,12 @@ namespace Library.Broadcast
 
         public IEnumerable<byte[]> GetQueue()
         {
-            //throw new NotImplementedException();
             return q;
         }
 
         public EventHandler<UdpReceiveResult> OnReceived()
         {
-            throw new NotImplementedException();
-            //write to something?
+            throw new NotImplementedException(); 
         }
     }
 }
