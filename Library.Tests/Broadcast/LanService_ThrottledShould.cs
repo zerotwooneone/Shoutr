@@ -53,7 +53,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(ignoredBytes);
 
             //assert
-            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<byte[]>()));
+            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<Task>()));
         }
     }
 }

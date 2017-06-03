@@ -6,13 +6,13 @@ using Xunit;
 
 namespace Library.Tests.Throttle
 {
-    public class BroadcastThrottleService_AlmostThrottledShould
+    public class BroadcastThrottleService_WhenOneBroadcastFromBeingThrottled_Should
     {
         private readonly Mock<IThrottleStateRepository> _mockThrottleStateRepository;
         private readonly BroadcastThrottleService _broadcastThrottleService;
         private readonly Mock<IConfigurationService> _mockConfigurationService;
 
-        public BroadcastThrottleService_AlmostThrottledShould()
+        public BroadcastThrottleService_WhenOneBroadcastFromBeingThrottled_Should()
         {
             const int maxBroadcastsPerSecond = 2;
 
@@ -40,7 +40,7 @@ namespace Library.Tests.Throttle
         }
 
         [Fact]
-        public void RaisePausedWhenTooManyAttemptsPerSecond()
+        public void RaisePausedWhenRecordCalled()
         {
             //assemble
             const string expected = nameof(_broadcastThrottleService.Paused);
@@ -56,7 +56,7 @@ namespace Library.Tests.Throttle
         }
 
         [Fact]
-        public void PauseWhenTooManyAttemptsPerSecond()
+        public void PauseWhenRecordCalled()
         {
             //assemble
             const bool expected = true;

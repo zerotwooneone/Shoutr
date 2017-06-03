@@ -2,22 +2,21 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Library.Broadcast
 {
     class LanRepository : ILanRepository
     {
-        private Queue<byte[]> q;
+        private Queue<Task> q;
         private const int port = 3036;
 
-        public void AddToQueue(byte[] data)
+        public void AddToQueue(Task broadcast)
         {
-            q.Enqueue(data);
+            q.Enqueue(broadcast);
         }
 
-        public byte[] PopQueue()
+        public Task PopQueue()
         {
             throw new NotImplementedException();
         }
@@ -34,7 +33,7 @@ namespace Library.Broadcast
 
         public IEnumerable<byte[]> GetQueue()
         {
-            return q;
+            throw new NotImplementedException("This method is obsolete.");
         }
 
         public EventHandler<UdpReceiveResult> OnReceived()
