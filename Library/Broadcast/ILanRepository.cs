@@ -12,8 +12,6 @@ namespace Library.Broadcast
     {
         Task Broadcast(byte[] data);
         EventHandler<UdpReceiveResult> OnReceived();
-        [Obsolete("Use PopQueue instead")]
-        IEnumerable<byte[]> GetQueue();
         void AddToQueue(Task broadcast);
         Task PopQueue();
         bool QueueIsEmpty { get; }

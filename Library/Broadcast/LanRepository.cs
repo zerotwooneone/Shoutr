@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Library.Broadcast
 {
     class LanRepository : ILanRepository
     {
-        private Queue<Task> q;
+        private Queue<Task> q = new Queue<Task>();
         private const int port = 3036;
 
         public void AddToQueue(Task broadcast)
@@ -18,10 +19,10 @@ namespace Library.Broadcast
 
         public Task PopQueue()
         {
-            throw new NotImplementedException();
+            return q.Dequeue();
         }
 
-        public bool QueueIsEmpty { get; }
+        public bool QueueIsEmpty => !q.Any();
 
         public Task Broadcast(byte[] data)
         {
@@ -29,11 +30,6 @@ namespace Library.Broadcast
             IPEndPoint ip = new IPEndPoint(IPAddress.Any, port);
             udp.EnableBroadcast = true;
             return udp.SendAsync(data, data.Length, ip); //"Sends a UDP datagram asynchronously to a remote host."
-        }
-
-        public IEnumerable<byte[]> GetQueue()
-        {
-            throw new NotImplementedException("This method is obsolete.");
         }
 
         public EventHandler<UdpReceiveResult> OnReceived()
