@@ -5,7 +5,7 @@ Local Area Network Broadcaster
 Broadcasts data over a LAN for maximum throughput. However, the price we pay for this speed is the reliability of knowing if each listener has received all the data and that the data has not been corrupted. The broadcaster and listeners will have to provide a way to check the data and fill in the gaps.
 
 ## Technical Detail
-This program uses UDP broadcasts to distribute data. UDP broadcasts will not be forwarded by any router, therefore this traffic will only be visible within a Local Area Network. UDP does not ensure delivery, order of arrival, or verification. This program will tolerate some late delivery, and will verify that protocol critical data has not been corrupted. Otherwise, listeners are left to their own interpretation. 
+This program fills a very niche need: When a group of local area clients need a copy of the same data at the maximum theoretical rate. We use UDP broadcasts to distribute data. UDP broadcasts will not be forwarded by most routers, therefore this traffic will only be visible within a Local Area Network. UDP does not ensure delivery, order of arrival, or verification. This program will tolerate some late delivery, and will throw out any protocol critical data that has been corrupted. Otherwise, listeners are left to their own interpretation. It is beyond the scope of this program to handle detection of corrupted payload data and the retransmission of that data. 
 ## Security concerns
 It is trivial to forge UDP packets. Therefore, do not run the listener on a network which you don not fully trust.
 ## examples
