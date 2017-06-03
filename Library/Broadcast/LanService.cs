@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Library.Throttle;
 
 namespace Library.Broadcast
@@ -27,6 +28,12 @@ namespace Library.Broadcast
             Task t = new Task(async () => { await _lanRepository.Broadcast(bytes); } );
             _lanRepository.AddToQueue(t);
             return t;
+        }
+
+        public bool ShouldDequeue =>throw new NotImplementedException();
+        public void Dequeue()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

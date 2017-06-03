@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Library.Broadcast;
 using Library.Throttle;
@@ -6,22 +7,26 @@ using Xunit;
 
 namespace Library.Tests.Broadcast
 {
-    public class LanService_NotThrottledShould
+    public class LanService_WhenNotThrottled_Should
     {
         private readonly LanService _lanService;
         private readonly Mock<ILanRepository> _mockLanRepository;
         private readonly Mock<IBroadcastThrottleService> _mockBroadcastThrottleService;
 
 
-        public LanService_NotThrottledShould()
+        public LanService_WhenNotThrottled_Should()
         {
             _mockLanRepository = new Mock<ILanRepository>();
             _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<byte[]>()))
                 .Returns(Task.CompletedTask);
+            _mockLanRepository
+                .SetupGet(lr => lr.QueueIsEmpty)
+                .Returns(true);
+            _mockLanRepository
+                .Setup(lr => lr.PopQueue())
+                .Returns(Task.CompletedTask);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
-            _mockBroadcastThrottleService
-                .Setup(bs => bs.Record());
             _mockBroadcastThrottleService
                 .SetupGet(bs => bs.Paused)
                 .Returns(false);
@@ -29,44 +34,52 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void ReturnTask()
+        public void Broadcast_WillReturnTask()
         {
             //assemble
             
             //act
-            byte[] ignoredBytes = { };
-            var actual = _lanService.Broadcast(ignoredBytes);
+            var actual = _lanService.Broadcast(It.IsAny<byte[]>());
 
             //assert
             Assert.NotNull(actual);
         }
 
         [Fact]
-        public void CallRecord()
+        public void Broadcast_WillGetQueued()
         {
             //assemble
 
-
             //act
-            byte[] ignoredBytes = { };
-            _lanService.Broadcast(ignoredBytes);
+            _lanService.Broadcast(It.IsAny<byte[]>());
 
             //assert
-            _mockBroadcastThrottleService.Verify(bs => bs.Record());
+            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<Task>()));
         }
 
         [Fact]
-        public void CallBroadcast()
+        public void ShouldDequeue_WillBeFalse()
+        {
+            //assemble
+            const bool expected = false;
+
+            //act
+            var actual = _lanService.ShouldDequeue;
+
+            //assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task Broadcast_WillGetDeQueued()
         {
             //assemble
 
-
             //act
-            byte[] ignoredBytes = { };
-            _lanService.Broadcast(ignoredBytes);
+            await _lanService.Broadcast(It.IsAny<byte[]>());
 
             //assert
-            _mockLanRepository.Verify(bs => bs.Broadcast(It.IsAny<byte[]>()));
+            _mockLanRepository.Verify(lr => lr.PopQueue());
         }
     }
 }

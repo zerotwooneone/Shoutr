@@ -23,8 +23,6 @@ namespace Library.Tests.Broadcast
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
-                .Setup(bs => bs.Record());
-            _mockBroadcastThrottleService
                 .SetupGet(bs => bs.Paused)
                 .Returns(false);
             _lanService = new LanService(_mockLanRepository.Object, _mockBroadcastThrottleService.Object);
@@ -69,6 +67,43 @@ namespace Library.Tests.Broadcast
             _mockLanRepository.Verify(lr => lr.AddToQueue(It.IsAny<Task>()));
         }
 
+        [Fact]
+        public void Dequeue_WillCallRecord()
+        {
+            //assemble
 
+
+            //act
+            _lanService.Dequeue();
+
+            //assert
+            _mockBroadcastThrottleService.Verify(bs => bs.Record());
+        }
+
+        [Fact]
+        public void Dequeue_WillCallRepositoryBroadcast()
+        {
+            //assemble
+
+
+            //act
+            _lanService.Dequeue();
+
+            //assert
+            _mockLanRepository.Verify(bs => bs.Broadcast(It.IsAny<byte[]>()));
+        }
+
+        [Fact]
+        public void ShouldDequeue_WillBeTrue()
+        {
+            //assemble
+            const bool expected = true;
+
+            //act
+            var actual = _lanService.ShouldDequeue;
+
+            //assert
+            Assert.Equal(expected, actual);
+        }
     }
 }
