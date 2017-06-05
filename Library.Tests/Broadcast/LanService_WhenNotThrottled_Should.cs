@@ -81,5 +81,29 @@ namespace Library.Tests.Broadcast
             //assert
             _mockLanRepository.Verify(lr => lr.PopQueue());
         }
+
+        [Fact]
+        public void Dequeue_WillCallRepoDequeue()
+        {
+            //assemble
+
+            //act
+            _lanService.Dequeue();
+
+            //assert
+            _mockLanRepository.Verify(lr => lr.PopQueue());
+        }
+
+        [Fact]
+        public void Dequeue_WillCallRepoBroadcast()
+        {
+            //assemble
+
+            //act
+            _lanService.Dequeue();
+
+            //assert
+            _mockLanRepository.Verify(lr => lr.Broadcast(It.IsAny<byte[]>()));
+        }
     }
 }
