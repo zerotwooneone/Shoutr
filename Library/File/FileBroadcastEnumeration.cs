@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using Library.Message;
 
 namespace Library.File
@@ -9,14 +11,17 @@ namespace Library.File
         private readonly IFileMessageService _fileMessageService;
         private readonly IBroadcastMessageConversionService _broadcastMessageConversionService;
         private readonly string _fileName;
+        private readonly Guid _broadcastId;
 
         public FileBroadcastEnumeration(IFileMessageService fileMessageService,
             IBroadcastMessageConversionService broadcastMessageConversionService,
-            string fileName)
+            string fileName,
+            Guid broadcastId)
         {
             _fileMessageService = fileMessageService;
             _broadcastMessageConversionService = broadcastMessageConversionService;
             _fileName = fileName;
+            _broadcastId = broadcastId;
         }
 
         public IEnumerator<byte[]> GetEnumerator()

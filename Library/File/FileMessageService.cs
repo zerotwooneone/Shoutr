@@ -18,17 +18,17 @@ namespace Library.File
             _configurationService = configurationService;
         }
 
-        public IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId)
+        public IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId, bool? isLast = null)
         {
             throw new NotImplementedException();
         }
 
-        public IFileHeader GetFileHeader(string fileName, Guid broadcastId)
+        public IFileHeader GetFileHeader(string fileName, Guid broadcastId, bool? isLast = null)
         {
             throw new NotImplementedException();
         }
 
-        public IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex)
+        public IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex, bool? isLast = null)
         {
             throw new NotImplementedException();
         }

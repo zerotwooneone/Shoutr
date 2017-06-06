@@ -10,9 +10,9 @@ namespace Library.File
     /// </summary>
     public interface IFileMessageService
     {
-        IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId);
-        IFileHeader GetFileHeader(string fileName, Guid broadcastId);
-        IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex);
+        IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId, bool? isLast = null);
+        IFileHeader GetFileHeader(string fileName, Guid broadcastId, bool? isLast = null);
+        IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex, bool? isLast = null);
         IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex);
     }
 }
