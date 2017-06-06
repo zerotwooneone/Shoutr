@@ -70,17 +70,17 @@ namespace Library.Tests.Broadcast
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
-        public async Task Broadcast_WillGetDeQueued()
-        {
-            //assemble
+        //[Fact]
+        //public async Task Broadcast_WillGetDeQueued()
+        //{
+        //    //assemble
 
-            //act
-            await _lanService.Broadcast(It.IsAny<byte[]>());
+        //    //act
+        //    await _lanService.Broadcast(It.IsAny<byte[]>());
 
-            //assert
-            _mockLanRepository.Verify(lr => lr.PopQueue());
-        }
+        //    //assert
+        //    _mockLanRepository.Verify(lr => lr.PopQueue());
+        //}
 
         [Fact]
         public void Dequeue_WillCallRepoDequeue()
