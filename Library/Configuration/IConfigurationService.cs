@@ -11,5 +11,6 @@ namespace Library.Configuration
         int? MaxBroadcastsPerSecond { get; }
         uint PageSize { get; }
         TimeSpan? TimeBetweenBroadcasts { get; }
+        int PayloadSizeInBytes { get; }
     }
 }

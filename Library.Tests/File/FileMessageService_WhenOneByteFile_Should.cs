@@ -8,13 +8,13 @@ using Xunit;
 
 namespace Library.Tests.File
 {
-    public class FileMessageService_WhenOneByteFileShould
+    public class FileMessageService_WhenOneByteFile_Should
     {
         private readonly FileMessageService _fileMessageService;
         private readonly Mock<IFileDataRepository> _mockFileDataRepository;
         private readonly Mock<IConfigurationService> _configurationService;
 
-        public FileMessageService_WhenOneByteFileShould()
+        public FileMessageService_WhenOneByteFile_Should()
         {
             _configurationService = new Mock<IConfigurationService>();
             _mockFileDataRepository = new Mock<IFileDataRepository>();
