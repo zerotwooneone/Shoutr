@@ -11,29 +11,27 @@ namespace Library.Tests.File
     public class FileMessageService_WhenOneByteFileShould
     {
         private readonly FileMessageService _fileMessageService;
-        private readonly Mock<IFileDataRepository> _mockFIleDataFactory;
+        private readonly Mock<IFileDataRepository> _mockFileDataRepository;
         private readonly Mock<IConfigurationService> _configurationService;
 
         public FileMessageService_WhenOneByteFileShould()
         {
             _configurationService = new Mock<IConfigurationService>();
-            _mockFIleDataFactory = new Mock<IFileDataRepository>();
+            _mockFileDataRepository = new Mock<IFileDataRepository>();
             BigInteger byteCount=1;
-            _mockFIleDataFactory
+            _mockFileDataRepository
                 .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
                 .Returns(byteCount);
-            _mockFIleDataFactory
+            _mockFileDataRepository
                 .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<ushort>(), It.IsAny<BigInteger>()))
                 .Returns(new[] {byte.MinValue});
-            _fileMessageService = new FileMessageService(_mockFIleDataFactory.Object, _configurationService.Object);
+            _fileMessageService = new FileMessageService(_mockFileDataRepository.Object, _configurationService.Object);
         }
 
         [Fact]
         public void GetFileHeader_ReturnChunkCountOfOne()
         {
-            string ingnoredFileName="filename";
-            Guid ignoredId = Guid.Empty;
-            var actual = _fileMessageService.GetFileHeader(ingnoredFileName,ignoredId).ChunkCount;
+            var actual = _fileMessageService.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkCount;
             BigInteger expected=1;
 
             Assert.Equal(expected, actual);
@@ -42,9 +40,7 @@ namespace Library.Tests.File
         [Fact]
         public void GetBroadcastHeader_ReturnOneByteChunkSize()
         {
-            string ingnoredFileName = "filename";
-            Guid ignoredId = Guid.Empty; 
-            var actual = _fileMessageService.GetBroadcastHeader(ingnoredFileName, ignoredId).ChunkSizeInBytes;
+            var actual = _fileMessageService.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkSizeInBytes;
             const ushort expected = 1;
 
             Assert.Equal(expected, actual);
@@ -53,11 +49,9 @@ namespace Library.Tests.File
         [Fact]
         public void GetPayloadByChunkIndex_ReturnOnePayload()
         {
-            string ingnoredFileName = "filename";
-            Guid ignoredId = Guid.Empty;
             BigInteger chunkIndex = 0;
             var actual = _fileMessageService
-                .GetPayloadsByChunkIndex(ingnoredFileName, ignoredId, chunkIndex)
+                .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), chunkIndex)
                 .Count();
             int expected = 1;
 
@@ -67,11 +61,9 @@ namespace Library.Tests.File
         [Fact]
         public void GetPayloadByChunkIndex_ReturnPayloadWithOneByte()
         {
-            string ingnoredFileName = "filename";
-            Guid ignoredId = Guid.Empty;
             BigInteger chunkIndex = 0;
             var actual = _fileMessageService
-                .GetPayloadsByChunkIndex(ingnoredFileName, ignoredId, chunkIndex)
+                .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), chunkIndex)
                 .First()
                 .Payload
                 .Length;
@@ -83,10 +75,10 @@ namespace Library.Tests.File
         [Fact]
         public void GetFileHeader_ReturnLazyLoadedPayloads()
         {
-            var payloads = _fileMessageService
+           _fileMessageService
                 .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<BigInteger>());
 
-            _mockFIleDataFactory
+            _mockFileDataRepository
                 .Verify(dr => dr.GetPage(It.IsAny<string>(), It.IsAny<uint>(), It.IsAny<BigInteger>()),
                     Times.Never);
         }
