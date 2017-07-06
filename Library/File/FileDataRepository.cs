@@ -12,7 +12,7 @@ namespace Library.File
             _configurationService = configurationService;
         }
 
-        public BigInteger GetByteCount(string fileName)
+        public long GetByteCount(string fileName)
         {
             throw new System.NotImplementedException();
         }

@@ -19,7 +19,7 @@ namespace Library.Tests.File
         {
             _configurationService = new Mock<IConfigurationService>();
             const int payloadSize = 1;
-            BigInteger byteCount = 2;
+            long byteCount = 2;
             uint pageSize = (uint)byteCount;
             _configurationService
                 .SetupGet(cs => cs.PayloadSizeInBytes)

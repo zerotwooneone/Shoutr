@@ -3,39 +3,44 @@ using System.Collections.Generic;
 using System.Numerics;
 using Library.Configuration;
 using Library.Message;
+using System.IO;
+using Library.File;
 
-namespace Library.File
+
+public class FileMessageService: IFileMessageService
 {
-    public class FileMessageService: IFileMessageService
+    private readonly IFileDataRepository _fileDataRepository;
+    private readonly IConfigurationService _configurationService;
+
+    public FileMessageService(IFileDataRepository fileDataRepository,
+        IConfigurationService configurationService)
     {
-        private readonly IFileDataRepository _fileDataRepository;
-        private readonly IConfigurationService _configurationService;
+        _fileDataRepository = fileDataRepository;
+        _configurationService = configurationService;
+    }
 
-        public FileMessageService(IFileDataRepository fileDataRepository,
-            IConfigurationService configurationService)
-        {
-            _fileDataRepository = fileDataRepository;
-            _configurationService = configurationService;
-        }
+    public IBroadcastHeader GetBroadcastHeader (string fileName, Guid broadcastId, bool? isLast = null)
+    {
+        long size = _fileDataRepository.GetByteCount(fileName);
+        BroadcastHeader header = new BroadcastHeader(broadcastId, isLast, size);
+        return header;
+    }
 
-        public IBroadcastHeader GetBroadcastHeader(string fileName, Guid broadcastId, bool? isLast = null)
-        {
-            throw new NotImplementedException();
-        }
+    public IFileHeader GetFileHeader(string fileName, Guid broadcastId, bool? isLast = null)
+    {
+        BigInteger chunkCount = 1;
+        FileHeader header = new FileHeader(broadcastId, isLast, fileName, chunkCount);
+        return header;
+    }
 
-        public IFileHeader GetFileHeader(string fileName, Guid broadcastId, bool? isLast = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex, bool? isLast = null)
-        {
-            throw new NotImplementedException();
-        }
+    public IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex, bool? isLast = null)
+    {
+        return new ChunkHeader(broadcastId, chunkIndex, isLast);
+    }
         
-        public IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex)
-        {
-            throw new NotImplementedException();
-        }
+    public IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex)
+    {
+        throw new NotImplementedException();
     }
 }
+ 

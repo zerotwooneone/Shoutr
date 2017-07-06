@@ -5,6 +5,6 @@ namespace Library.Message
     /// </summary>
     public interface IBroadcastHeader : IBroadcastMessage, IMessageHeader
     {
-        ushort ChunkSizeInBytes { get; }
+        long ChunkSizeInBytes { get; }
     }
 }

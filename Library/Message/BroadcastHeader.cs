@@ -4,11 +4,11 @@ namespace Library.Message
 {
     public class BroadcastHeader : MessageHeader, IBroadcastHeader
     {
-        public BroadcastHeader(Guid broadcastId, bool? isLast, ushort chunkSizeInBytes) : base(broadcastId, isLast)
+        public BroadcastHeader(Guid broadcastId, bool? isLast, long chunkSizeInBytes) : base(broadcastId, isLast)
         {
             ChunkSizeInBytes = chunkSizeInBytes;
         }
 
-        public ushort ChunkSizeInBytes { get; }
+        public long ChunkSizeInBytes { get; }
     }
 }

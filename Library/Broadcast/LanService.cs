@@ -15,7 +15,7 @@ namespace Library.Broadcast
             _lanRepository = lanRepository;
             _broadcastThrottleService = broadcastThrottleService;
             _DrainQueue = Task.Run(async () => {
-                while (!_broadcastThrottleService.Paused && !_lanRepository.QueueIsEmpty)
+                while (ShouldDequeue)
                 {
                     Task t = _lanRepository.PopQueue();
                     t.Start();
@@ -30,7 +30,7 @@ namespace Library.Broadcast
             return t;
         }
 
-        public bool ShouldDequeue =>throw new NotImplementedException();
+        public bool ShouldDequeue => !_broadcastThrottleService.Paused && !_lanRepository.QueueIsEmpty;
         public void Dequeue()
         {
             throw new System.NotImplementedException();

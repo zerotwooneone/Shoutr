@@ -7,7 +7,7 @@ namespace Library.File
     /// </summary>
     public interface IFileDataRepository
     {
-        BigInteger GetByteCount(string fileName);
+        long GetByteCount(string fileName);
         byte[] GetPage(string fileName, uint pageSize, BigInteger pageIndex);
     }
 }

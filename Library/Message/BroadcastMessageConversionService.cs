@@ -167,7 +167,7 @@ namespace Library.Message
             [ProtoMember(5)]
             public bool? IsLast { get; set; }
             [ProtoMember(6)]
-            public ushort? ChunkSizeInBytes { get; set; }
+            public long? ChunkSizeInBytes { get; set; }
             [ProtoMember(7)]
             public string FileName { get; set; }
             [ProtoMember(8)]
@@ -186,7 +186,7 @@ namespace Library.Message
                 byte[] payloadIndex = null,
                  byte[] payload = null,
                 bool? isLast = null,
-                ushort? chunkSizeInBytes = null,
+                long? chunkSizeInBytes = null,
                 string fileName = null,
                 byte[] chunkCount = null)
             {

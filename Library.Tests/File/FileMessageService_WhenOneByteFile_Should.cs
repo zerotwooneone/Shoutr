@@ -13,12 +13,13 @@ namespace Library.Tests.File
         private readonly FileMessageService _fileMessageService;
         private readonly Mock<IFileDataRepository> _mockFileDataRepository;
         private readonly Mock<IConfigurationService> _configurationService;
+        const long byteCount = 1;
 
         public FileMessageService_WhenOneByteFile_Should()
         {
             _configurationService = new Mock<IConfigurationService>();
             _mockFileDataRepository = new Mock<IFileDataRepository>();
-            BigInteger byteCount=1;
+            
             _mockFileDataRepository
                 .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
                 .Returns(byteCount);
@@ -41,7 +42,7 @@ namespace Library.Tests.File
         public void GetBroadcastHeader_ReturnOneByteChunkSize()
         {
             var actual = _fileMessageService.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkSizeInBytes;
-            const ushort expected = 1;
+            const long expected = byteCount;
 
             Assert.Equal(expected, actual);
         }
