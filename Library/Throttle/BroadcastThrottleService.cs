@@ -18,9 +18,10 @@ namespace Library.Throttle
         public event PropertyChangedEventHandler PropertyChanged;
         public void Record()
         {
-            throw new System.NotImplementedException();
+            Paused = true;
+            PropertyChanged(this, new PropertyChangedEventArgs("Paused") );
         }
 
-        public bool Paused { get; }
+        public bool Paused { get; set; }
     }
 }

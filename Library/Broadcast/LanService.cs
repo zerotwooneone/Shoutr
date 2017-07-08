@@ -33,7 +33,8 @@ namespace Library.Broadcast
         public bool ShouldDequeue => !_broadcastThrottleService.Paused && !_lanRepository.QueueIsEmpty;
         public void Dequeue()
         {
-            throw new System.NotImplementedException();
+            _broadcastThrottleService.Record();
+            _lanRepository.Broadcast(null  /*  <<<<  Needs to pass a byte[]  */  );
         }
     }
 }
