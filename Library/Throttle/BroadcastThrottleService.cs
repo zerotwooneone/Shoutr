@@ -16,10 +16,19 @@ namespace Library.Throttle
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        private void NotifyPropertyChanged(string info)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(info));
+            }
+        }
+
         public void Record()
         {
             Paused = true;
-            PropertyChanged(this, new PropertyChangedEventArgs("Paused") );
+            NotifyPropertyChanged(nameof(Paused));
         }
 
         public bool Paused { get; set; }
