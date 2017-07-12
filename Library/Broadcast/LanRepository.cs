@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Library.Broadcast
 {
-    class LanRepository : ILanRepository
+    public class LanRepository : ILanRepository
     {
         private Queue<Task> q = new Queue<Task>();
         private const int port = 3036;
