@@ -9,15 +9,15 @@ namespace Library.Broadcast
 {
     public class LanRepository : ILanRepository
     {
-        private Queue<Task> q = new Queue<Task>();
+        private Queue<byte[]> q = new Queue<byte[]>();
         private const int port = 3036;
 
-        public void AddToQueue(Task broadcast)
+        public void AddToQueue(byte[] broadcast)
         {
             q.Enqueue(broadcast);
         }
 
-        public Task PopQueue()
+        public byte[] PopQueue()
         {
             return q.Dequeue();
         }
@@ -29,7 +29,7 @@ namespace Library.Broadcast
             UdpClient udp = new UdpClient();
             IPEndPoint ip = new IPEndPoint(IPAddress.Any, port);
             udp.EnableBroadcast = true;
-            return udp.SendAsync(data, data.Length, ip); //"Sends a UDP datagram asynchronously to a remote host."
+            return new Task(async () => await udp.SendAsync(data, data.Length, ip)); //"Sends a UDP datagram asynchronously to a remote host."
         }
 
         public EventHandler<UdpReceiveResult> OnReceived()

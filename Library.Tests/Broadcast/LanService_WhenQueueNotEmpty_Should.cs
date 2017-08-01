@@ -19,7 +19,7 @@ namespace Library.Tests.Broadcast
             _mockLanRepository.SetupGet(lr => lr.QueueIsEmpty)
                 .Returns(false);
             _mockLanRepository.Setup(lr => lr.PopQueue())
-                .Returns(Task.CompletedTask);
+                .Returns(It.IsAny<byte[]>);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
@@ -64,7 +64,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(expectedBytes);
 
             //assert
-            _mockLanRepository.Verify(lr => lr.AddToQueue(It.IsAny<Task>()));
+            _mockLanRepository.Verify(lr => lr.AddToQueue(It.IsAny<byte[]>()));
         }
 
         [Fact]

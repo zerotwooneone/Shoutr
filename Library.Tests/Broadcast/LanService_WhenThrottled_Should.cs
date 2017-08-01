@@ -58,7 +58,7 @@ namespace Library.Tests.Broadcast
             _lanService.Broadcast(It.IsAny<byte[]>());
 
             //assert
-            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<Task>()));
+            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<byte[]>()));
         }
     }
 }

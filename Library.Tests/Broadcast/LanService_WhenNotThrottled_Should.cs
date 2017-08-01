@@ -12,6 +12,7 @@ namespace Library.Tests.Broadcast
         private readonly LanService _lanService;
         private readonly Mock<ILanRepository> _mockLanRepository;
         private readonly Mock<IBroadcastThrottleService> _mockBroadcastThrottleService;
+        private readonly byte[] bytes = It.IsAny<byte[]>();
 
 
         public LanService_WhenNotThrottled_Should()
@@ -24,7 +25,7 @@ namespace Library.Tests.Broadcast
                 .Returns(true);
             _mockLanRepository
                 .Setup(lr => lr.PopQueue())
-                .Returns(Task.CompletedTask);
+                .Returns(bytes);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
@@ -39,22 +40,10 @@ namespace Library.Tests.Broadcast
             //assemble
             
             //act
-            var actual = _lanService.Broadcast(It.IsAny<byte[]>());
+            var actual = _lanService.Broadcast(bytes);
 
             //assert
             Assert.NotNull(actual);
-        }
-
-        [Fact]
-        public void Broadcast_WillGetQueued()
-        {
-            //assemble
-
-            //act
-            _lanService.Broadcast(It.IsAny<byte[]>());
-
-            //assert
-            _mockLanRepository.Verify(lr=>lr.AddToQueue(It.IsAny<Task>()));
         }
 
         [Fact]

@@ -17,24 +17,40 @@ namespace Library.Broadcast
             _DrainQueue = Task.Run(async () => {
                 while (ShouldDequeue)
                 {
-                    Task t = _lanRepository.PopQueue();
-                    t.Start();
+                    Dequeue();
                 }
             });
+            _broadcastThrottleService.PropertyChanged += _broadcastThrottleService_PropertyChanged;
+        }
+
+        private void _broadcastThrottleService_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(IBroadcastThrottleService.Paused) && !_broadcastThrottleService.Paused)
+            {
+
+            }
         }
 
         public Task Broadcast(byte[] bytes)
         {
-            Task t = new Task(async () => { await _lanRepository.Broadcast(bytes); } );
-            _lanRepository.AddToQueue(t);
-            return t;
+            if (_broadcastThrottleService.Paused)
+            {
+                _lanRepository.AddToQueue(bytes);
+                return null; //this is a problem for tomorrow Paz
+            }
+            else
+            {
+                _broadcastThrottleService.Record();
+                return _lanRepository.Broadcast(bytes);
+            }
         }
 
         public bool ShouldDequeue => !_broadcastThrottleService.Paused && !_lanRepository.QueueIsEmpty;
         public void Dequeue()
         {
+            var t = _lanRepository.PopQueue();
             _broadcastThrottleService.Record();
-            _lanRepository.Broadcast(null  /*  <<<<  Needs to pass a byte[]  */  );
+            _lanRepository.Broadcast(t);
         }
     }
 }

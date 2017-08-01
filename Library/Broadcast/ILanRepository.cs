@@ -12,8 +12,8 @@ namespace Library.Broadcast
     {
         Task Broadcast(byte[] data);
         EventHandler<UdpReceiveResult> OnReceived();
-        void AddToQueue(Task broadcast);
-        Task PopQueue();
+        void AddToQueue(byte[] broadcast);
+        byte[] PopQueue();
         bool QueueIsEmpty { get; }
     }
 }
