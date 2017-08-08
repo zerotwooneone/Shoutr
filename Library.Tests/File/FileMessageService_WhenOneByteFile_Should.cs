@@ -18,14 +18,22 @@ namespace Library.Tests.File
         public FileMessageService_WhenOneByteFile_Should()
         {
             _configurationService = new Mock<IConfigurationService>();
+            _configurationService
+                .SetupGet(cs => cs.PageSize)
+                .Returns(8000);
+            _configurationService
+                .SetupGet(cs => cs.PayloadSizeInBytes)
+                .Returns(1000);
+
             _mockFileDataRepository = new Mock<IFileDataRepository>();
-            
+
             _mockFileDataRepository
                 .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
                 .Returns(byteCount);
             _mockFileDataRepository
-                .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<ushort>(), It.IsAny<BigInteger>()))
-                .Returns(new[] {byte.MinValue});
+                .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<uint>(), It.IsAny<BigInteger>()))
+                .Returns(new[] { byte.MinValue });
+
             _fileMessageService = new FileMessageService(_mockFileDataRepository.Object, _configurationService.Object);
         }
 
@@ -33,7 +41,7 @@ namespace Library.Tests.File
         public void GetFileHeader_ReturnChunkCountOfOne()
         {
             var actual = _fileMessageService.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkCount;
-            BigInteger expected=1;
+            BigInteger expected = 1;
 
             Assert.Equal(expected, actual);
         }
@@ -76,8 +84,8 @@ namespace Library.Tests.File
         [Fact]
         public void GetFileHeader_ReturnLazyLoadedPayloads()
         {
-           _fileMessageService
-                .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<BigInteger>());
+            _fileMessageService
+                 .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<BigInteger>());
 
             _mockFileDataRepository
                 .Verify(dr => dr.GetPage(It.IsAny<string>(), It.IsAny<uint>(), It.IsAny<BigInteger>()),

@@ -48,13 +48,14 @@ public class FileMessageService: IFileMessageService
         BigInteger payloadIndex = 0;
         int i = 0;
         int copied = 0;
-        long pages = byteCount / pageSize;
+        long pages = byteCount % pageSize == 0 ? byteCount / pageSize : byteCount / pageSize + 1;
         for (BigInteger pageIndex = 0; pageIndex < pages; pageIndex++)
         {
             var page = _fileDataRepository.GetPage(fileName, pageSize, pageIndex);
             for (int j = 0; j < pageSize; i+=copied, j+=copied)
             {
                 copied = (int) (payloadSize - i < pageSize - j ? payloadSize - i : pageSize - j);
+                copied = copied < page.Length ? copied : page.Length; 
                 Array.Copy(page, j, payload, i, copied);
                 if (i == payloadSize - 1)
                 {
