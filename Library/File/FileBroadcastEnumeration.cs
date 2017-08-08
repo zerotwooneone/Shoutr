@@ -6,6 +6,11 @@ using Library.Message;
 
 namespace Library.File
 {
+    /// <summary>
+    /// Represents all the raw data that makes up a broadcast, based on one file. 
+    /// This requests messages from the message service, in protocol order, 
+    /// and passes those messages to the message conversion service so they become byte arrays.
+    /// </summary>
     public class FileBroadcastEnumeration : IEnumerable<byte[]>
     {
         private readonly IFileMessageService _fileMessageService;
