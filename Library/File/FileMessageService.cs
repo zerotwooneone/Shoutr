@@ -40,7 +40,31 @@ public class FileMessageService: IFileMessageService
         
     public IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex)
     {
-        throw new NotImplementedException();
+        //BigInteger pageIndex = 0;
+        long byteCount = _fileDataRepository.GetByteCount(fileName);
+        uint pageSize = _configurationService.PageSize;
+        int payloadSize = _configurationService.PayloadSizeInBytes;
+        byte[] payload = new byte[payloadSize];
+        BigInteger payloadIndex = 0;
+        int i = 0;
+        int copied = 0;
+        long pages = byteCount / pageSize;
+        for (BigInteger pageIndex = 0; pageIndex < pages; pageIndex++)
+        {
+            var page = _fileDataRepository.GetPage(fileName, pageSize, pageIndex);
+            for (int j = 0; j < pageSize; i+=copied, j+=copied)
+            {
+                copied = (int) (payloadSize - i < pageSize - j ? payloadSize - i : pageSize - j);
+                Array.Copy(page, j, payload, i, copied);
+                if (i == payloadSize - 1)
+                {
+                    IPayloadMessage pm = new PayloadMessage(broadcastId, payloadIndex, payload, chunkIndex);
+                    payloadIndex++;
+                    i = 0;
+                    yield return pm;
+                }
+            }
+        }
     }
 }
  
