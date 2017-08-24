@@ -8,5 +8,6 @@ namespace Library.Broadcast
     public interface ILanService
     {
         Task Broadcast(byte[] bytes);
+        bool DequeueInProgress { get; }
     }
 }

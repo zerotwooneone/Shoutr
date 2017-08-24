@@ -18,7 +18,8 @@ namespace Library.Tests.Broadcast
         public LanService_WhenNotThrottled_Should()
         {
             _mockLanRepository = new Mock<ILanRepository>();
-            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<byte[]>()))
+            _mockLanRepository
+                .Setup(lr => lr.Broadcast(It.IsAny<byte[]>()))
                 .Returns(Task.CompletedTask);
             _mockLanRepository
                 .SetupGet(lr => lr.QueueIsEmpty)
@@ -26,6 +27,9 @@ namespace Library.Tests.Broadcast
             _mockLanRepository
                 .Setup(lr => lr.PopQueue())
                 .Returns(bytes);
+            _mockLanRepository
+                .SetupGet(lr => lr.DequeueTask)
+                .Returns(Task.CompletedTask); 
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
@@ -35,46 +39,58 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void Broadcast_WillReturnTask()
+        public void Broadcast_GetsQueued()
         {
             //assemble
-            
+            _mockLanRepository.ResetCalls();
+
             //act
-            var actual = _lanService.Broadcast(bytes);
+            _lanService.Broadcast(It.IsAny<byte[]>());
 
             //assert
-            Assert.NotNull(actual);
+            _mockLanRepository.Verify(lr => lr.AddToQueue(It.IsAny<byte[]>()));
         }
 
         [Fact]
-        public void ShouldDequeue_WillBeFalse()
+        public void Broadcast_StartsNewDequeueTask()
+        {
+            //assemble
+            _mockLanRepository.ResetCalls();
+
+            //act
+            _lanService.Broadcast(It.IsAny<byte[]>());
+            //assert
+            _mockLanRepository.VerifySet(lr => lr.DequeueTask = It.IsAny<Task>());
+        }
+
+        [Fact]
+        public void StartDeque_StartsNewDequeueTask()
+        {
+            //assemble
+            _mockLanRepository.ResetCalls();
+
+            //act
+            _lanService.StartDequeue();
+            //assert
+            _mockLanRepository.VerifySet(lr => lr.DequeueTask = It.IsAny<Task>());
+        }
+
+        [Fact]
+        public void DequeueInProgress_WillBeFalse()
         {
             //assemble
             const bool expected = false;
-
             //act
-            var actual = _lanService.ShouldDequeue;
-
+            var actual = _lanService.DequeueInProgress;
             //assert
             Assert.Equal(expected, actual);
         }
-
-        //[Fact]
-        //public async Task Broadcast_WillGetDeQueued()
-        //{
-        //    //assemble
-
-        //    //act
-        //    await _lanService.Broadcast(It.IsAny<byte[]>());
-
-        //    //assert
-        //    _mockLanRepository.Verify(lr => lr.PopQueue());
-        //}
 
         [Fact]
         public void Dequeue_WillCallRepoDequeue()
         {
             //assemble
+            _mockLanRepository.ResetCalls();
 
             //act
             _lanService.Dequeue();
@@ -87,6 +103,7 @@ namespace Library.Tests.Broadcast
         public void Dequeue_WillCallRepoBroadcast()
         {
             //assemble
+            _mockLanRepository.ResetCalls();
 
             //act
             _lanService.Dequeue();
