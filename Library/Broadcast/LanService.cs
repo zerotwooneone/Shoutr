@@ -34,17 +34,16 @@ namespace Library.Broadcast
             }
         }
 
-        public Task Broadcast(byte[] bytes)
+        public void Broadcast(byte[] bytes)
         {
             if (_broadcastThrottleService.Paused)
             {
                 _lanRepository.AddToQueue(bytes);
-                return null; //this is a problem for tomorrow Paz
             }
             else
             {
                 _broadcastThrottleService.Record();
-                return _lanRepository.Broadcast(bytes);
+                _lanRepository.Broadcast(bytes);
             }
         }
 
@@ -60,12 +59,7 @@ namespace Library.Broadcast
             _lanRepository.Broadcast(t);
         }
 
-        /// <summary>
-        /// Starts a task which will continuously dequeue from the repository. The task ends when the queue is empty or the throttle service becomes paused
-        /// </summary>
-        /// <returns>The new task that was created</returns>
-        /// <exception cref="">Throws an exception is the task is already in progress</exception>
-        public Task StartDequeue()
+        public Task StartBroadcast()
         {
             throw new NotImplementedException();
         }

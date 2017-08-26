@@ -82,17 +82,14 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void Broadcast_WillNotStartDequeueTask()
+        public void StartBroadcast_ReturnsNewTask()
         {
             //assemble
-            _mockLanRepository.ResetCalls();
 
             //act
-            _lanService.Broadcast(It.IsAny<byte[]>());
-
+            Task actual = _lanService.StartBroadcast();
             //assert
-            _mockLanRepository.VerifySet(lr=>lr.DequeueTask=It.IsAny<Task>(), 
-                Times.Never);
+            Assert.False(actual.IsCompleted);
         }
     }
 }

@@ -52,25 +52,25 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void Broadcast_StartsNewDequeueTask()
+        public void StartBroadcast_SetsNewDequeueTask()
         {
             //assemble
             _mockLanRepository.ResetCalls();
 
             //act
-            _lanService.Broadcast(It.IsAny<byte[]>());
+            _lanService.StartBroadcast();
             //assert
             _mockLanRepository.VerifySet(lr => lr.DequeueTask = It.IsAny<Task>());
         }
-
+        
         [Fact]
-        public void StartDeque_StartsNewDequeueTask()
+        public void SStartBroadcast_StartsNewDequeueTask()
         {
             //assemble
             _mockLanRepository.ResetCalls();
 
             //act
-            _lanService.StartDequeue();
+            _lanService.StartBroadcast();
             //assert
             _mockLanRepository.VerifySet(lr => lr.DequeueTask = It.IsAny<Task>());
         }
