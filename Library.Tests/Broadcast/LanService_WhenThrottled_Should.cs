@@ -19,7 +19,8 @@ namespace Library.Tests.Broadcast
         public LanService_WhenThrottled_Should()
         {
             _mockLanRepository = new Mock<ILanRepository>();
-            _mockLanRepository.Setup(lr => lr.Broadcast(It.IsAny<byte []>()))
+            _mockLanRepository
+                .Setup(lr => lr.Broadcast(It.IsAny<byte []>()))
                 .Returns(Task.CompletedTask);
             _mockLanRepository
                 .SetupGet(lr => lr.QueueIsEmpty)
@@ -39,7 +40,7 @@ namespace Library.Tests.Broadcast
         public void Broadcast_WillNotCallBroadcast()
         {
             //assemble
-
+            _mockLanRepository.ResetCalls();
 
             //act
             _lanService.Broadcast(It.IsAny<byte[]>());
@@ -52,7 +53,7 @@ namespace Library.Tests.Broadcast
         public void Broadcast_GetsQueued()
         {
             //assemble
-
+            _mockLanRepository.ResetCalls();
 
             //act
             _lanService.Broadcast(It.IsAny<byte[]>());

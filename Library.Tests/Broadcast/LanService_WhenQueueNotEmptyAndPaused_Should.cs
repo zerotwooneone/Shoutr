@@ -15,9 +15,11 @@ namespace Library.Tests.Broadcast
         public LanService_WhenQueueNotEmptyAndPaused_Should()
         {
             _mockLanRepository = new Mock<ILanRepository>();
-            _mockLanRepository.SetupGet(lr => lr.QueueIsEmpty)
+            _mockLanRepository
+                .SetupGet(lr => lr.QueueIsEmpty)
                 .Returns(false);
-            _mockLanRepository.Setup(lr => lr.PopQueue())
+            _mockLanRepository
+                .Setup(lr => lr.PopQueue())
                 .Returns(It.IsAny<byte[]>);
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
@@ -31,6 +33,7 @@ namespace Library.Tests.Broadcast
         public void QueueInsteadOfBroadcast()
         {
             //assemble
+            _mockLanRepository.ResetCalls();
             var expectedBytes = new byte[] {124};
 
             //act
