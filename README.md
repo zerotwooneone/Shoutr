@@ -4,6 +4,28 @@ Local Area Network Broadcaster
 ## TL;DR
 Broadcasts data over a LAN for maximum throughput. However, the price we pay for this speed is the reliability of knowing if each listener has received all the data and that the data has not been corrupted. The broadcaster and listeners will have to provide a way to check the data and fill in the gaps.
 
+## What's new
+
+### This version
+* Broadcast Logic
+  * Throttling / Queuing
+  * First-draft protocol implementation
+  * Paged reads from disk
+
+### Upcoming 
+* v 0.2
+  * Listen Logic
+
+### Further out 
+* v 0.9 
+  * Performance review
+  * Security review
+  * Network impact review
+* Post v1.0
+  * Grouping protocol messages into "chunks"
+  * Adding data verification at the payload/chunk/file/broadcast level
+  * Signing data at the payload/chunk/file/broadcast level
+
 ## Technical Detail
 This program fills a very niche need: When a group of local area clients need a copy of the same data at the maximum theoretical rate. We use UDP broadcasts to distribute data. UDP broadcasts will not be forwarded by most routers, therefore this traffic will only be visible within a Local Area Network. UDP does not ensure delivery, order of arrival, or verification. This program will tolerate some late delivery, and will throw out any protocol critical data that has been corrupted. Otherwise, listeners are left to their own interpretation. It is beyond the scope of this program to handle detection of corrupted payload data and the retransmission of that data. 
 ## Security concerns
@@ -22,3 +44,6 @@ We intend the default method of "filling in the gaps" (missing or bad data) is g
 * One broadcaster broadcasts the entirety of her message
 * Listeners acquire and download a .torrent which is seeded by the broadcaster
   - BitTorrent will handle identifying missing or bad data. It will also take advantage of the fact that different listeners might have successfully received different parts of the broadcast.
+
+
+
