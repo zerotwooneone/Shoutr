@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Library.Broadcast;
 using Library.Throttle;
@@ -6,24 +7,38 @@ using Xunit;
 
 namespace Library.Tests.Broadcast
 {
-    public class LanService_WhenQueueNotEmpty_Should
+    public class LanService_WhenQueueNotEmptyAndDequeueStarted_Should
     {
         private readonly LanService _lanService;
         private readonly Mock<ILanRepository> _mockLanRepository;
         private readonly Mock<IBroadcastThrottleService> _mockBroadcastThrottleService;
-        
-        public LanService_WhenQueueNotEmpty_Should()
+        private readonly Task _dequeueTask;
+
+        public LanService_WhenQueueNotEmptyAndDequeueStarted_Should()
         {
             _mockLanRepository = new Mock<ILanRepository>();
-            _mockLanRepository.SetupGet(lr => lr.QueueIsEmpty)
-                .Returns(false);
-            _mockLanRepository.Setup(lr => lr.PopQueue())
+            _mockLanRepository
+                .SetupGet(lr => lr.QueueIsEmpty)
+                .Returns(false); 
+            _mockLanRepository
+                .Setup(lr => lr.PopQueue())
                 .Returns(It.IsAny<byte[]>);
+            _dequeueTask = Task.Run(async ()=>
+            {
+                while (true)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+            });
+            _mockLanRepository
+                .SetupGet(lr => lr.DequeueTask)
+                .Returns(_dequeueTask); //the mock task is already started, and will not complete during our tests
 
             _mockBroadcastThrottleService = new Mock<IBroadcastThrottleService>();
             _mockBroadcastThrottleService
                 .SetupGet(bs => bs.Paused)
                 .Returns(false);
+
             _lanService = new LanService(_mockLanRepository.Object, _mockBroadcastThrottleService.Object);
         }
         
@@ -31,7 +46,7 @@ namespace Library.Tests.Broadcast
         public void Dequeue_WillCallRecord()
         {
             //assemble
-
+            _mockBroadcastThrottleService.ResetCalls();
 
             //act
             _lanService.Dequeue();
@@ -44,7 +59,7 @@ namespace Library.Tests.Broadcast
         public void Dequeue_WillCallRepositoryBroadcast()
         {
             //assemble
-
+            _mockLanRepository.ResetCalls();
 
             //act
             _lanService.Dequeue();
@@ -54,16 +69,27 @@ namespace Library.Tests.Broadcast
         }
 
         [Fact]
-        public void ShouldDequeue_WillBeTrue()
+        public void DequeueInProgress_WillBeTrue()
         {
             //assemble
             const bool expected = true;
 
             //act
-            var actual = _lanService.ShouldDequeue;
+            var actual = _lanService.DequeueInProgress;
 
             //assert
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void StartBroadcast_ReturnsNewTask()
+        {
+            //assemble
+
+            //act
+            Task actual = _lanService.StartBroadcast();
+            //assert
+            Assert.False(actual.IsCompleted);
         }
     }
 }
