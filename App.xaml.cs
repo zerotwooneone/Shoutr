@@ -22,8 +22,7 @@ namespace WpfPractice
             _unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),
                 WithMappings.FromMatchingInterface,
-                WithName.Default,
-                WithLifetime.Hierarchical);
+                WithName.Default);
 
             var mainWindow =_unityContainer.Resolve<MainWindow>();
             mainWindow.Show();

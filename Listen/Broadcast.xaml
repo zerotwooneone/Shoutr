@@ -13,8 +13,7 @@
         </Grid.RowDefinitions>
         <WrapPanel Grid.Row="0">
             <Label Foreground="LimeGreen">Broadcast:</Label>
-            <Label Foreground="LimeGreen" DataContext="{Binding BroadcastId}">temp</Label>
+            <Label Foreground="LimeGreen" Content="{Binding BroadcastId}"></Label>
         </WrapPanel>
-        
     </Grid>
 </UserControl>
