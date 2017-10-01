@@ -5,8 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfPractice"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="525"
+        AllowsTransparency="True"
+        WindowStyle="None">
+    <Window.Background>
+        <SolidColorBrush Opacity="0.5" Color="Black"/>
+    </Window.Background>
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition ></RowDefinition>
+            <RowDefinition ></RowDefinition>
+        </Grid.RowDefinitions>
+        <Label Foreground="LimeGreen"
+               Grid.Row="0">This is some text</Label>
+        <VirtualizingStackPanel Grid.Row="1"
+                    DataContext="{Binding Broadcasts}">
+            
+        </VirtualizingStackPanel>
     </Grid>
 </Window>
