@@ -19,9 +19,18 @@
         </Grid.RowDefinitions>
         <Label Foreground="LimeGreen"
                Grid.Row="0">Listening...</Label>
-        <VirtualizingStackPanel Grid.Row="1"
-                    DataContext="{Binding Broadcasts}">
-            <listen:Broadcast></listen:Broadcast>
-        </VirtualizingStackPanel>
+        <ItemsControl Grid.Row="1"
+                      ItemsSource="{Binding (local:IMainWindowViewmodel.Broadcasts)}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel ></VirtualizingStackPanel>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <listen:Broadcast></listen:Broadcast>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Window>
