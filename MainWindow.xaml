@@ -10,27 +10,34 @@
         AllowsTransparency="True"
         WindowStyle="None">
     <Window.Background>
-        <SolidColorBrush Opacity="0.7" Color="Black"/>
+        <SolidColorBrush Opacity="0.7" 
+                         Color="Black"/>
     </Window.Background>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition ></RowDefinition>
-            <RowDefinition ></RowDefinition>
+            <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         <Label Foreground="LimeGreen"
                Grid.Row="0">Listening...</Label>
-        <ItemsControl Grid.Row="1"
-                      ItemsSource="{Binding (local:IMainWindowViewmodel.Broadcasts)}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <VirtualizingStackPanel ></VirtualizingStackPanel>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <listen:Broadcast></listen:Broadcast>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding (local:IMainWindowViewmodel.Broadcasts)}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel CanVerticallyScroll="True"
+                                                ScrollUnit="Item">
+                        </VirtualizingStackPanel>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <listen:Broadcast></listen:Broadcast>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </Window>
+
+
+
