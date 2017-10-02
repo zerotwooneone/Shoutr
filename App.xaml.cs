@@ -29,13 +29,14 @@ namespace WpfPractice
 
         public static void SetupContainer(IUnityContainer unityContainer)
         {
-            var hierarchicalLifetimeManager = new HierarchicalLifetimeManager();
-            unityContainer.RegisterType<IListenService>(hierarchicalLifetimeManager);
+            unityContainer.RegisterType<IListenService,ListenService>(new ContainerControlledLifetimeManager());
+            unityContainer.RegisterType<IResizeService, ResizeService>(new ContainerControlledLifetimeManager());
             unityContainer.RegisterType<Func<Guid, IBroadcastViewmodel>>(
                 new InjectionFactory(c => new Func<Guid, IBroadcastViewmodel>(broadcastId =>
              {
                  var listenService = c.Resolve<IListenService>();
-                 return new BroadcastViewmodel(listenService, broadcastId);
+                 var resizeService = c.Resolve<IResizeService>();
+                 return new BroadcastViewmodel(listenService, broadcastId, resizeService);
              })));
             unityContainer.RegisterType<Func<Guid, uint, IBroadcastSliverViewmodel>>(
                 new InjectionFactory(c => new Func<Guid, uint, IBroadcastSliverViewmodel>((broadcastId, sliverIndex) =>

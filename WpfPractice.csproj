@@ -66,6 +66,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ResizeService.cs" />
     <Page Include="BroadcastSliver\BroadcastSliver.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -90,6 +91,7 @@
     <Compile Include="DataModel\BroadcastSliverEventArgs.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IMainWindowViewmodel.cs" />
+    <Compile Include="IResizeService.cs" />
     <Compile Include="Listen\Broadcast.xaml.cs">
       <DependentUpon>Broadcast.xaml</DependentUpon>
     </Compile>

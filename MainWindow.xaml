@@ -8,7 +8,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         AllowsTransparency="True"
-        WindowStyle="None" d:DataContext="{d1:MockMainWindowViewmodel}">
+        WindowStyle="None" d:DataContext="{d1:MockMainWindowViewmodel}"
+        ResizeMode="CanResizeWithGrip">
     <Window.Background>
         <SolidColorBrush Opacity="0.7" 
                          Color="Black"/>
@@ -25,7 +26,8 @@
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel CanVerticallyScroll="True"
-                                                ScrollUnit="Item">
+                                                ScrollUnit="Item"
+                                                SizeChanged="SliverPanel_OnSizeChanged">
                         </VirtualizingStackPanel>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
