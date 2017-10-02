@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Practices.Unity;
+using WpfPractice.BroadcastSliver;
 using WpfPractice.Listen;
 
 namespace WpfPractice
@@ -36,6 +37,12 @@ namespace WpfPractice
                  var listenService = c.Resolve<IListenService>();
                  return new BroadcastViewmodel(listenService, broadcastId);
              })));
+            unityContainer.RegisterType<Func<Guid, uint, IBroadcastSliverViewmodel>>(
+                new InjectionFactory(c => new Func<Guid, uint, IBroadcastSliverViewmodel>((broadcastId, sliverIndex) =>
+                {
+                    var sliverService = c.Resolve<IBroadcastSliverService>();
+                    return new BroadcastSliverViewmodel(sliverService, broadcastId, sliverIndex);
+                })));
 
             unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),

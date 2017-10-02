@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:d1="clr-namespace:WpfPractice.Mock"
+             xmlns:broadcastSliver="clr-namespace:WpfPractice.BroadcastSliver"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d1:MockListenBroadcastViewmodel}">
     <Grid>
@@ -15,15 +17,18 @@
             <Label Foreground="LimeGreen">Broadcast:</Label>
             <Label Foreground="LimeGreen" Content="{Binding BroadcastId}"></Label>
         </WrapPanel>
-        <!--<ItemsControl Grid.Row="1">
+        <ItemsControl ItemsSource="{Binding BroadcastSlivers}"
+            Grid.Row="1">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <StackPanel Orientation="Horizontal"></StackPanel>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
-                
+                <DataTemplate>
+                    <broadcastSliver:BroadcastSliver MinWidth="1"></broadcastSliver:BroadcastSliver>
+                </DataTemplate>
             </ItemsControl.ItemTemplate>
-        </ItemsControl>-->
+        </ItemsControl>
     </Grid>
 </UserControl>

@@ -87,6 +87,7 @@
       <DependentUpon>BroadcastSliver.xaml</DependentUpon>
     </Compile>
     <Compile Include="BroadcastSliver\IBroadcastSliverViewmodel.cs" />
+    <Compile Include="DataModel\BroadcastSliverEventArgs.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IMainWindowViewmodel.cs" />
     <Compile Include="Listen\Broadcast.xaml.cs">
@@ -103,8 +104,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindowViewmodel.cs" />
+    <Compile Include="Mock\MockBroadcastSliverViewmodel.cs" />
     <Compile Include="Mock\MockListenBroadcastViewmodel.cs" />
     <Compile Include="Mock\MockMainWindowViewmodel.cs" />
+    <Compile Include="Mock\MockUtil.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
