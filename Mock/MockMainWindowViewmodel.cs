@@ -12,7 +12,7 @@ namespace WpfPractice.Mock
             Broadcasts = new ObservableCollection<IBroadcastViewmodel>();
             Extensions.Repeat(() =>
             {
-                var viewmodel = new MockListenBroadcastViewmodel(Guid.NewGuid());
+                var viewmodel = new MockListenBroadcastViewmodel();
                 Broadcasts.Add(viewmodel);
                 Task
                     .Delay(TimeSpan.FromSeconds(.7))
@@ -21,15 +21,5 @@ namespace WpfPractice.Mock
         }
 
         public ObservableCollection<IBroadcastViewmodel> Broadcasts { get; }
-    }
-
-    public class MockListenBroadcastViewmodel : IBroadcastViewmodel
-    {
-        public MockListenBroadcastViewmodel(Guid broadcastId)
-        {
-            BroadcastId = broadcastId;
-        }
-
-        public Guid BroadcastId { get; }
     }
 }

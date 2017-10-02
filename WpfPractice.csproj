@@ -66,6 +66,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="BroadcastSliver\BroadcastSliver.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Listen\Broadcast.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -78,6 +82,11 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BroadcastSliver\BroadcastSliverViewmodel.cs" />
+    <Compile Include="BroadcastSliver\BroadcastSliver.xaml.cs">
+      <DependentUpon>BroadcastSliver.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="BroadcastSliver\IBroadcastSliverViewmodel.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IMainWindowViewmodel.cs" />
     <Compile Include="Listen\Broadcast.xaml.cs">
@@ -94,6 +103,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindowViewmodel.cs" />
+    <Compile Include="Mock\MockListenBroadcastViewmodel.cs" />
     <Compile Include="Mock\MockListenService.cs" />
     <Compile Include="Mock\MockMainWindowViewmodel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
