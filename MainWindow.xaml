@@ -5,10 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfPractice"
         xmlns:listen="clr-namespace:WpfPractice.Listen"
+        xmlns:d1="clr-namespace:WpfPractice.Mock"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525"
         AllowsTransparency="True"
-        WindowStyle="None">
+        WindowStyle="None" d:DataContext="{d1:MockMainWindowViewmodel}">
     <Window.Background>
         <SolidColorBrush Opacity="0.7" 
                          Color="Black"/>
@@ -21,7 +22,7 @@
         <Label Foreground="LimeGreen"
                Grid.Row="0">Listening...</Label>
         <ScrollViewer Grid.Row="1">
-            <ItemsControl ItemsSource="{Binding (local:IMainWindowViewmodel.Broadcasts)}">
+            <ItemsControl ItemsSource="{Binding Broadcasts}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel CanVerticallyScroll="True"

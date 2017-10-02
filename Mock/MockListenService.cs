@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System.Windows;
+using WpfPractice.Listen;
 
-namespace WpfPractice.Listen
+namespace WpfPractice.Mock
 {
-    public class ListenService : IListenService
+    public class MockListenService:IListenService
     {
-        private readonly ConcurrentQueue<Guid> _broadcastIds;
-
-        public ListenService()
+        public MockListenService()
         {
-            _broadcastIds = new ConcurrentQueue<Guid>();
-
             Extensions.Repeat(() =>
             {
-                _broadcastIds.Enqueue(Guid.NewGuid());
                 OnNewBroadcast();
-            }, 1000, .7, 4);
+            },1000,.7,4);
         }
-
         public Guid GetNextBroadcastId()
         {
             return Guid.NewGuid();

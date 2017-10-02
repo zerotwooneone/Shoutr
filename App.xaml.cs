@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Practices.Unity;
+using WpfPractice.Listen;
 
 namespace WpfPractice
 {
@@ -19,13 +20,21 @@ namespace WpfPractice
         public App()
         {
             _unityContainer = new UnityContainer();
-            _unityContainer.RegisterTypes(
-                AllClasses.FromLoadedAssemblies(),
-                WithMappings.FromMatchingInterface,
-                WithName.Default);
+            SetupContainer(_unityContainer);
 
             var mainWindow =_unityContainer.Resolve<MainWindow>();
             mainWindow.Show();
+        }
+
+        public static void SetupContainer(IUnityContainer unityContainer)
+        {
+            var hierarchicalLifetimeManager = new HierarchicalLifetimeManager();
+            unityContainer.RegisterType<IListenService>(hierarchicalLifetimeManager);
+
+            unityContainer.RegisterTypes(
+                AllClasses.FromLoadedAssemblies(),
+                WithMappings.FromMatchingInterface,
+                WithName.Default);
         }
     }
     

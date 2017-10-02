@@ -9,21 +9,24 @@ namespace WpfPractice
 {
     public class MainWindowViewmodel : IMainWindowViewmodel
     {
-        public MainWindowViewmodel(Func<IBroadcastViewmodel> broadcastViewmodelFactory)
+        private readonly Func<IBroadcastViewmodel> _broadcastViewmodelFactory;
+        private readonly IListenService _listenService;
+
+        public MainWindowViewmodel(Func<IBroadcastViewmodel> broadcastViewmodelFactory,
+            IListenService listenService)
         {
             Broadcasts = new ObservableCollection<IBroadcastViewmodel>();
 
-            int count = 0;
-            Func<Task> c = null;
-            c = () => Task
-                     .Delay(TimeSpan.FromSeconds(2))
-                     .ContinueWith(t => Application.Current.Dispatcher.Invoke(() => Broadcasts.Add(broadcastViewmodelFactory())))
-                     .ContinueWith(t =>
-                 {
-                     if (count < 1000) c();
-                 });
-            c();
+            _broadcastViewmodelFactory = broadcastViewmodelFactory;
+            _listenService = listenService;
+            _listenService
+                .NewBroadcast += OnNewBroadcast;
+        }
 
+        private void OnNewBroadcast(object sender, EventArgs e)
+        {
+            var broadcast = _broadcastViewmodelFactory();
+            Broadcasts.Add(broadcast);
         }
 
         public ObservableCollection<IBroadcastViewmodel> Broadcasts { get; }

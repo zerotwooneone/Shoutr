@@ -78,6 +78,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions.cs" />
     <Compile Include="IMainWindowViewmodel.cs" />
     <Compile Include="Listen\Broadcast.xaml.cs">
       <DependentUpon>Broadcast.xaml</DependentUpon>
@@ -93,6 +94,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindowViewmodel.cs" />
+    <Compile Include="Mock\MockListenService.cs" />
+    <Compile Include="Mock\MockMainWindowViewmodel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
