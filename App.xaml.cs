@@ -22,7 +22,7 @@ namespace WpfPractice
             _unityContainer = new UnityContainer();
             SetupContainer(_unityContainer);
 
-            var mainWindow =_unityContainer.Resolve<MainWindow>();
+            var mainWindow = _unityContainer.Resolve<MainWindow>();
             mainWindow.Show();
         }
 
@@ -30,6 +30,12 @@ namespace WpfPractice
         {
             var hierarchicalLifetimeManager = new HierarchicalLifetimeManager();
             unityContainer.RegisterType<IListenService>(hierarchicalLifetimeManager);
+            unityContainer.RegisterType<Func<Guid, IBroadcastViewmodel>>(
+                new InjectionFactory(c => new Func<Guid, IBroadcastViewmodel>(broadcastId =>
+             {
+                 var listenService = c.Resolve<IListenService>();
+                 return new BroadcastViewmodel(listenService, broadcastId);
+             })));
 
             unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),
@@ -37,5 +43,5 @@ namespace WpfPractice
                 WithName.Default);
         }
     }
-    
+
 }

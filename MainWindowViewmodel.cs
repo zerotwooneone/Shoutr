@@ -9,10 +9,10 @@ namespace WpfPractice
 {
     public class MainWindowViewmodel : IMainWindowViewmodel
     {
-        private readonly Func<IBroadcastViewmodel> _broadcastViewmodelFactory;
+        private readonly Func<Guid, IBroadcastViewmodel> _broadcastViewmodelFactory;
         private readonly IListenService _listenService;
 
-        public MainWindowViewmodel(Func<IBroadcastViewmodel> broadcastViewmodelFactory,
+        public MainWindowViewmodel(Func<Guid, IBroadcastViewmodel> broadcastViewmodelFactory,
             IListenService listenService)
         {
             Broadcasts = new ObservableCollection<IBroadcastViewmodel>();
@@ -23,9 +23,9 @@ namespace WpfPractice
                 .NewBroadcast += OnNewBroadcast;
         }
 
-        private void OnNewBroadcast(object sender, EventArgs e)
+        private void OnNewBroadcast(object sender, Guid e)
         {
-            var broadcast = _broadcastViewmodelFactory();
+            var broadcast = _broadcastViewmodelFactory(e);
             Broadcasts.Add(broadcast);
         }
 

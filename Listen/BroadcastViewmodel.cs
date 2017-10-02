@@ -7,10 +7,10 @@ namespace WpfPractice.Listen
         private readonly IListenService _listenService;
         public Guid BroadcastId { get; }
 
-        public BroadcastViewmodel(IListenService listenService)
+        public BroadcastViewmodel(IListenService listenService, Guid broadcastId)
         {
             _listenService = listenService;
-            BroadcastId = _listenService.GetNextBroadcastId();
+            BroadcastId = broadcastId;
         }
     }
 }

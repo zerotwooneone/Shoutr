@@ -1,33 +1,23 @@
 ﻿using System;
-using System.Collections.Concurrent;
 
 namespace WpfPractice.Listen
 {
     public class ListenService : IListenService
     {
-        private readonly ConcurrentQueue<Guid> _broadcastIds;
-
         public ListenService()
         {
-            _broadcastIds = new ConcurrentQueue<Guid>();
-
+        
             Extensions.Repeat(() =>
             {
-                _broadcastIds.Enqueue(Guid.NewGuid());
-                OnNewBroadcast();
+                OnNewBroadcast(Guid.NewGuid());
             }, 1000, .7, 4);
         }
 
-        public Guid GetNextBroadcastId()
-        {
-            return Guid.NewGuid();
-        }
+        public event EventHandler<Guid> NewBroadcast;
 
-        public event EventHandler NewBroadcast;
-
-        protected virtual void OnNewBroadcast()
+        protected virtual void OnNewBroadcast(Guid broadcastId)
         {
-            NewBroadcast?.Invoke(this, EventArgs.Empty);
+            NewBroadcast?.Invoke(this, broadcastId);
         }
     }
 }

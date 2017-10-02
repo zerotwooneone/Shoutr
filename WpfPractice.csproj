@@ -104,7 +104,6 @@
   <ItemGroup>
     <Compile Include="MainWindowViewmodel.cs" />
     <Compile Include="Mock\MockListenBroadcastViewmodel.cs" />
-    <Compile Include="Mock\MockListenService.cs" />
     <Compile Include="Mock\MockMainWindowViewmodel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

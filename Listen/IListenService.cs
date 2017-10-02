@@ -4,7 +4,6 @@ namespace WpfPractice.Listen
 {
     public interface IListenService
     {
-        Guid GetNextBroadcastId();
-        event EventHandler NewBroadcast;
+        event EventHandler<Guid> NewBroadcast;
     }
 }
