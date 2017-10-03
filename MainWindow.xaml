@@ -26,8 +26,7 @@
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel CanVerticallyScroll="True"
-                                                ScrollUnit="Item"
-                                                SizeChanged="SliverPanel_OnSizeChanged">
+                                                ScrollUnit="Item">
                         </VirtualizingStackPanel>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>

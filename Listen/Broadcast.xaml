@@ -20,7 +20,7 @@
             Grid.Row="1">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"></StackPanel>
+                    <UniformGrid ></UniformGrid>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

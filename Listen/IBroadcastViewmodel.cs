@@ -8,6 +8,5 @@ namespace WpfPractice.Listen
     {
         Guid BroadcastId { get; }
         ObservableCollection<IBroadcastSliverViewmodel> BroadcastSlivers { get; }
-        float SliverWidth { get; set; }
     }
 }

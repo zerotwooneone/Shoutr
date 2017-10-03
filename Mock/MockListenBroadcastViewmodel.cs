@@ -19,6 +19,5 @@ namespace WpfPractice.Mock
 
         public Guid BroadcastId { get; }
         public ObservableCollection<IBroadcastSliverViewmodel> BroadcastSlivers { get; }
-        public float SliverWidth { get; set; }
     }
 }

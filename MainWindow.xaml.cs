@@ -20,23 +20,10 @@ namespace WpfPractice
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly IResizeService _resizeService;
-
-        public MainWindow(IMainWindowViewmodel mainWindowViewmodel,
-            IResizeService resizeService)
+        public MainWindow(IMainWindowViewmodel mainWindowViewmodel)
         {
-            _resizeService = resizeService;
             DataContext = mainWindowViewmodel;
             InitializeComponent();
-        }
-
-        private void SliverPanel_OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (e.WidthChanged)
-            {
-                _resizeService.OnSliverPanelResized(e);
-                Console.WriteLine($"mainwindow resize:{_resizeService.GetHashCode()}");
-            }
         }
     }
 }

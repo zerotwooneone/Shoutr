@@ -30,13 +30,11 @@ namespace WpfPractice
         public static void SetupContainer(IUnityContainer unityContainer)
         {
             unityContainer.RegisterType<IListenService,ListenService>(new ContainerControlledLifetimeManager());
-            unityContainer.RegisterType<IResizeService, ResizeService>(new ContainerControlledLifetimeManager());
             unityContainer.RegisterType<Func<Guid, IBroadcastViewmodel>>(
                 new InjectionFactory(c => new Func<Guid, IBroadcastViewmodel>(broadcastId =>
              {
                  var listenService = c.Resolve<IListenService>();
-                 var resizeService = c.Resolve<IResizeService>();
-                 return new BroadcastViewmodel(listenService, broadcastId, resizeService);
+                 return new BroadcastViewmodel(listenService, broadcastId);
              })));
             unityContainer.RegisterType<Func<Guid, uint, IBroadcastSliverViewmodel>>(
                 new InjectionFactory(c => new Func<Guid, uint, IBroadcastSliverViewmodel>((broadcastId, sliverIndex) =>
