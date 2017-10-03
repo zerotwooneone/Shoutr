@@ -82,7 +82,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Listen\ViewmodelBase.cs" />
+    <Compile Include="BroadcastSliver\BroadcastSliverService.cs" />
+    <Compile Include="BroadcastSliver\IBroadcastSliverService.cs" />
+    <Compile Include="DataModel\SliverChangedParams.cs" />
+    <Compile Include="DataModel\BroadcastViewmodelParams.cs" />
+    <Compile Include="DataModel\SliverViewmodelParams.cs" />
+    <Compile Include="Viewmodel\ViewmodelBase.cs" />
     <Page Include="BroadcastSliver\BroadcastSliver.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -104,7 +109,6 @@
       <DependentUpon>BroadcastSliver.xaml</DependentUpon>
     </Compile>
     <Compile Include="BroadcastSliver\IBroadcastSliverViewmodel.cs" />
-    <Compile Include="DataModel\BroadcastSliverEventArgs.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IMainWindowViewmodel.cs" />
     <Compile Include="Listen\Broadcast.xaml.cs">

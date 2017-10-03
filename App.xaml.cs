@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Practices.Unity;
 using WpfPractice.BroadcastSliver;
+using WpfPractice.DataModel;
 using WpfPractice.Listen;
 
 namespace WpfPractice
@@ -30,19 +26,23 @@ namespace WpfPractice
         public static void SetupContainer(IUnityContainer unityContainer)
         {
             unityContainer.RegisterType<IListenService,ListenService>(new ContainerControlledLifetimeManager());
-            unityContainer.RegisterType<Func<Guid, IBroadcastViewmodel>>(
-                new InjectionFactory(c => new Func<Guid, IBroadcastViewmodel>(broadcastId =>
+            unityContainer.RegisterType<IBroadcastSliverService, BroadcastSliverService>(
+                new ContainerControlledLifetimeManager());
+            unityContainer.RegisterType<Func<BroadcastViewmodelParams, IBroadcastViewmodel>>(
+                new InjectionFactory(c => new Func<BroadcastViewmodelParams, IBroadcastViewmodel>(broadcastParams =>
              {
                  var listenService = c.Resolve<IListenService>();
-                 return new BroadcastViewmodel(listenService, broadcastId);
+                 return new BroadcastViewmodel(listenService, 
+                     broadcastParams,
+                     c.Resolve<Func<SliverViewmodelParams, IBroadcastSliverViewmodel>>());
              })));
-            unityContainer.RegisterType<Func<Guid, uint, IBroadcastSliverViewmodel>>(
-                new InjectionFactory(c => new Func<Guid, uint, IBroadcastSliverViewmodel>((broadcastId, sliverIndex) =>
+            unityContainer.RegisterType<Func<SliverViewmodelParams, IBroadcastSliverViewmodel>>(
+                new InjectionFactory(c => new Func<SliverViewmodelParams, IBroadcastSliverViewmodel>(param =>
                 {
                     var sliverService = c.Resolve<IBroadcastSliverService>();
-                    return new BroadcastSliverViewmodel(sliverService, broadcastId, sliverIndex);
+                    return new BroadcastSliverViewmodel(sliverService,
+                        param);
                 })));
-
             unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),
                 WithMappings.FromMatchingInterface,

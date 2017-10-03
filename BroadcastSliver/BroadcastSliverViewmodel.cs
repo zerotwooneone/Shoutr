@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
-using WpfPractice.Annotations;
 using WpfPractice.DataModel;
+using WpfPractice.Viewmodel;
 
 namespace WpfPractice.BroadcastSliver
 {
-    public class BroadcastSliverViewmodel: IBroadcastSliverViewmodel, INotifyPropertyChanged
+    public class BroadcastSliverViewmodel : ViewmodelBase, IBroadcastSliverViewmodel
     {
         public Guid BroadcastId { get; }
         public uint SliverIndex { get; }
@@ -31,39 +25,31 @@ namespace WpfPractice.BroadcastSliver
 
         public static readonly Brush Initial = new SolidColorBrush(Colors.DarkSlateBlue);
         public static readonly Brush Complete = new SolidColorBrush(Colors.MediumSeaGreen);
+        public static readonly Brush Failed = new SolidColorBrush(Colors.IndianRed);
         public BroadcastSliverViewmodel(IBroadcastSliverService broadcastSliverService,
-            Guid broadcastId,
-            uint sliverIndex)
+            SliverViewmodelParams sliverViewmodelParams)
         {
-            BroadcastId = broadcastId;
-            SliverIndex = sliverIndex;
+            BroadcastId = sliverViewmodelParams.BroadcastId;
+            SliverIndex = sliverViewmodelParams.SliverIndex;
             _broadcastSliverService = broadcastSliverService;
-            _broadcastSliverService.BroadcastSliverChanged += OnSliverChanged;
-            Color = Initial;
+            _broadcastSliverService
+                .BroadcastSliverChanged
+                .Subscribe(param =>
+                {
+                    if (param.BroadcastId == BroadcastId &&
+                        param.SliverIndex == SliverIndex)
+                    {
+                        Color = GetSuccessColor(param.Success);
+                    }
+                });
+            Color = GetSuccessColor(sliverViewmodelParams.Success);
         }
 
-        private void OnSliverChanged(object sender, BroadcastSliverEventArgs e)
+        private Brush GetSuccessColor(bool? isSuccess)
         {
-            if (e.BroadcastId == BroadcastId &&
-                e.SliverIndex == SliverIndex)
-            {
-                Color = Complete; //temp hack
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            return isSuccess.HasValue ?
+                isSuccess.Value ?
+                    Complete : Failed : Initial;
         }
     }
-
-    public interface IBroadcastSliverService
-    {
-        event EventHandler<BroadcastSliverEventArgs> BroadcastSliverChanged;
-    }
-
-    
 }

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Net.Mail;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Windows;
 using WpfPractice.BroadcastSliver;
+using WpfPractice.DataModel;
+using WpfPractice.Viewmodel;
 
 namespace WpfPractice.Listen
 {
@@ -15,21 +13,19 @@ namespace WpfPractice.Listen
         public ObservableCollection<IBroadcastSliverViewmodel> BroadcastSlivers { get; }
 
         public BroadcastViewmodel(IListenService listenService, 
-            Guid broadcastId)
+            BroadcastViewmodelParams broadcastViewmodelParams,
+            Func<SliverViewmodelParams, 
+                IBroadcastSliverViewmodel> broadcastSliverFactory)
         {
             _listenService = listenService;
-            BroadcastId = broadcastId;
+            BroadcastId = broadcastViewmodelParams.BroadcastId;
             BroadcastSlivers = new ObservableCollection<IBroadcastSliverViewmodel>();
 
-            for (int i = 0; i < 100; i++)
+            foreach (var sliver in broadcastViewmodelParams.Slivers)
             {
-                BroadcastSlivers.Add(new Mock.MockBroadcastSliverViewmodel());
+                var sliverViewmodel = broadcastSliverFactory(sliver);
+                BroadcastSlivers.Add(sliverViewmodel);
             }
-            
         }
-
-        
-
-        
     }
 }

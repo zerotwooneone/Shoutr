@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using WpfPractice.Annotations;
 
-namespace WpfPractice.Listen
+namespace WpfPractice.Viewmodel
 {
     public class ViewmodelBase : INotifyPropertyChanged
     {

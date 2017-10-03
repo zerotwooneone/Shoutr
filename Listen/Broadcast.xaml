@@ -6,10 +6,10 @@
              xmlns:d1="clr-namespace:WpfPractice.Mock"
              xmlns:broadcastSliver="clr-namespace:WpfPractice.BroadcastSliver"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" d:DataContext="{d1:MockListenBroadcastViewmodel}">
+             d:DesignWidth="300" d:DataContext="{d1:MockListenBroadcastViewmodel}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="20"></RowDefinition>
         </Grid.RowDefinitions>
         <WrapPanel Grid.Row="0">
@@ -20,7 +20,9 @@
             Grid.Row="1">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid ></UniformGrid>
+                    <UniformGrid >
+                        <UniformGrid.Rows>1</UniformGrid.Rows>
+                    </UniformGrid>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>

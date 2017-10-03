@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
+using WpfPractice.DataModel;
 using WpfPractice.Listen;
+using WpfPractice.Viewmodel;
 
 namespace WpfPractice
 {
-    public class MainWindowViewmodel : IMainWindowViewmodel
+    public class MainWindowViewmodel : ViewmodelBase, IMainWindowViewmodel
     {
-        private readonly Func<Guid, IBroadcastViewmodel> _broadcastViewmodelFactory;
+        private readonly Func<BroadcastViewmodelParams, IBroadcastViewmodel> _broadcastViewmodelFactory;
         private readonly IListenService _listenService;
 
-        public MainWindowViewmodel(Func<Guid, IBroadcastViewmodel> broadcastViewmodelFactory,
+        public MainWindowViewmodel(Func<BroadcastViewmodelParams, IBroadcastViewmodel> broadcastViewmodelFactory,
             IListenService listenService)
         {
             Broadcasts = new ObservableCollection<IBroadcastViewmodel>();
@@ -20,13 +19,12 @@ namespace WpfPractice
             _broadcastViewmodelFactory = broadcastViewmodelFactory;
             _listenService = listenService;
             _listenService
-                .NewBroadcast += OnNewBroadcast;
-        }
-
-        private void OnNewBroadcast(object sender, Guid e)
-        {
-            var broadcast = _broadcastViewmodelFactory(e);
-            Broadcasts.Add(broadcast);
+                .NewBroadcast
+                .Subscribe(p =>
+                {
+                    var broadcast = _broadcastViewmodelFactory(p);
+                    Broadcasts.Add(broadcast);
+                });
         }
 
         public ObservableCollection<IBroadcastViewmodel> Broadcasts { get; }

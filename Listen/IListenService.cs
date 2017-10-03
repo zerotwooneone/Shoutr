@@ -1,9 +1,10 @@
 ﻿using System;
+using WpfPractice.DataModel;
 
 namespace WpfPractice.Listen
 {
     public interface IListenService
     {
-        event EventHandler<Guid> NewBroadcast;
+        IObservable<BroadcastViewmodelParams> NewBroadcast { get; }
     }
 }

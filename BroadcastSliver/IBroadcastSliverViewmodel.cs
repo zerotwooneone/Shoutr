@@ -1,9 +1,8 @@
-using System.ComponentModel;
 using System.Windows.Media;
 
 namespace WpfPractice.BroadcastSliver
 {
-    public interface IBroadcastSliverViewmodel: INotifyPropertyChanged
+    public interface IBroadcastSliverViewmodel
     {
         Brush Color { get; }
     }
