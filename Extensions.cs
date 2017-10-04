@@ -22,7 +22,7 @@ namespace WpfPractice
                 .ContinueWith(t =>
                 {
                     count++;
-                    if (count < 1000)
+                    if (count < times)
                     {
                         Func();
                     }
