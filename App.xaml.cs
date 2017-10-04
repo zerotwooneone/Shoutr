@@ -34,14 +34,15 @@ namespace WpfPractice
                  var listenService = c.Resolve<IListenService>();
                  return new BroadcastViewmodel(listenService, 
                      broadcastParams,
-                     c.Resolve<Func<SliverViewmodelParams, IBroadcastSliverViewmodel>>());
+                     c.Resolve<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>());
              })));
-            unityContainer.RegisterType<Func<SliverViewmodelParams, IBroadcastSliverViewmodel>>(
-                new InjectionFactory(c => new Func<SliverViewmodelParams, IBroadcastSliverViewmodel>(param =>
+            unityContainer.RegisterType<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>(
+                new InjectionFactory(c => new Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>((param, changed) =>
                 {
                     var sliverService = c.Resolve<IBroadcastSliverService>();
                     return new BroadcastSliverViewmodel(sliverService,
-                        param);
+                        param,
+                        changed);
                 })));
             unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),

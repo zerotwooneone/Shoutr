@@ -10,14 +10,15 @@ namespace WpfPractice.Listen
 {
     public class ListenService : IListenService
     {
-        private readonly IBroadcastSliverService _broadcastSliverService;
         public IObservable<BroadcastViewmodelParams> NewBroadcast => _newBroadcast;
         private readonly Subject<BroadcastViewmodelParams> _newBroadcast;
+        private readonly Subject<SliverChangedParams> _sliverChanged;
+        public IObservable<SliverChangedParams> SliverChanged => _sliverChanged;
 
-        public ListenService(IBroadcastSliverService broadcastSliverService)
+        public ListenService()
         {
-            _broadcastSliverService = broadcastSliverService;
             _newBroadcast = new Subject<BroadcastViewmodelParams>();
+            _sliverChanged = new Subject<SliverChangedParams>();
             Extensions.Repeat(() =>
             {
                 var broadcastId = Guid.NewGuid();
@@ -39,7 +40,13 @@ namespace WpfPractice.Listen
                                 .Timer(TimeSpan.FromSeconds(Mock.MockUtil.Random.NextDouble(.7, 2)))
                                 .Subscribe(l =>
                                 {
-                                    _broadcastSliverService.Hack(broadcastId, (uint)i, success2);
+                                    _sliverChanged
+                                        .OnNext(new SliverChangedParams()
+                                        {
+                                            BroadcastId = broadcastId,
+                                            SliverIndex = (uint)i,
+                                            Success = success2
+                                        });
                                 });
                         }
 

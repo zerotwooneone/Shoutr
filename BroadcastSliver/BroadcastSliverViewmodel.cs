@@ -10,6 +10,7 @@ namespace WpfPractice.BroadcastSliver
         public Guid BroadcastId { get; }
         public uint SliverIndex { get; }
         private readonly IBroadcastSliverService _broadcastSliverService;
+        private readonly IObservable<SliverChangedParams> _changed;
         private Brush _color;
 
         public Brush Color
@@ -27,20 +28,17 @@ namespace WpfPractice.BroadcastSliver
         public static readonly Brush Complete = new SolidColorBrush(Colors.MediumSeaGreen);
         public static readonly Brush Failed = new SolidColorBrush(Colors.IndianRed);
         public BroadcastSliverViewmodel(IBroadcastSliverService broadcastSliverService,
-            SliverViewmodelParams sliverViewmodelParams)
+            SliverViewmodelParams sliverViewmodelParams,
+            IObservable<SliverChangedParams> changed)
         {
             BroadcastId = sliverViewmodelParams.BroadcastId;
             SliverIndex = sliverViewmodelParams.SliverIndex;
             _broadcastSliverService = broadcastSliverService;
-            _broadcastSliverService
-                .BroadcastSliverChanged
+            _changed = changed;
+            _changed
                 .Subscribe(param =>
                 {
-                    if (param.BroadcastId == BroadcastId &&
-                        param.SliverIndex == SliverIndex)
-                    {
                         Color = GetSuccessColor(param.Success);
-                    }
                 });
             Color = GetSuccessColor(sliverViewmodelParams.Success);
         }
