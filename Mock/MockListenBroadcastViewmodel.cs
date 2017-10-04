@@ -2,10 +2,11 @@
 using System.Collections.ObjectModel;
 using WpfPractice.BroadcastSliver;
 using WpfPractice.Listen;
+using WpfPractice.Viewmodel;
 
 namespace WpfPractice.Mock
 {
-    public class MockListenBroadcastViewmodel : IBroadcastViewmodel
+    public class MockListenBroadcastViewmodel : ViewmodelBase, IBroadcastViewmodel
     {
         public MockListenBroadcastViewmodel()
         {

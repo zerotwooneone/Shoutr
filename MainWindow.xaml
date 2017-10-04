@@ -21,7 +21,7 @@
         </Grid.RowDefinitions>
         <Label Foreground="LimeGreen"
                Grid.Row="0">Listening...</Label>
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Broadcasts}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
