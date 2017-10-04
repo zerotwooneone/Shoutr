@@ -6,10 +6,11 @@ using System.Windows;
 using System.Windows.Media;
 using WpfPractice.Annotations;
 using WpfPractice.BroadcastSliver;
+using WpfPractice.Viewmodel;
 
 namespace WpfPractice.Mock
 {
-    public class MockBroadcastSliverViewmodel : IBroadcastSliverViewmodel
+    public class MockBroadcastSliverViewmodel : ViewmodelBase, IBroadcastSliverViewmodel
     {
         private Brush _color;
 
