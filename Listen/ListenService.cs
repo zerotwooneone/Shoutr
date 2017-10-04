@@ -37,7 +37,7 @@ namespace WpfPractice.Listen
                             var successNum2 = Mock.MockUtil.Random.Next(1, 101);
                             var success2 = successNum2 < 90;
                             Observable
-                                .Timer(TimeSpan.FromSeconds(Mock.MockUtil.Random.NextDouble(.7, 2)))
+                                .Timer(TimeSpan.FromSeconds(Mock.MockUtil.Random.NextDouble(.7, 20)))
                                 .Subscribe(l =>
                                 {
                                     _sliverChanged
@@ -66,7 +66,7 @@ namespace WpfPractice.Listen
                     Slivers = slivers
                 };
                 _newBroadcast.OnNext(param);
-            }, 1000, .7, 4);
+            }, 8, .7, 4);
         }
 
 
