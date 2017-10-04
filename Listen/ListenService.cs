@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
-using WpfPractice.BroadcastSliver;
 using WpfPractice.DataModel;
 
 namespace WpfPractice.Listen
@@ -23,8 +21,15 @@ namespace WpfPractice.Listen
             {
                 var broadcastId = Guid.NewGuid();
 
-                var sliverCount = Mock.MockUtil.Random.Next(1, 1000);
-                sliverCount = sliverCount > 100 && sliverCount < 200 ? 1 : sliverCount;
+
+                const int minSliverCount = 1;
+                const int maxSliverCount = 200;
+                var sliverCount = Mock.MockUtil.Random.Next(minSliverCount, maxSliverCount);
+                const int sc = maxSliverCount - minSliverCount;
+                const int oneBytePercent = sc / 10;
+                const int scMid = sc / 2;
+                const int scMidOffset = scMid + oneBytePercent;
+                sliverCount = sliverCount > scMid && sliverCount < scMidOffset ? 1 : sliverCount;
                 var slivers = Enumerable
                 .Range(0, sliverCount)
                 .Select(i =>
