@@ -17,13 +17,14 @@ namespace WpfPractice.Listen
         public ObservableCollection<IBroadcastSliverViewmodel> BroadcastSlivers { get; }
         public readonly IDictionary<uint, Subject<SliverChangedParams>> _sliverChanges;
 
-        public BroadcastViewmodel(IListenService listenService, 
+        public BroadcastViewmodel(IListenService listenService,
             BroadcastViewmodelParams broadcastViewmodelParams,
-            Func<SliverViewmodelParams, 
+            Func<SliverViewmodelParams,
                 IObservable<SliverChangedParams>,
-                IBroadcastSliverViewmodel> broadcastSliverFactory)
+                IBroadcastSliverViewmodel> broadcastSliverFactory,
+            IObservable<SliverChangedParams> sliverChanged)
         {
-            
+
             _listenService = listenService;
             _sliverChanges = new Dictionary<uint, Subject<SliverChangedParams>>();
 
@@ -37,16 +38,12 @@ namespace WpfPractice.Listen
                     return sliverViewmodel;
                 });
             BroadcastSlivers = new ObservableCollection<IBroadcastSliverViewmodel>(slivers);
-            
-            _listenService
-                .SliverChanged
+
+            sliverChanged
                 .Subscribe(sp =>
                 {
-                    if (sp.BroadcastId == BroadcastId)
-                    {
-                        _sliverChanges[sp.SliverIndex]
+                    _sliverChanges[sp.SliverIndex]
                             .OnNext(sp);
-                    }
                 });
         }
     }

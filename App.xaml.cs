@@ -25,16 +25,17 @@ namespace WpfPractice
 
         public static void SetupContainer(IUnityContainer unityContainer)
         {
-            unityContainer.RegisterType<IListenService,ListenService>(new ContainerControlledLifetimeManager());
+            unityContainer.RegisterType<IListenService, ListenService>(new ContainerControlledLifetimeManager());
             unityContainer.RegisterType<IBroadcastSliverService, BroadcastSliverService>(
                 new ContainerControlledLifetimeManager());
-            unityContainer.RegisterType<Func<BroadcastViewmodelParams, IBroadcastViewmodel>>(
-                new InjectionFactory(c => new Func<BroadcastViewmodelParams, IBroadcastViewmodel>(broadcastParams =>
+            unityContainer.RegisterType<Func<BroadcastViewmodelParams, IObservable<SliverChangedParams>, IBroadcastViewmodel>>(
+                new InjectionFactory(c => new Func<BroadcastViewmodelParams, IObservable<SliverChangedParams>, IBroadcastViewmodel>((broadcastParams, changed) =>
              {
                  var listenService = c.Resolve<IListenService>();
-                 return new BroadcastViewmodel(listenService, 
+                 return new BroadcastViewmodel(listenService,
                      broadcastParams,
-                     c.Resolve<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>());
+                     c.Resolve<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>(),
+                     changed);
              })));
             unityContainer.RegisterType<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>(
                 new InjectionFactory(c => new Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>((param, changed) =>
