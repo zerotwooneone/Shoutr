@@ -28,6 +28,7 @@
             <Label Foreground="LimeGreen"
                    Grid.Column="0">Listening...</Label>
             <Button Content="Stop"
+                    Command="{Binding StopCommand}"
                     Background="Transparent"
                     Foreground="Red"
                     Grid.Column="1"></Button>

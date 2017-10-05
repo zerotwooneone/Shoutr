@@ -7,5 +7,6 @@ namespace WpfPractice.Listen
     {
         IObservable<BroadcastViewmodelParams> NewBroadcast { get; }
         IObservable<SliverChangedParams> SliverChanged { get; }
+        void StopListening();
     }
 }
