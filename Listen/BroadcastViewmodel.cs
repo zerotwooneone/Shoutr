@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,19 +27,20 @@ namespace WpfPractice.Listen
         {
 
             _listenService = listenService;
-            _sliverChanges = new Dictionary<uint, Subject<SliverChangedParams>>();
+            _sliverChanges = new ConcurrentDictionary<uint, Subject<SliverChangedParams>>();
 
             BroadcastId = broadcastViewmodelParams.BroadcastId;
             var slivers = broadcastViewmodelParams
                 .Slivers
                 .Select(sliver =>
                 {
-                    _sliverChanges[sliver.SliverIndex] = new Subject<SliverChangedParams>();
-                    var sliverViewmodel = broadcastSliverFactory(sliver, _sliverChanges[sliver.SliverIndex]);
+                    var sliverChange = new Subject<SliverChangedParams>();
+                    _sliverChanges[sliver.SliverIndex] = sliverChange;
+                    var sliverViewmodel = broadcastSliverFactory(sliver, sliverChange);
                     return sliverViewmodel;
                 });
             BroadcastSlivers = new ObservableCollection<IBroadcastSliverViewmodel>(slivers);
-
+            
             sliverChanged
                 .Subscribe(sp =>
                 {

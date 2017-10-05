@@ -27,6 +27,14 @@ namespace WpfPractice.BroadcastSliver
         public static readonly Brush Initial = new SolidColorBrush(Colors.DarkSlateBlue);
         public static readonly Brush Complete = new SolidColorBrush(Colors.MediumSeaGreen);
         public static readonly Brush Failed = new SolidColorBrush(Colors.IndianRed);
+
+        static BroadcastSliverViewmodel()
+        {
+            Initial.Freeze();
+            Complete.Freeze();
+            Failed.Freeze();
+        }
+
         public BroadcastSliverViewmodel(IBroadcastSliverService broadcastSliverService,
             SliverViewmodelParams sliverViewmodelParams,
             IObservable<SliverChangedParams> changed)
@@ -38,7 +46,10 @@ namespace WpfPractice.BroadcastSliver
             _changed
                 .Subscribe(param =>
                 {
+                    App.Current.Dispatcher.Invoke(() =>
+                    {
                         Color = GetSuccessColor(param.Success);
+                    });
                 });
             Color = GetSuccessColor(sliverViewmodelParams.Success);
         }

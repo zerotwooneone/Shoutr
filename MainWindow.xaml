@@ -19,8 +19,19 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
-        <Label Foreground="LimeGreen"
-               Grid.Row="0">Listening...</Label>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition MinWidth="50"
+                                  MaxWidth="80"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Label Foreground="LimeGreen"
+                   Grid.Column="0">Listening...</Label>
+            <Button Content="Stop"
+                    Background="Transparent"
+                    Foreground="Red"
+                    Grid.Column="1"></Button>
+        </Grid>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Broadcasts}">
                 <ItemsControl.ItemsPanel>
