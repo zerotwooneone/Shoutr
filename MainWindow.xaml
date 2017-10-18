@@ -11,46 +11,59 @@
         WindowStyle="None" d:DataContext="{d1:MockMainWindowViewmodel}"
         ResizeMode="CanResizeWithGrip">
     <Window.Background>
-        <SolidColorBrush Opacity="0.7" 
-                         Color="Black"/>
+        <SolidColorBrush Color="Transparent"/>
     </Window.Background>
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition></RowDefinition>
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition></ColumnDefinition>
-                <ColumnDefinition MinWidth="50"
-                                  MaxWidth="80"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <Label Foreground="LimeGreen"
-                   Grid.Column="0">Listening...</Label>
-            <Button Content="Stop"
-                    Command="{Binding StopCommand}"
-                    Background="Transparent"
-                    Foreground="Red"
-                    Grid.Column="1"></Button>
-        </Grid>
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding Broadcasts}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel CanVerticallyScroll="True"
-                                                ScrollUnit="Item">
-                        </VirtualizingStackPanel>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <listen:Broadcast></listen:Broadcast>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <Border BorderBrush="DarkOliveGreen" 
+                BorderThickness="2" 
+                CornerRadius="5"
+                Padding="2">
+            <Grid Background="Black"
+                  Opacity=".7">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" 
+                        x:Name="Titlebar"
+                        MouseDown="Titlebar_OnMouseDown">
+                    <Grid >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition MinWidth="50"
+                                              MaxWidth="80">
+                            </ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Label Foreground="LimeGreen"
+                               Grid.Column="0">
+                            Listening...
+                        </Label>
+                        <Button Content="Stop"
+                                Command="{Binding StopCommand}"
+                                Background="Transparent"
+                                Foreground="Red"
+                                Grid.Column="1">
+                        </Button>
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Broadcasts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel CanVerticallyScroll="True"
+                                                        ScrollUnit="Item">
+                                </VirtualizingStackPanel>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <listen:Broadcast></listen:Broadcast>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
     </Grid>
+
 </Window>
-
-
-
