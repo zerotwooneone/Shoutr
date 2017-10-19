@@ -12,27 +12,9 @@ namespace WpfPractice
         {
             DataContext = mainWindowViewmodel;
             InitializeComponent();
+            
         }
 
-        private void Titlebar_OnMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton != MouseButton.Left) return;
-            if (e.ClickCount == 2)
-            {
-                AdjustWindowSize();
-            }
-            else
-            {
-                Application.Current.MainWindow.DragMove();
-            }
-        }
-
-        /// <summary>
-        /// Adjusts the WindowSize to correct parameters when Maximize button is clicked
-        /// </summary>
-        private void AdjustWindowSize()
-        {
-            this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        }
+        
     }
 }
