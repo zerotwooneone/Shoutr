@@ -16,62 +16,55 @@
     <Window.Background>
         <SolidColorBrush Color="Transparent"/>
     </Window.Background>
-    <Grid>
-        <Border BorderBrush="DarkOliveGreen" 
-                BorderThickness="2" 
-                CornerRadius="5"
-                Padding="2">
-            <Grid Background="Black"
+    <Grid Margin="2">
+        <Grid Background="Black"
                   Opacity=".7">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition></RowDefinition>
-                </Grid.RowDefinitions>
-                <Border Grid.Row="0">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="MouseDown">
-                            <cmd:EventToCommand Command="{Binding MouseDownCommand,
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseDown">
+                        <cmd:EventToCommand Command="{Binding MouseDownCommand,
                                           Mode=OneWay}"
-                                                PassEventArgsToCommand="True" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                    <Grid >
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition MinWidth="50"
+                                                    PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition MinWidth="50"
                                               MaxWidth="80">
-                            </ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Label Foreground="LimeGreen"
+                    </ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Label Foreground="LimeGreen"
                                Grid.Column="0">
-                            Listening...
-                        </Label>
-                        <Button Content="Stop"
+                    Listening...
+                </Label>
+                <Button Content="Stop"
                                 Command="{Binding StopCommand}"
                                 Background="Transparent"
                                 Foreground="Red"
                                 Grid.Column="1">
-                        </Button>
-                    </Grid>
-                </Border>
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Broadcasts}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel CanVerticallyScroll="True"
-                                                        ScrollUnit="Item">
-                                </VirtualizingStackPanel>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <listen:Broadcast></listen:Broadcast>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                </Button>
             </Grid>
-        </Border>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Broadcasts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel CanVerticallyScroll="True"
+                                                        ScrollUnit="Item">
+                            </VirtualizingStackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <listen:Broadcast></listen:Broadcast>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 
 </Window>
