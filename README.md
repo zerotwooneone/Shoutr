@@ -7,14 +7,14 @@ Broadcasts data over a LAN for maximum throughput. However, the price we pay for
 ## What's new
 
 ### This version
-* Broadcast Logic
-  * Throttling / Queuing
-  * First-draft protocol implementation
-  * Paged reads from disk
+* Wpf Gui app
+  * Listening visual
 
 ### Upcoming 
 * v 0.2
   * Listen Logic
+* v 0.3
+  * Gui Wpf App
 
 ### Further out 
 * v 0.9 
