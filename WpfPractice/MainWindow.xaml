@@ -1,0 +1,70 @@
+﻿<Window x:Class="WpfPractice.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:listen="clr-namespace:WpfPractice.Listen"
+        xmlns:d1="clr-namespace:WpfPractice.Mock"
+        xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Platform"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525"
+        AllowsTransparency="True"
+        WindowStyle="None" d:DataContext="{d1:MockMainWindowViewmodel}"
+        ResizeMode="CanResizeWithGrip"
+        WindowState="{Binding WindowState}">
+    <Window.Background>
+        <SolidColorBrush Color="Transparent"/>
+    </Window.Background>
+    <Grid Margin="2">
+        <Grid Background="Black"
+                  Opacity=".7">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseDown">
+                        <cmd:EventToCommand Command="{Binding MouseDownCommand,
+                                          Mode=OneWay}"
+                                                    PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition MinWidth="50"
+                                              MaxWidth="80">
+                    </ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Label Foreground="LimeGreen"
+                               Grid.Column="0">
+                    Listening...
+                </Label>
+                <Button Content="Stop"
+                                Command="{Binding StopCommand}"
+                                Background="Transparent"
+                                Foreground="Red"
+                                Grid.Column="1">
+                </Button>
+            </Grid>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Broadcasts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel CanVerticallyScroll="True"
+                                                        ScrollUnit="Item">
+                            </VirtualizingStackPanel>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <listen:Broadcast></listen:Broadcast>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+
+</Window>
