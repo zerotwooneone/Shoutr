@@ -23,6 +23,7 @@ namespace Library.Broadcast
         }
 
         public bool QueueIsEmpty => !q.Any();
+        public Task DequeueTask { get; set; }
 
         public Task Broadcast(byte[] data)
         {

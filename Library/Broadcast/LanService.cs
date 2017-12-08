@@ -8,12 +8,15 @@ namespace Library.Broadcast
     {
         private readonly ILanRepository _lanRepository;
         private readonly IBroadcastThrottleService _broadcastThrottleService;
+        [Obsolete("This task is now located on the repository. This should be removed.")]
         private readonly Task _DrainQueue;
 
         public LanService(ILanRepository lanRepository, IBroadcastThrottleService broadcastThrottleService)
         {
             _lanRepository = lanRepository;
             _broadcastThrottleService = broadcastThrottleService;
+
+            //we are going to start the task when broadcast is called, if the task is not allready started, so we dont need this here.
             _DrainQueue = Task.Run(async () => {
                 while (ShouldDequeue)
                 {
@@ -31,26 +34,34 @@ namespace Library.Broadcast
             }
         }
 
-        public Task Broadcast(byte[] bytes)
+        public void Broadcast(byte[] bytes)
         {
             if (_broadcastThrottleService.Paused)
             {
                 _lanRepository.AddToQueue(bytes);
-                return null; //this is a problem for tomorrow Paz
             }
             else
             {
                 _broadcastThrottleService.Record();
-                return _lanRepository.Broadcast(bytes);
+                _lanRepository.Broadcast(bytes);
             }
         }
 
+        [Obsolete("Depricated. This should be removed.")]
         public bool ShouldDequeue => !_broadcastThrottleService.Paused && !_lanRepository.QueueIsEmpty;
+
+        public bool DequeueInProgress => throw new NotImplementedException();
+
         public void Dequeue()
         {
             var t = _lanRepository.PopQueue();
             _broadcastThrottleService.Record();
             _lanRepository.Broadcast(t);
+        }
+
+        public Task StartBroadcast()
+        {
+            throw new NotImplementedException();
         }
     }
 }
