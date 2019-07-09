@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Windows;
-using Microsoft.Practices.Unity;
 using ShoutrGui.BroadcastSliver;
 using ShoutrGui.DataModel;
 using ShoutrGui.Listen;
+using Unity;
+using Unity.Injection;
+using Unity.Lifetime;
+using Unity.RegistrationByConvention;
 
 namespace ShoutrGui
 {
