@@ -29,8 +29,6 @@ namespace ShoutrGui
         public static void SetupContainer(IUnityContainer unityContainer)
         {
             unityContainer.RegisterType<IListenService, ListenService>(new ContainerControlledLifetimeManager());
-            unityContainer.RegisterType<IBroadcastSliverService, BroadcastSliverService>(
-                new ContainerControlledLifetimeManager());
             unityContainer.RegisterType<Func<BroadcastViewmodelParams, IObservable<SliverChangedParams>, IBroadcastViewmodel>>(
                 new InjectionFactory(c => new Func<BroadcastViewmodelParams, IObservable<SliverChangedParams>, IBroadcastViewmodel>((broadcastParams, changed) =>
              {
@@ -43,9 +41,7 @@ namespace ShoutrGui
             unityContainer.RegisterType<Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>>(
                 new InjectionFactory(c => new Func<SliverViewmodelParams, IObservable<SliverChangedParams>, IBroadcastSliverViewmodel>((param, changed) =>
                 {
-                    var sliverService = c.Resolve<IBroadcastSliverService>();
-                    return new BroadcastSliverViewmodel(sliverService,
-                        param,
+                    return new BroadcastSliverViewmodel(param,
                         changed);
                 })));
             unityContainer.RegisterTypes(

@@ -9,7 +9,6 @@ namespace ShoutrGui.BroadcastSliver
     {
         public Guid BroadcastId { get; }
         public uint SliverIndex { get; }
-        private readonly IBroadcastSliverService _broadcastSliverService;
         private readonly IObservable<SliverChangedParams> _changed;
         private Brush _color;
 
@@ -35,13 +34,11 @@ namespace ShoutrGui.BroadcastSliver
             Failed.Freeze();
         }
 
-        public BroadcastSliverViewmodel(IBroadcastSliverService broadcastSliverService,
-            SliverViewmodelParams sliverViewmodelParams,
+        public BroadcastSliverViewmodel(SliverViewmodelParams sliverViewmodelParams,
             IObservable<SliverChangedParams> changed)
         {
             BroadcastId = sliverViewmodelParams.BroadcastId;
             SliverIndex = sliverViewmodelParams.SliverIndex;
-            _broadcastSliverService = broadcastSliverService;
             _changed = changed;
             _changed
                 .Subscribe(param =>
