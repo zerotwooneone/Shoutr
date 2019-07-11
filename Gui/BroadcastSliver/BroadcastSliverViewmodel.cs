@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Media;
 using ShoutrGui.DataModel;
+using ShoutrGui.Dispatcher;
 using ShoutrGui.Viewmodel;
 
 namespace ShoutrGui.BroadcastSliver
@@ -10,6 +11,7 @@ namespace ShoutrGui.BroadcastSliver
         public Guid BroadcastId { get; }
         public uint SliverIndex { get; }
         private readonly IObservable<SliverChangedParams> _changed;
+        private readonly IDispatcher _dispatcher;
         private Brush _color;
 
         public Brush Color
@@ -39,16 +41,19 @@ namespace ShoutrGui.BroadcastSliver
         {
             BroadcastId = sliverViewmodelParams.BroadcastId;
             SliverIndex = sliverViewmodelParams.SliverIndex;
+            
+            Color = GetSuccessColor(sliverViewmodelParams.Success);
+
             _changed = changed;
             _changed
                 .Subscribe(param =>
                 {
-                    App.Current.Dispatcher.Invoke(() =>
+                    sliverViewmodelParams.Dispatcher.Invoke(() =>
                     {
                         Color = GetSuccessColor(param.Success);
                     });
                 });
-            Color = GetSuccessColor(sliverViewmodelParams.Success);
+            
         }
 
         private Brush GetSuccessColor(bool? isSuccess)

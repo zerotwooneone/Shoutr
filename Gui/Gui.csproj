@@ -113,6 +113,8 @@
     <Compile Include="DataModel\SliverChangedParams.cs" />
     <Compile Include="DataModel\BroadcastViewmodelParams.cs" />
     <Compile Include="DataModel\SliverViewmodelParams.cs" />
+    <Compile Include="Dispatcher\DispatcherWrapper.cs" />
+    <Compile Include="Dispatcher\IDispatcher.cs" />
     <Compile Include="Viewmodel\ViewmodelBase.cs" />
     <Page Include="BroadcastSliver\BroadcastSliver.xaml">
       <SubType>Designer</SubType>

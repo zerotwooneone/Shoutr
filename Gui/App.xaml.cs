@@ -2,6 +2,7 @@
 using System.Windows;
 using ShoutrGui.BroadcastSliver;
 using ShoutrGui.DataModel;
+using ShoutrGui.Dispatcher;
 using ShoutrGui.Listen;
 using Unity;
 using Unity.Injection;
@@ -26,7 +27,7 @@ namespace ShoutrGui
             mainWindow.Show();
         }
 
-        public static void SetupContainer(IUnityContainer unityContainer)
+        public void SetupContainer(IUnityContainer unityContainer)
         {
             unityContainer.RegisterType<IListenService, ListenService>(new ContainerControlledLifetimeManager());
             unityContainer.RegisterType<Func<BroadcastViewmodelParams, IObservable<SliverChangedParams>, IBroadcastViewmodel>>(
@@ -44,6 +45,7 @@ namespace ShoutrGui
                     return new BroadcastSliverViewmodel(param,
                         changed);
                 })));
+            unityContainer.RegisterInstance<IDispatcher>(new DispatcherWrapper(Dispatcher));
             unityContainer.RegisterTypes(
                 AllClasses.FromLoadedAssemblies(),
                 WithMappings.FromMatchingInterface,

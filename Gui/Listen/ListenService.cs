@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using ShoutrGui.DataModel;
+using ShoutrGui.Dispatcher;
 
 namespace ShoutrGui.Listen
 {
@@ -24,6 +25,8 @@ namespace ShoutrGui.Listen
             //_newBroadcast = new Subject<BroadcastViewmodelParams>();
             _sliverChanged = new Subject<SliverChangedParams>();
             
+            var dispatcher = new DispatcherWrapper(System.Windows.Threading.Dispatcher.CurrentDispatcher);
+
             NewBroadcast = Observable
                 .Range(1, 8)
                 .Select(broadcastCount =>
@@ -68,11 +71,12 @@ namespace ShoutrGui.Listen
                                             });
                                     }
 
-                                    return new SliverViewmodelParams()
+                                    return new SliverViewmodelParams(dispatcher)
                                     {
                                         BroadcastId = broadcastId,
                                         SliverIndex = (uint)sliverIndex,
-                                        Success = success
+                                        Success = success,
+                                        
                                     };
                                 });
 
