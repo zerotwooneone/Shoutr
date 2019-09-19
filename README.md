@@ -4,6 +4,16 @@ Local Area Network Broadcaster
 ## TL;DR
 Broadcasts data over a LAN for maximum throughput. However, the price we pay for this speed is the reliability of knowing if each listener has received all the data and that the data has not been corrupted. The broadcaster and listeners will have to provide a way to check the data and fill in the gaps.
 
+## Projects in Solution
+###Shoutr
+The original console app. This was written in .Net Framework and can broadcast files.
+
+###NetCoreConsoleApp
+The new console app that will replace 'Shoutr' above with both broadcast and listening features, but for now this is just a POC for listening
+
+###Library
+Common code between broadcasting and listening. This is meant to be project-type agnostic so that console, gui, and other project types can use this library.
+
 ## What's new
 
 ### This version
