@@ -23,7 +23,10 @@ namespace Library.Listen
             _udpReceiveObservable = Observable
                 .Using(()=> _udpClientFactory.Create(IpEndPoint),
                     udpClient=> Observable
-                        .FromAsync(udpClient.ReceiveAsync)
+                        .FromAsync(() =>
+                        {
+                            return udpClient.ReceiveAsync();
+                        })
                         .Repeat());
             MessagesObservable = _udpReceiveObservable.Select(ConvertToMessage);
         }

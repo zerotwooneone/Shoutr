@@ -6,10 +6,10 @@ namespace Library.Listen
     public class ListenerFactory : IListenerFactory
     {
         private readonly UdpClientFactory _udpClientFactory;
-        private readonly BroadcastMessageConversionService _broadcastMessageConversionService;
+        private readonly IBroadcastMessageConversionService _broadcastMessageConversionService;
 
         public ListenerFactory(UdpClientFactory udpClientFactory,
-            BroadcastMessageConversionService broadcastMessageConversionService)
+            IBroadcastMessageConversionService broadcastMessageConversionService)
         {
             _udpClientFactory = udpClientFactory;
             _broadcastMessageConversionService = broadcastMessageConversionService;

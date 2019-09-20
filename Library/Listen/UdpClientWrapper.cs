@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace Library.Listen
@@ -20,6 +21,11 @@ namespace Library.Listen
         public Task<UdpReceiveResult> ReceiveAsync()
         {
             return _udpClient.ReceiveAsync();
+        }
+
+        public void Send(byte[] data, int dataLength, IPEndPoint ipEndPoint)
+        {
+            _udpClient.Send(data, dataLength, ipEndPoint);
         }
     }
 }
