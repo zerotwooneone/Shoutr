@@ -20,8 +20,6 @@ namespace Shoutr
             var testConfig = testSection.Get<TestConfig>();
 
             Console.WriteLine($" Hello { testConfig.Name } and {config["listen"]} !");
-
-            Console.WriteLine("Hello World!");
         }
     }
 }
