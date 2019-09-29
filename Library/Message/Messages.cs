@@ -3,7 +3,7 @@ namespace Library.Message
     /// <summary>
     /// A wrapper which is returned when deserializing bytes into messages. 
     /// </summary>
-    public class Messages
+    public class Messages : IMessages
     {
         public IBroadcastHeader BroadcastHeader { get; set; }
         public IPayloadMessage PayloadMessage { get; set; }
