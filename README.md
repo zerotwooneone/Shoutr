@@ -14,6 +14,10 @@ The new console app that will replace 'Shoutr' above with both broadcast and lis
 ###Library
 Common code between broadcasting and listening. This is meant to be project-type agnostic so that console, gui, and other project types can use this library.
 
+
+###Protocol Documentation
+[Slides](https://docs.google.com/presentation/d/1IqBBzTBrykF9-Zw34GQDIrYgL3kA21jB26MuMpO7WNU/edit#slide=id.p)
+
 ## What's new
 
 ### This version
