@@ -2,6 +2,7 @@ using Library.Message;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using System;
+using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -10,27 +11,29 @@ using Xunit;
 
 namespace Library.Tests.Message
 {
-    public class NaiveHeaderCacheTests : IDisposable
+    public class NaiveMessageCacheTests : IDisposable
     {
         private MockRepository mockRepository;
 
         private Mock<IMemoryCache> mockMemoryCache;
         private Mock<IReceivedMessage> mockMessage;
         private Mock<IBroadcastHeader> mockBroadcastHeader;
-        private Mock<ICacheEntry> mockCacheEntry;
+        private Mock<ICacheEntry> mockBroadcastCacheEntry;
+        private Mock<ICacheEntry> mockPayloadCacheEntry;
         private Mock<IMessageCacheConfig> messageCacheConfig;
         private Mock<IPayloadMessage> mockPayloadMessage;
         private Mock<IChunkHeader> mockChunkHeader;
         private Mock<IFileHeader> mockFileHeader;
 
-        public NaiveHeaderCacheTests()
+        public NaiveMessageCacheTests()
         {
             this.mockRepository = new MockRepository(MockBehavior.Strict);
 
             this.mockMemoryCache = this.mockRepository.Create<IMemoryCache>();
             mockMessage = mockRepository.Create<IReceivedMessage>();
             mockBroadcastHeader = mockRepository.Create<IBroadcastHeader>();
-            mockCacheEntry = mockRepository.Create<ICacheEntry>();
+            mockBroadcastCacheEntry = mockRepository.Create<ICacheEntry>();
+            mockPayloadCacheEntry = mockRepository.Create<ICacheEntry>();
             messageCacheConfig = mockRepository.Create<IMessageCacheConfig>();
             mockPayloadMessage = mockRepository.Create<IPayloadMessage>();
             mockChunkHeader = mockRepository.Create<IChunkHeader>();
@@ -42,9 +45,9 @@ namespace Library.Tests.Message
             this.mockRepository.VerifyAll();
         }
 
-        private NaiveHeaderCache CreateNaiveHeaderCache()
+        private NaiveMessageCache CreateNaiveHeaderCache()
         {
-            return new NaiveHeaderCache(
+            return new NaiveMessageCache(
                 this.mockMemoryCache.Object,
                 messageCacheConfig.Object);
         }
@@ -59,7 +62,10 @@ namespace Library.Tests.Message
             SetupBroadcastHeaderMessage(broadcastId);
             IObservable<IReceivedMessage> messagesObservable = new BehaviorSubject<IReceivedMessage>(mockMessage.Object);
             SetupGetOrCreateCache();
-            mockCacheEntry
+            messageCacheConfig
+                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+            mockBroadcastCacheEntry
                 .SetupSet(mce=>mce.SlidingExpiration = It.IsAny<TimeSpan?>())
                 .Verifiable();
             //mockMessage
@@ -86,7 +92,10 @@ namespace Library.Tests.Message
             SetupBroadcastHeaderMessage(broadcastId);
             IObservable<IReceivedMessage> messagesObservable = new BehaviorSubject<IReceivedMessage>(mockMessage.Object);
             SetupGetOrCreateCache();
-            mockCacheEntry
+            messageCacheConfig
+                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+            mockBroadcastCacheEntry
                 .SetupSet(mce=>mce.SlidingExpiration = It.IsAny<TimeSpan?>())
                 .Verifiable();
             //mockMessage
@@ -98,7 +107,7 @@ namespace Library.Tests.Message
                 messagesObservable);
 
             // Assert
-            mockCacheEntry
+            mockBroadcastCacheEntry
                 .VerifySet(mce=>mce.SlidingExpiration = It.Is<TimeSpan?>(ts=>messageCacheConfig.Object.BroadcastCacheExpiration.Equals(ts)), 
                     Times.Once);
         }
@@ -177,10 +186,6 @@ namespace Library.Tests.Message
                 .Returns(allreadyCached != null);
             var task = NaiveHeaderCache
                 .CachedObservable
-                .Do(c =>
-                {
-                    int x = 0;
-                })
                 .FirstOrDefaultAsync()
                 .ToTask();
 
@@ -247,11 +252,71 @@ namespace Library.Tests.Message
             Assert.Equal(expected, actual.Payload);
         }
 
+        [Fact]
+        public void Handle_PayloadMessageWhenColdCache_Caches()
+        {
+            // Arrange
+            var NaiveHeaderCache = this.CreateNaiveHeaderCache();
+
+            var broadcastId = Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541");
+            SetupPayloadMessage(broadcastId,
+                new byte[]{16,16,99},
+                0,
+                0);
+            IObservable<IReceivedMessage> messagesObservable = new BehaviorSubject<IReceivedMessage>(mockMessage.Object);
+            
+            object emptyCache = null;
+            mockMemoryCache
+                .Setup(mmc => mmc.TryGetValue(It.IsAny<BroadcastCacheKey>(), out emptyCache))
+                .Returns(false);
+            mockMemoryCache
+                .Setup(mmc => mmc.CreateEntry(It.IsAny<BroadcastCacheKey>()))
+                .Returns(mockBroadcastCacheEntry.Object);
+            
+            mockMemoryCache
+                .Setup(mmc => mmc.TryGetValue(It.IsAny<PayloadQueueCacheKey>(), out emptyCache))
+                .Returns(false);
+            mockMemoryCache
+                .Setup(mmc => mmc.CreateEntry(It.IsAny<PayloadQueueCacheKey>()))
+                .Returns(mockPayloadCacheEntry.Object);
+
+            mockPayloadCacheEntry
+                .SetupSet(mce => mce.Value =It.IsAny<PayloadQueueCacheKey>());
+            mockPayloadCacheEntry
+                .Setup(mce=>mce.Dispose())
+                .Verifiable();
+
+            mockBroadcastCacheEntry
+                .SetupSet(mce => mce.Value =It.IsAny<BroadcastCacheKey>());
+            mockBroadcastCacheEntry
+                .Setup(mce=>mce.Dispose())
+                .Verifiable();
+
+            messageCacheConfig
+                .SetupGet(mcc => mcc.ChunkPayloadCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+            mockBroadcastCacheEntry
+                .SetupSet(mce=>mce.SlidingExpiration = It.IsAny<TimeSpan?>())
+                .Verifiable();
+            mockPayloadCacheEntry
+                .SetupSet(mce=>mce.SlidingExpiration = It.IsAny<TimeSpan?>())
+                .Verifiable();
+
+            // Act
+            NaiveHeaderCache.Handle(
+                messagesObservable);
+
+            // Assert
+            mockMemoryCache
+                .Verify(mmc => mmc.CreateEntry(It.Is<PayloadQueueCacheKey>(bck=>bck.BroadCastId == broadcastId)), 
+                    Times.Once);
+        }
+
         private void SetupMockCacheEntry()
         {
-            mockCacheEntry
+            mockBroadcastCacheEntry
                 .SetupSet(mce => mce.Value =It.IsAny<object>());
-            mockCacheEntry
+            mockBroadcastCacheEntry
                 .Setup(mce=>mce.Dispose())
                 .Verifiable();
         }
@@ -259,15 +324,12 @@ namespace Library.Tests.Message
         private void SetupGetOrCreateCache()
         {
             object allreadyCached = null;
-            messageCacheConfig
-                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
-                .Returns(TimeSpan.MaxValue);
             mockMemoryCache
                 .Setup(mmc => mmc.TryGetValue(It.IsAny<object>(), out allreadyCached))
                 .Returns(allreadyCached != null);
             mockMemoryCache
                 .Setup(mmc => mmc.CreateEntry(It.IsAny<object>()))
-                .Returns(mockCacheEntry.Object);
+                .Returns(mockBroadcastCacheEntry.Object);
             SetupMockCacheEntry();
         }
 
@@ -279,6 +341,37 @@ namespace Library.Tests.Message
             mockMessage
                 .SetupGet(mm => mm.BroadcastHeader)
                 .Returns(mockBroadcastHeader.Object);
+            mockMessage
+                .SetupGet(mm => mm.FileHeader)
+                .Returns((IFileHeader)null);
+        }
+
+        private void SetupPayloadMessage(Guid broadcastId,
+            byte[] payload,
+            BigInteger? payloadIndex = null,
+            BigInteger? chunkIndex = null)
+        {
+            mockPayloadMessage
+                .SetupGet(mpm => mpm.BroadcastId)
+                .Returns(broadcastId);
+            mockPayloadMessage
+                .SetupGet(mpm => mpm.Payload)
+                .Returns(payload);
+            mockPayloadMessage
+                .When(()=>payloadIndex !=null)
+                .SetupGet(mpm => mpm.PayloadIndex)
+                .Returns(payloadIndex.Value);
+            mockPayloadMessage
+                .When(()=>chunkIndex !=null)
+                .SetupGet(mpm => mpm.ChunkIndex)
+                .Returns(chunkIndex.Value);
+
+            mockMessage
+                .SetupGet(mm => mm.BroadcastHeader)
+                .Returns((IBroadcastHeader)null);
+            mockMessage
+                .SetupGet(mm => mm.ChunkHeader)
+                .Returns((IChunkHeader)null);
             mockMessage
                 .SetupGet(mm => mm.FileHeader)
                 .Returns((IFileHeader)null);

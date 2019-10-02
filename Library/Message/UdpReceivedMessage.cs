@@ -1,4 +1,3 @@
-using System;
 using System.Net.Sockets;
 
 namespace Library.Message
@@ -15,11 +14,5 @@ namespace Library.Message
             SenderId = udpReceiveResult.RemoteEndPoint.ToString();
         }
         public string SenderId { get; }
-    }
-
-    public interface IHeaderCache
-    {
-        void Handle(IObservable<IReceivedMessage> messagesObservable);
-        IObservable<ICachedMessage> CachedObservable { get; }
     }
 }

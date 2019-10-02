@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -7,13 +6,13 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Library.Message
 {
-    public class NaiveHeaderCache : IHeaderCache
+    public class NaiveMessageCache : IMessageCache
     {
         private readonly IMemoryCache _memoryCache;
         private readonly IMessageCacheConfig _messageCacheConfig;
         private readonly Subject<ICachedMessage> _cachedMessageSubject;
 
-        public NaiveHeaderCache(IMemoryCache memoryCache,
+        public NaiveMessageCache(IMemoryCache memoryCache,
             IMessageCacheConfig messageCacheConfig)
         {
             _memoryCache = memoryCache;

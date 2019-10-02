@@ -20,10 +20,6 @@ namespace Library.Message
 
         public override int GetHashCode()
         {
-            //const int magicHash1 = 17;
-            //const int magicHash2 = 31;
-            //int hash = magicHash1;
-            //hash = hash * magicHash2 + BroadCastId.GetHashCode();
             return BroadCastId.GetHashCode();
         }
     }
