@@ -24,7 +24,7 @@ namespace Library.Message
             CachedObservable = _cachedMessageSubject.AsObservable();
         }
 
-        public void Handle(IObservable<IFileReadyMessage> observable)
+        public void HandleFileReady(IObservable<IFileReadyMessage> observable)
         {
             observable
                 .Subscribe(fileReadyMessage =>
@@ -53,64 +53,36 @@ namespace Library.Message
                 });
         }
 
-        public void Handle(IObservable<IPayloadMessage> observable)
+        public void HandlePayload(IObservable<IPayloadMessage> observable)
         {
-            throw new NotImplementedException();
-            //observable
-            //    .Subscribe(m =>
-            //    {
-            //        var broadcastId = m.BroadcastHeader?.BroadcastId ??
-            //                          m.ChunkHeader?.BroadcastId ??
-            //                          m.FileHeader?.BroadcastId ??
-            //                          m.PayloadMessage.BroadcastId;
-            //        var cacheValue = _memoryCache.GetOrCreate(new BroadcastCacheKey(broadcastId),
-            //            cacheEntry =>
-            //            {
-            //                cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
-            //                return new BroadcastCacheValue(broadcastId)
-            //                {
-            //                    FileName = m.FileHeader.FileName
-            //                };
-            //            });
-            //        //if (string.IsNullOrEmpty(cacheValue.FileName) &&
-            //        // m.PayloadMessage != null)
-            //        //{
-            //        //    var payloadQueue = _memoryCache.GetOrCreate(GetPayloadQueueKey(broadcastId), cacheEntry =>
-            //        //    {
-            //        //        cacheEntry.SlidingExpiration = _messageCacheConfig.HeaderlessPayloadExpiration
-            //        //        var newQueue = new ConcurrentQueue<IPayloadMessage>();
-            //        //        return newQueue;
-            //        //    });
-            //        //    payloadQueue.Enqueue(m.PayloadMessage);
-            //        //}
-
-            //        if(!string.IsNullOrEmpty(cacheValue.FileName))
-            //        {
-            //            //if (_memoryCache.TryGetValue(GetPayloadQueueKey(broadcastId), out ConcurrentQueue<IPayloadMessage> payloadQueue))
-            //            //{
-            //            //    while (payloadQueue.TryDequeue(out var payloadMessage))
-            //            //    {
-            //            //        _cachedMessageSubject
-            //            //            .OnNext(new CachedMessage(payloadMessage.BroadcastId,
-            //            //                payloadMessage.ChunkIndex,
-            //            //                payloadMessage.PayloadIndex,
-            //            //                payloadMessage.Payload,
-            //            //                cacheValue.FileName,
-            //            //                BigInteger.Zero));
-            //            //    } 
-            //            //}
-            //            if (m.PayloadMessage != null)
-            //            {
-            //                _cachedMessageSubject
-            //                    .OnNext(new CachedMessage(m.PayloadMessage.BroadcastId,
-            //                        m.PayloadMessage.ChunkIndex,
-            //                        m.PayloadMessage.PayloadIndex,
-            //                        m.PayloadMessage.Payload,
-            //                        cacheValue.FileName,
-            //                        BigInteger.Zero));
-            //            }
-            //        }
-            //    });
+            observable
+                .Subscribe(payloadMessage =>
+                {
+                    const string changeThisLater = "file name";
+                    if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, changeThisLater),
+                        out var fileReadyObject))
+                    {
+                        var fileReadyMessage = (IFileReadyMessage) fileReadyObject;
+                        _cachedMessageSubject
+                            .OnNext(new CachedMessage(fileReadyMessage.BroadcastId,
+                                payloadMessage.ChunkIndex,
+                                payloadMessage.PayloadIndex,
+                                payloadMessage.Payload,
+                                fileReadyMessage.FileName,
+                                1));
+                    }
+                    else
+                    {
+                        var cachedQueue = _memoryCache.GetOrCreate(
+                            new PayloadCacheKey(payloadMessage.BroadcastId, payloadMessage.ChunkIndex),
+                            cacheEntry =>
+                            {
+                                cacheEntry.SlidingExpiration = _messageCacheConfig.ChunkPayloadCacheExpiration;
+                                return new ConcurrentQueue<IPayloadMessage>();
+                            });
+                        cachedQueue.Enqueue(payloadMessage);
+                    }
+                });
         }
 
         public IObservable<ICachedMessage> CachedObservable { get; }

@@ -4,8 +4,8 @@ namespace Library.Message
 {
     public interface IPayloadCache
     {
-        void Handle(IObservable<IFileReadyMessage> observable);
-        void Handle(IObservable<IPayloadMessage> observable);
+        void HandleFileReady(IObservable<IFileReadyMessage> observable);
+        void HandlePayload(IObservable<IPayloadMessage> observable);
         IObservable<ICachedMessage> CachedObservable { get; }
     }
 }

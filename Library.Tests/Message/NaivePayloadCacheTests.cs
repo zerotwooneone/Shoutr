@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace Library.Tests.Message
 
         public void Dispose()
         {
-            this.mockRepository.VerifyAll();
+            //mockRepository.VerifyAll();
         }
 
         private NaivePayloadCache CreateNaivePayloadCache()
@@ -45,7 +46,7 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public async Task Handle_FileReadyWhenPayloadCached_EmitsPayload()
+        public async Task HandleFileReady_WhenPayloadCached_EmitsPayload()
         {
             // Arrange
             var naivePayloadCache = this.CreateNaivePayloadCache();
@@ -78,7 +79,7 @@ namespace Library.Tests.Message
                 .ToTask();
 
             // Act
-            naivePayloadCache.Handle(
+            naivePayloadCache.HandleFileReady(
                 observable);
 
             // Assert
@@ -86,7 +87,7 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public async Task Handle_FileReadyWhenPayloadCached_EmitsFilename()
+        public async Task HandleFileReady_WhenPayloadCached_EmitsFilename()
         {
             // Arrange
             var naivePayloadCache = this.CreateNaivePayloadCache();
@@ -119,11 +120,78 @@ namespace Library.Tests.Message
                 .ToTask();
 
             // Act
-            naivePayloadCache.Handle(
+            naivePayloadCache.HandleFileReady(
                 observable);
 
             // Assert
             Assert.Equal(expected, (await actual).FileName);
+        }
+
+        [Fact]
+        public async Task HandlePayload_WhenFileReady_EmitsPayload()
+        {
+            // Arrange
+            var naivePayloadCache = this.CreateNaivePayloadCache();
+            Guid broadcastId = Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541");
+            var expected = new byte[]{16,16,99};
+            var observable = new BehaviorSubject<IPayloadMessage>(new PayloadMessage(broadcastId, 0, expected, 0));
+
+            var fileReadyObject = (object) new FileReadyMessage(broadcastId, "file name", 0);
+            mockMemoryCache
+                .Setup(mc => mc.TryGetValue((object)It.IsAny<NaivePayloadCache.FileReadyCacheKey>(), out fileReadyObject)) 
+                .Returns(true);
+            
+            var actual = naivePayloadCache
+                .CachedObservable
+                .FirstOrDefaultAsync()
+                .ToTask();
+
+            // Act
+            naivePayloadCache.HandlePayload(
+                observable);
+
+            // Assert
+            Assert.Equal(expected, (await actual).Payload);
+        }
+
+        [Fact]
+        public async Task HandlePayload_WhenCacheCold_CachePayload()
+        {
+            // Arrange
+            var naivePayloadCache = this.CreateNaivePayloadCache();
+            Guid broadcastId = Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541");
+            var expected = new byte[]{16,16,99};
+            var observable = new BehaviorSubject<IPayloadMessage>(new PayloadMessage(broadcastId, 0, expected, 0));
+
+            var fileReadyObject = (object) null;
+            mockMemoryCache
+                .Setup(mc => mc.TryGetValue((object)It.IsAny<NaivePayloadCache.FileReadyCacheKey>(), out fileReadyObject)) 
+                .Returns(false);
+
+            mockMemoryCache
+                .SetupGetOrCreate<NaivePayloadCache.PayloadCacheKey, ConcurrentQueue<IPayloadMessage>>(_payloadCacheEntry);
+
+            mockMessageCacheConfig
+                .SetupGet(mcc => mcc.ChunkPayloadCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+
+            _payloadCacheEntry
+                .SetupSet(pce => pce.SlidingExpiration = It.IsAny<TimeSpan?>())
+                .Verifiable();
+
+            //this is a dirty hack to get access to the queue. Improve this with dependency injection
+            ConcurrentQueue<IPayloadMessage> queue = null;
+            _payloadCacheEntry
+                .SetupSet(pce=>pce.Value = It.IsAny<ConcurrentQueue<IPayloadMessage>>())
+                .Callback((object q)=>queue = (ConcurrentQueue<IPayloadMessage>)q);
+
+            // Act
+            naivePayloadCache.HandlePayload(
+                observable);
+
+            // Assert
+            var actual = queue.First();
+            Assert.Equal(expected, actual.Payload);
         }
     }
 }
