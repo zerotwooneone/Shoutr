@@ -12,6 +12,8 @@ namespace Library.Message
         private readonly IMemoryCache _memoryCache;
         private readonly IMessageCacheConfig _messageCacheConfig;
         private readonly Subject<ICachedMessage> _cachedMessageSubject;
+        private const int chunkIndex = 0; //we are going to implement chunks later
+        private const string fileNameKey = "file name"; //we are going to support multiple files-per-broadcast later
 
         public NaivePayloadCache(IMemoryCache memoryCache,
             IMessageCacheConfig messageCacheConfig)
@@ -30,20 +32,20 @@ namespace Library.Message
                 .Subscribe(fileReadyMessage =>
                 {
                     _memoryCache.GetOrCreate(
-                        new FileReadyCacheKey(fileReadyMessage.BroadcastId, fileReadyMessage.FileName),
+                        new FileReadyCacheKey(fileReadyMessage.BroadcastId, fileNameKey),
                         cacheEntry =>
                         {
                             cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
                             return fileReadyMessage;
                         });
-                    if (_memoryCache.TryGetValue(new PayloadCacheKey(fileReadyMessage.BroadcastId, 0),
+                    if (_memoryCache.TryGetValue(new PayloadCacheKey(fileReadyMessage.BroadcastId, chunkIndex),
                         out object cachedObject))
                     {
                         var queue = (ConcurrentQueue<IPayloadMessage>) cachedObject;
                         while (queue.TryDequeue(out var payloadMessage))
                         {
                             _cachedMessageSubject.OnNext(new CachedMessage(fileReadyMessage.BroadcastId, 
-                                payloadMessage.ChunkIndex, 
+                                chunkIndex, 
                                 payloadMessage.PayloadIndex,
                                 payloadMessage.Payload, 
                                 fileReadyMessage.FileName,
@@ -58,8 +60,7 @@ namespace Library.Message
             observable
                 .Subscribe(payloadMessage =>
                 {
-                    const string changeThisLater = "file name";
-                    if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, changeThisLater),
+                    if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, fileNameKey),
                         out var fileReadyObject))
                     {
                         var fileReadyMessage = (IFileReadyMessage) fileReadyObject;
@@ -74,7 +75,7 @@ namespace Library.Message
                     else
                     {
                         var cachedQueue = _memoryCache.GetOrCreate(
-                            new PayloadCacheKey(payloadMessage.BroadcastId, payloadMessage.ChunkIndex),
+                            new PayloadCacheKey(payloadMessage.BroadcastId, chunkIndex),
                             cacheEntry =>
                             {
                                 cacheEntry.SlidingExpiration = _messageCacheConfig.ChunkPayloadCacheExpiration;
