@@ -22,7 +22,7 @@ namespace Library.Message
             FileReadyObservable = _fileReadySubject.AsObservable();
         }
 
-        public void Handle(IObservable<IBroadcastHeader> observable)
+        public void HandleBroadcastHeader(IObservable<IBroadcastHeader> observable)
         {
             //observable
             //    .Subscribe(m =>
@@ -38,12 +38,12 @@ namespace Library.Message
             throw new NotImplementedException();
         }
 
-        public void Handle(IObservable<IChunkHeader> observable)
+        public void HandleChunkHeader(IObservable<IChunkHeader> observable)
         {
             throw new NotImplementedException();
         }
 
-        public void Handle(IObservable<IFileHeader> observable)
+        public void HandleFileHeader(IObservable<IFileHeader> observable)
         {
             observable
                 .Subscribe(m =>

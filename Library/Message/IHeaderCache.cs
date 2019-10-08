@@ -4,9 +4,9 @@ namespace Library.Message
 {
     public interface IHeaderCache
     {
-        void Handle(IObservable<IBroadcastHeader> observable);
-        void Handle(IObservable<IChunkHeader> observable);
-        void Handle(IObservable<IFileHeader> observable);
+        void HandleBroadcastHeader(IObservable<IBroadcastHeader> observable);
+        void HandleChunkHeader(IObservable<IChunkHeader> observable);
+        void HandleFileHeader(IObservable<IFileHeader> observable);
         IObservable<IFileReadyMessage> FileReadyObservable { get; }
     }
 }

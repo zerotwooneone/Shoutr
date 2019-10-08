@@ -48,14 +48,14 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public void Handle_BroadcastSmoke_True()
+        public void HandleBroadcastHeader_Smoke_True()
         {
             // Arrange
             var naiveHeaderCache = this.CreateNaiveHeaderCache();
             var observable = new Subject<IBroadcastHeader>();
 
             // Act
-            naiveHeaderCache.Handle(
+            naiveHeaderCache.HandleBroadcastHeader(
                 observable);
 
             // Assert
@@ -63,14 +63,14 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public void Handle_ChunkSmoke_True()
+        public void HandleChunkHeader_Smoke_True()
         {
             // Arrange
             var naiveHeaderCache = this.CreateNaiveHeaderCache();
             var observable = new Subject<IChunkHeader>();
 
             // Act
-            naiveHeaderCache.Handle(
+            naiveHeaderCache.HandleChunkHeader(
                 observable);
 
             // Assert
@@ -78,7 +78,7 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public async Task Handle_FileHeaderWhenCacheCold_EmitsFilenameReady()
+        public async Task HandleFileHeader_WhenCacheCold_EmitsFilenameReady()
         {
             // Arrange
             var naiveHeaderCache = this.CreateNaiveHeaderCache();
@@ -109,7 +109,7 @@ namespace Library.Tests.Message
                 .ToTask();
 
             // Act
-            naiveHeaderCache.Handle(
+            naiveHeaderCache.HandleFileHeader(
                     observable);
             
             // Assert
