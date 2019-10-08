@@ -1,91 +1,29 @@
 using System;
-using System.Numerics;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using Microsoft.Extensions.Caching.Memory;
+using Library.Listen;
 
 namespace Library.Message
 {
     public class NaiveMessageCache : IMessageCache
     {
-        private readonly IMemoryCache _memoryCache;
-        private readonly IMessageCacheConfig _messageCacheConfig;
-        private readonly Subject<ICachedMessage> _cachedMessageSubject;
+        private readonly IHeaderCache _headerCache;
+        private readonly IPayloadCache _payloadCache;
 
-        public NaiveMessageCache(IMemoryCache memoryCache,
-            IMessageCacheConfig messageCacheConfig)
+        public NaiveMessageCache(IHeaderCache headerCache,
+            IPayloadCache payloadCache)
         {
-            _memoryCache = memoryCache;
-            _messageCacheConfig = messageCacheConfig;
-
-            
-            _cachedMessageSubject = new Subject<ICachedMessage>();
-            CachedObservable = _cachedMessageSubject.AsObservable();
+            _headerCache = headerCache;
+            _payloadCache = payloadCache;
         }
         public void Handle(IObservable<IReceivedMessage> messagesObservable)
         {
-            messagesObservable
-                .Subscribe(m =>
-                {
-                    var broadcastId = m.BroadcastHeader?.BroadcastId ??
-                                      m.ChunkHeader?.BroadcastId ??
-                                      m.FileHeader?.BroadcastId ??
-                                      m.PayloadMessage.BroadcastId;
-                    var cacheValue = _memoryCache.GetOrCreate(new BroadcastCacheKey(broadcastId),
-                        cacheEntry =>
-                        {
-                            cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
-                            return new BroadcastCacheValue(broadcastId)
-                            {
-                                FileName = m.FileHeader?.FileName
-                            };
-                        });
-                    //if (string.IsNullOrEmpty(cacheValue.FileName) &&
-                    // m.PayloadMessage != null)
-                    //{
-                    //    var payloadQueue = _memoryCache.GetOrCreate(GetPayloadQueueKey(broadcastId), cacheEntry =>
-                    //    {
-                    //        cacheEntry.SlidingExpiration = _messageCacheConfig.HeaderlessPayloadExpiration
-                    //        var newQueue = new ConcurrentQueue<IPayloadMessage>();
-                    //        return newQueue;
-                    //    });
-                    //    payloadQueue.Enqueue(m.PayloadMessage);
-                    //}
+            _headerCache.HandleBroadcastHeader(messagesObservable.GetHeaderObservable());
+            _headerCache.HandleChunkHeader(messagesObservable.GetChunkObservable());
+            _headerCache.HandleFileHeader(messagesObservable.GetFileObservable());
 
-                    if(!string.IsNullOrEmpty(cacheValue.FileName))
-                    {
-                        //if (_memoryCache.TryGetValue(GetPayloadQueueKey(broadcastId), out ConcurrentQueue<IPayloadMessage> payloadQueue))
-                        //{
-                        //    while (payloadQueue.TryDequeue(out var payloadMessage))
-                        //    {
-                        //        _cachedMessageSubject
-                        //            .OnNext(new CachedMessage(payloadMessage.BroadcastId,
-                        //                payloadMessage.ChunkIndex,
-                        //                payloadMessage.PayloadIndex,
-                        //                payloadMessage.Payload,
-                        //                cacheValue.FileName,
-                        //                BigInteger.Zero));
-                        //    } 
-                        //}
-                        if (m.PayloadMessage != null)
-                        {
-                            _cachedMessageSubject
-                                .OnNext(new CachedMessage(m.PayloadMessage.BroadcastId,
-                                    m.PayloadMessage.ChunkIndex,
-                                    m.PayloadMessage.PayloadIndex,
-                                    m.PayloadMessage.Payload,
-                                    cacheValue.FileName,
-                                    BigInteger.Zero));
-                        }
-                    }
-                });
+            _payloadCache.HandlePayload(messagesObservable.GetPayloadObservable());
+            _payloadCache.HandleFileReady(_headerCache.FileReadyObservable);
         }
 
-        private static string GetPayloadQueueKey(Guid broadcastId)
-        {
-            return $"{broadcastId} Payloads";
-        }
-
-        public IObservable<ICachedMessage> CachedObservable { get; }
+        public IObservable<ICachedMessage> CachedObservable => _payloadCache.CachedObservable;
     }
 }
