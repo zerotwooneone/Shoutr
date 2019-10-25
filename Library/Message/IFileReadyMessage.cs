@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 
 namespace Library.Message
 {
@@ -7,6 +6,6 @@ namespace Library.Message
     {
         Guid BroadcastId { get; }
         string FileName { get; }
-        BigInteger? ChunkIndex { get; }
+        long ChunkSizeInBytes { get; }
     }
 }

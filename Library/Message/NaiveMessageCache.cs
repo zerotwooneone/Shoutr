@@ -20,7 +20,8 @@ namespace Library.Message
             _headerCache.HandleChunkHeader(messagesObservable.GetChunkObservable());
             _headerCache.HandleFileHeader(messagesObservable.GetFileObservable());
 
-            _payloadCache.HandlePayload(messagesObservable.GetPayloadObservable());
+            _payloadCache.HandlePayload(messagesObservable.GetPayloadObservable(),
+                _headerCache.GetFileName);
             _payloadCache.HandleFileReady(_headerCache.FileReadyObservable);
         }
 

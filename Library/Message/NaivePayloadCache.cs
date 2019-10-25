@@ -13,7 +13,6 @@ namespace Library.Message
         private readonly IMessageCacheConfig _messageCacheConfig;
         private readonly Subject<ICachedMessage> _cachedMessageSubject;
         private const int chunkIndex = 0; //we are going to implement chunks later
-        private const string fileNameKey = "file name"; //we are going to support multiple files-per-broadcast later
 
         public NaivePayloadCache(IMemoryCache memoryCache,
             IMessageCacheConfig messageCacheConfig)
@@ -32,7 +31,7 @@ namespace Library.Message
                 .Subscribe(fileReadyMessage =>
                 {
                     _memoryCache.GetOrCreate(
-                        new FileReadyCacheKey(fileReadyMessage.BroadcastId, fileNameKey),
+                        new FileReadyCacheKey(fileReadyMessage.BroadcastId, fileReadyMessage.FileName),
                         cacheEntry =>
                         {
                             cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
@@ -55,12 +54,14 @@ namespace Library.Message
                 });
         }
 
-        public void HandlePayload(IObservable<IPayloadMessage> observable)
+        public void HandlePayload(IObservable<IPayloadMessage> observable, 
+            Func<Guid, BigInteger, BigInteger, string> getFileName)
         {
             observable
                 .Subscribe(payloadMessage =>
                 {
-                    if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, fileNameKey),
+                    var fileName = getFileName(payloadMessage.BroadcastId, payloadMessage.ChunkIndex, payloadMessage.PayloadIndex);
+                    if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, fileName),
                         out var fileReadyObject))
                     {
                         var fileReadyMessage = (IFileReadyMessage) fileReadyObject;

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 
 namespace Library.Message
 {
@@ -8,5 +9,6 @@ namespace Library.Message
         void HandleChunkHeader(IObservable<IChunkHeader> observable);
         void HandleFileHeader(IObservable<IFileHeader> observable);
         IObservable<IFileReadyMessage> FileReadyObservable { get; }
+        string GetFileName(Guid broadcastId, BigInteger chunkIndex, BigInteger payloadIndex);
     }
 }

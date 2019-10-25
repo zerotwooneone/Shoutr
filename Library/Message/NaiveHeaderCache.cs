@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.Extensions.Caching.Memory;
@@ -24,23 +25,12 @@ namespace Library.Message
 
         public void HandleBroadcastHeader(IObservable<IBroadcastHeader> observable)
         {
-            //observable
-            //    .Subscribe(m =>
-            //    {
-            //        var broadcastId = m.BroadcastId;
-            //        var cacheValue = _memoryCache.GetOrCreate(new HeaderCacheKey(broadcastId),
-            //            cacheEntry =>
-            //            {
-            //                cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
-            //                return new HeaderCacheValue(broadcastId);
-            //            });
-            //    });
-            throw new NotImplementedException();
+            return; //this is intentionally left blank in this implementation
         }
 
         public void HandleChunkHeader(IObservable<IChunkHeader> observable)
         {
-            throw new NotImplementedException();
+            return; //this is intentionally left blank in this implementation
         }
 
         public void HandleFileHeader(IObservable<IFileHeader> observable)
@@ -61,10 +51,18 @@ namespace Library.Message
                     _fileReadySubject
                         .OnNext(new FileReadyMessage(broadcastId,
                             m.FileName,
-                            null));
+                            0));
                 });
         }
 
+        public string GetFileName(Guid broadcastId, BigInteger chunkIndex, BigInteger payloadIndex)
+        {
+            if(!_memoryCache.TryGetValue<HeaderCacheValue>(new HeaderCacheKey(broadcastId), out var headerCacheValue))
+            {
+                return null;
+            }
+            return string.IsNullOrEmpty(headerCacheValue.FileName) ? null : headerCacheValue.FileName;
+        }
 
         public IObservable<IFileReadyMessage> FileReadyObservable { get; }
 

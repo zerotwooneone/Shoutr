@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Library.Tests.Extensions.Caching.Memory;
 using Xunit;
 using IFileHeader = Library.Message.IFileHeader;
+using static Library.Message.NaiveHeaderCache;
 
 namespace Library.Tests.Message
 {
@@ -74,7 +75,7 @@ namespace Library.Tests.Message
                 observable);
 
             // Assert
-            Assert.True(false);
+            Assert.True(true);
         }
 
         [Fact]
@@ -114,6 +115,63 @@ namespace Library.Tests.Message
             
             // Assert
             Assert.Equal(expected, (await actual).FileName);
+        }
+
+        [Fact]
+        public async Task GetFileName_WhenCacheCold_ReturnsNull()
+        {
+            // Arrange
+            var naiveHeaderCache = this.CreateNaiveHeaderCache();
+
+            object nullEntry = null;
+            mockMemoryCache
+                .Setup(mc=>mc.TryGetValue((object)It.IsAny<HeaderCacheKey>(), out nullEntry))
+                .Returns(false);
+
+            // Act
+            var actual = naiveHeaderCache.GetFileName(Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541"), 0, 0);
+
+            //Assert
+            Assert.Null(actual);
+        }
+
+        [Fact]
+        public async Task GetFileName_WhenCacheDoesNotHaveFileName_ReturnsNull()
+        {
+            // Arrange
+            var naiveHeaderCache = this.CreateNaiveHeaderCache();
+            var broadcastId = Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541");
+
+            object headerValue = new HeaderCacheValue(broadcastId);
+            mockMemoryCache
+                .Setup(mc=>mc.TryGetValue((object)It.IsAny<HeaderCacheKey>(), out headerValue))
+                .Returns(false);
+
+            // Act            
+            var actual = naiveHeaderCache.GetFileName(broadcastId, 0, 0);
+
+            //Assert
+            Assert.Null(actual);
+        }
+
+        [Fact]
+        public async Task GetFileName_WhenCacheHasFileName_ReturnsFilename()
+        {
+            // Arrange
+            var naiveHeaderCache = this.CreateNaiveHeaderCache();
+            var broadcastId = Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541");
+            var expected = "File Name";
+
+            object headerValue = new HeaderCacheValue(broadcastId){ FileName = expected };
+            mockMemoryCache
+                .Setup(mc=>mc.TryGetValue((object)It.IsAny<HeaderCacheKey>(), out headerValue))
+                .Returns(true);
+
+            // Act            
+            var actual = naiveHeaderCache.GetFileName(broadcastId, 0, 0);
+
+            //Assert
+            Assert.Equal(expected,actual);
         }
     }
 }

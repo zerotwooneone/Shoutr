@@ -10,6 +10,7 @@ using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Xunit;
+using System.Numerics;
 
 namespace Library.Tests.Message
 {
@@ -19,13 +20,15 @@ namespace Library.Tests.Message
 
         private MemoryCache _memoryCache;
         private Mock<IMessageCacheConfig> mockMessageCacheConfig;
+        private readonly Mock<Func<Guid, BigInteger, BigInteger, string>> mockGetFileName;
 
         public NaivePayloadCacheTests()
         {
             this.mockRepository = new MockRepository(MockBehavior.Strict);
 
             _memoryCache = new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(new MemoryCacheOptions()));
-            this.mockMessageCacheConfig = this.mockRepository.Create<IMessageCacheConfig>();
+            this.mockMessageCacheConfig = this.mockRepository.Create<IMessageCacheConfig>();            
+            this.mockGetFileName = this.mockRepository.Create<Func<Guid, BigInteger, BigInteger, string>>();
         }
 
         public void Dispose()
@@ -116,6 +119,10 @@ namespace Library.Tests.Message
             _memoryCache
                 .Set(new NaivePayloadCache.FileReadyCacheKey(broadcastId, "file name"), 
                     new FileReadyMessage(broadcastId, "file name", 0));
+
+            mockGetFileName
+                .Setup(gf=>gf(It.IsAny<Guid>(), It.IsAny<BigInteger>(), It.IsAny<BigInteger>()))
+                .Returns("file name");
             
             var actual = naivePayloadCache
                 .CachedObservable
@@ -124,7 +131,8 @@ namespace Library.Tests.Message
 
             // Act
             naivePayloadCache.HandlePayload(
-                observable);
+                observable,
+                mockGetFileName.Object);
 
             // Assert
             Assert.Equal(expected, (await actual).Payload);
@@ -142,10 +150,15 @@ namespace Library.Tests.Message
             mockMessageCacheConfig
                 .SetupGet(mcc => mcc.ChunkPayloadCacheExpiration)
                 .Returns(TimeSpan.MaxValue);
+
+            mockGetFileName
+                .Setup(gf=>gf(It.IsAny<Guid>(), It.IsAny<BigInteger>(), It.IsAny<BigInteger>()))
+                .Returns("file name");
             
             // Act
             naivePayloadCache.HandlePayload(
-                observable);
+                observable,
+                mockGetFileName.Object);
                
             // Assert
             var actual = _memoryCache

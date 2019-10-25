@@ -1,6 +1,7 @@
 using Library.Message;
 using Moq;
 using System;
+using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Xunit;
@@ -13,7 +14,7 @@ namespace Library.Tests.Message
 
         private Mock<IHeaderCache> mockHeaderCache;
         private Mock<IPayloadCache> mockPayloadCache;
-
+        
         public NaiveMessageCacheTests()
         {
             this.mockRepository = new MockRepository(MockBehavior.Strict);
@@ -56,7 +57,8 @@ namespace Library.Tests.Message
                 .Returns(fileReadyObservable);
 
             mockPayloadCache
-                .Setup(pc=>pc.HandlePayload(It.IsAny<IObservable<IPayloadMessage>>()))
+                .Setup(pc=>pc.HandlePayload(It.IsAny<IObservable<IPayloadMessage>>(), 
+                It.IsAny<Func<Guid, BigInteger, BigInteger, string>>()))
                 .Verifiable();
             mockPayloadCache
                 .Setup(pc=>pc.HandleFileReady(It.IsAny<IObservable<IFileReadyMessage>>()))
