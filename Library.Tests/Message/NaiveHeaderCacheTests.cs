@@ -49,18 +49,72 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public void HandleBroadcastHeader_Smoke_True()
+        public void HandleBroadcastHeader_WhenCacheCold_DoesNotEmitFileReady()
         {
             // Arrange
             var naiveHeaderCache = this.CreateNaiveHeaderCache();
-            var observable = new Subject<IBroadcastHeader>();
+            var observable = new BehaviorSubject<IBroadcastHeader>(mockBroadcastHeader.Object);
+
+            mockBroadcastHeader
+                .SetupGet(fh => fh.ChunkSizeInBytes)
+                .Returns(999);
+            mockBroadcastHeader
+                .SetupGet(fh => fh.BroadcastId)
+                .Returns(Guid.Empty);
+
+            mockMemoryCache
+                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry);
+
+            mockCacheEntry
+                .SetupSet(ce=>ce.SlidingExpiration = It.IsAny<TimeSpan?>())
+                .Verifiable();
+            
+            mockMessageCacheConfig
+                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+
+            bool actual = false; 
+            naiveHeaderCache
+                .FileReadyObservable
+                .Subscribe(fr=>actual = true);
 
             // Act
             naiveHeaderCache.HandleBroadcastHeader(
-                observable);
-
+                    observable);
+            
             // Assert
-            Assert.True(true);
+            Assert.False(actual);
+        }
+
+        [Fact]
+        public async Task HandleBroadcastHeader_WhenCached_EmitsFilenameReady()
+        {
+            // Arrange
+            var naiveHeaderCache = this.CreateNaiveHeaderCache();
+            var observable = new BehaviorSubject<IBroadcastHeader>(mockBroadcastHeader.Object);
+
+            const long expected  = 999;
+            mockBroadcastHeader
+                .SetupGet(fh => fh.ChunkSizeInBytes)
+                .Returns(expected);
+            mockBroadcastHeader
+                .SetupGet(fh => fh.BroadcastId)
+                .Returns(Guid.Empty);
+
+            mockMemoryCache
+                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry, new HeaderCacheValue(Guid.Empty){FileName = "file name" });
+            
+            var actual = naiveHeaderCache
+                .FileReadyObservable
+                .FirstOrDefaultAsync()
+                .ToTask();
+
+            // Act
+            naiveHeaderCache.HandleBroadcastHeader(
+                    observable);
+            
+            // Assert
+            Assert.Equal(expected, (await actual).ChunkSizeInBytes);
         }
 
         [Fact]
@@ -79,7 +133,45 @@ namespace Library.Tests.Message
         }
 
         [Fact]
-        public async Task HandleFileHeader_WhenCacheCold_EmitsFilenameReady()
+        public void HandleFileHeader_WhenCacheCold_DoesNotEmit()
+        {
+            // Arrange
+            var naiveHeaderCache = this.CreateNaiveHeaderCache();
+            var observable = new BehaviorSubject<IFileHeader>(mockFileHeader.Object);
+
+            mockFileHeader
+                .SetupGet(fh => fh.FileName)
+                .Returns("file name");
+            mockFileHeader
+                .SetupGet(fh => fh.BroadcastId)
+                .Returns(Guid.Empty);
+
+            mockMemoryCache
+                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry);
+
+            mockCacheEntry
+                .SetupSet(ce=>ce.SlidingExpiration = It.IsAny<TimeSpan?>())
+                .Verifiable();
+            
+            mockMessageCacheConfig
+                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
+                .Returns(TimeSpan.MaxValue);
+
+            bool actual = false; 
+            naiveHeaderCache
+                .FileReadyObservable
+                .Subscribe(fr=>actual = true);
+
+            // Act
+            naiveHeaderCache.HandleFileHeader(
+                    observable);
+            
+            // Assert
+            Assert.False(actual);
+        }
+
+        [Fact]
+        public async Task HandleFileHeader_WhenCached_EmitsFilenameReady()
         {
             // Arrange
             var naiveHeaderCache = this.CreateNaiveHeaderCache();
@@ -91,19 +183,11 @@ namespace Library.Tests.Message
                 .Returns(expected);
             mockFileHeader
                 .SetupGet(fh => fh.BroadcastId)
-                .Returns(Guid.Parse("58f5022e-0024-4105-a0b8-9c77b0ead541"));
+                .Returns(Guid.Empty);
 
             mockMemoryCache
-                .SetupGetOrCreate<NaiveHeaderCache.HeaderCacheKey, NaiveHeaderCache.HeaderCacheValue>(mockCacheEntry);
-
-            mockCacheEntry
-                .SetupSet(ce=>ce.SlidingExpiration = It.IsAny<TimeSpan?>())
-                .Verifiable();
+                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry, new HeaderCacheValue(Guid.Empty){ChunkSizeInBytes = 999 });
             
-            mockMessageCacheConfig
-                .SetupGet(mcc => mcc.BroadcastCacheExpiration)
-                .Returns(TimeSpan.MaxValue);
-
             var actual = naiveHeaderCache
                 .FileReadyObservable
                 .FirstOrDefaultAsync()

@@ -14,12 +14,12 @@ namespace Library.Tests.Extensions.Caching.Memory
             var existingObject = (object) existingCacheValue;
             memoryCache
                 .Setup(mc => mc.TryGetValue((object)It.IsAny<TKey>(), out existingObject)) 
-                .Returns(tgResult);
-            memoryCache
-                .Setup(mc => mc.CreateEntry(It.IsAny<TKey>()))
-                .Returns(cacheEntry.Object);
+                .Returns(tgResult);           
             if (!tgResult)
             {
+                 memoryCache
+                    .Setup(mc => mc.CreateEntry(It.IsAny<TKey>()))
+                    .Returns(cacheEntry.Object);
                 cacheEntry
                     .SetupSet(ce=>ce.Value = It.IsAny<TValue>())
                     .Verifiable();

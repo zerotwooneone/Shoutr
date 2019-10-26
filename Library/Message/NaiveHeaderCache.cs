@@ -25,7 +25,28 @@ namespace Library.Message
 
         public void HandleBroadcastHeader(IObservable<IBroadcastHeader> observable)
         {
-            return; //this is intentionally left blank in this implementation
+            observable
+                .Subscribe(m =>
+                {
+                    var broadcastId = m.BroadcastId;
+                    var cacheValue = _memoryCache.GetOrCreate(new HeaderCacheKey(broadcastId),
+                        cacheEntry =>
+                        {
+                            cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
+                            return new HeaderCacheValue(broadcastId)
+                            {
+                                ChunkSizeInBytes = m.ChunkSizeInBytes
+                            };
+                        });
+                    if(cacheValue.FileName !=null &&
+                    cacheValue.ChunkSizeInBytes == null)
+                    {
+                        _fileReadySubject
+                        .OnNext(new FileReadyMessage(broadcastId,
+                            cacheValue.FileName,
+                            m.ChunkSizeInBytes));
+                    }                    
+                });
         }
 
         public void HandleChunkHeader(IObservable<IChunkHeader> observable)
@@ -48,10 +69,14 @@ namespace Library.Message
                                 FileName = m.FileName
                             };
                         });
-                    _fileReadySubject
+                    if(cacheValue.FileName == null &&
+                    cacheValue.ChunkSizeInBytes.HasValue)
+                    {
+                        _fileReadySubject
                         .OnNext(new FileReadyMessage(broadcastId,
                             m.FileName,
-                            0));
+                            cacheValue.ChunkSizeInBytes.Value));
+                    }                    
                 });
         }
 
@@ -96,7 +121,8 @@ namespace Library.Message
             }
 
             public Guid BroadCastId { get; }
-            public string FileName { get; set; }
+            public string FileName { get; internal set; }
+            public long? ChunkSizeInBytes { get; internal set; }
         }
     }
 }
