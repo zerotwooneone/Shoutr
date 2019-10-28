@@ -11,7 +11,7 @@ namespace Library.Message
     {
         private readonly IMemoryCache _memoryCache;
         private readonly IMessageCacheConfig _messageCacheConfig;
-        private readonly Subject<ICachedMessage> _cachedMessageSubject;
+        private readonly Subject<IFileWriteRequest> _cachedMessageSubject;
         private const int chunkIndex = 0; //we are going to implement chunks later
 
         public NaivePayloadCache(IMemoryCache memoryCache,
@@ -21,7 +21,7 @@ namespace Library.Message
             _messageCacheConfig = messageCacheConfig;
 
             
-            _cachedMessageSubject = new Subject<ICachedMessage>();
+            _cachedMessageSubject = new Subject<IFileWriteRequest>();
             CachedObservable = _cachedMessageSubject.AsObservable();
         }
 
@@ -43,12 +43,13 @@ namespace Library.Message
                         var queue = (ConcurrentQueue<IPayloadMessage>) cachedObject;
                         while (queue.TryDequeue(out var payloadMessage))
                         {
-                            _cachedMessageSubject.OnNext(new CachedMessage(fileReadyMessage.BroadcastId, 
-                                chunkIndex, 
+                            var maxPayloadSizeInBytes = GetMaxPayloadSizeInBytes(fileReadyMessage);
+                            _cachedMessageSubject.OnNext(new FileWriteRequest(fileReadyMessage.BroadcastId, 
                                 payloadMessage.PayloadIndex,
                                 payloadMessage.Payload, 
                                 fileReadyMessage.FileName,
-                                null));
+                                false,
+                                maxPayloadSizeInBytes));
                         }
                     }
                 });
@@ -64,14 +65,15 @@ namespace Library.Message
                     if (_memoryCache.TryGetValue(new FileReadyCacheKey(payloadMessage.BroadcastId, fileName),
                         out var fileReadyObject))
                     {
-                        var fileReadyMessage = (IFileReadyMessage) fileReadyObject;
+                        var fileReadyMessage = (IFileReadyMessage)fileReadyObject;
+                        var maxPayloadSizeInBytes = GetMaxPayloadSizeInBytes(fileReadyMessage);
                         _cachedMessageSubject
-                            .OnNext(new CachedMessage(fileReadyMessage.BroadcastId,
-                                payloadMessage.ChunkIndex,
+                            .OnNext(new FileWriteRequest(fileReadyMessage.BroadcastId,
                                 payloadMessage.PayloadIndex,
                                 payloadMessage.Payload,
                                 fileReadyMessage.FileName,
-                                1));
+                                false,
+                                maxPayloadSizeInBytes));
                     }
                     else
                     {
@@ -87,7 +89,17 @@ namespace Library.Message
                 });
         }
 
-        public IObservable<ICachedMessage> CachedObservable { get; }
+        /// <summary>
+        /// This is a placeholder until we provide the max payload size in the broadcast header
+        /// </summary>
+        /// <param name="fileReadyMessage"></param>
+        /// <returns></returns>
+        private static long GetMaxPayloadSizeInBytes(IFileReadyMessage fileReadyMessage)
+        {
+            return fileReadyMessage.ChunkSizeInBytes;
+        }
+
+        public IObservable<IFileWriteRequest> CachedObservable { get; }
 
         internal class FileReadyCacheKey
         {

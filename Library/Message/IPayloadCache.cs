@@ -7,6 +7,6 @@ namespace Library.Message
     {
         void HandleFileReady(IObservable<IFileReadyMessage> observable);
         void HandlePayload(IObservable<IPayloadMessage> observable, Func<Guid, BigInteger, BigInteger, string> getFileName);
-        IObservable<ICachedMessage> CachedObservable { get; }
+        IObservable<IFileWriteRequest> CachedObservable { get; }
     }
 }
