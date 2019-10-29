@@ -43,13 +43,9 @@ namespace Library.Message
                         var queue = (ConcurrentQueue<IPayloadMessage>) cachedObject;
                         while (queue.TryDequeue(out var payloadMessage))
                         {
-                            var maxPayloadSizeInBytes = GetMaxPayloadSizeInBytes(fileReadyMessage);
-                            _cachedMessageSubject.OnNext(new FileWriteRequest(fileReadyMessage.BroadcastId, 
-                                payloadMessage.PayloadIndex,
+                            _cachedMessageSubject.OnNext(new FileWriteRequest(GetStartIndex(payloadMessage, fileReadyMessage),
                                 payloadMessage.Payload, 
-                                fileReadyMessage.FileName,
-                                false,
-                                maxPayloadSizeInBytes));
+                                fileReadyMessage.FileName));
                         }
                     }
                 });
@@ -66,14 +62,10 @@ namespace Library.Message
                         out var fileReadyObject))
                     {
                         var fileReadyMessage = (IFileReadyMessage)fileReadyObject;
-                        var maxPayloadSizeInBytes = GetMaxPayloadSizeInBytes(fileReadyMessage);
                         _cachedMessageSubject
-                            .OnNext(new FileWriteRequest(fileReadyMessage.BroadcastId,
-                                payloadMessage.PayloadIndex,
+                            .OnNext(new FileWriteRequest(GetStartIndex(payloadMessage, fileReadyMessage),
                                 payloadMessage.Payload,
-                                fileReadyMessage.FileName,
-                                false,
-                                maxPayloadSizeInBytes));
+                                fileReadyMessage.FileName));
                     }
                     else
                     {
@@ -92,11 +84,12 @@ namespace Library.Message
         /// <summary>
         /// This is a placeholder until we provide the max payload size in the broadcast header
         /// </summary>
+        /// <param name="payloadMessage"></param>
         /// <param name="fileReadyMessage"></param>
         /// <returns></returns>
-        private static long GetMaxPayloadSizeInBytes(IFileReadyMessage fileReadyMessage)
+        private static BigInteger GetStartIndex(IPayloadMessage payloadMessage, IFileReadyMessage fileReadyMessage)
         {
-            return fileReadyMessage.ChunkSizeInBytes;
+            return payloadMessage.PayloadIndex * fileReadyMessage.ChunkSizeInBytes;
         }
 
         public IObservable<IFileWriteRequest> CachedObservable { get; }

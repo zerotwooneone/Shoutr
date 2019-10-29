@@ -5,10 +5,8 @@ namespace Library.Message
 {
     public interface IFileWriteRequest
     {
-        Guid BroadcastId { get; }
-        BigInteger? PayloadIndex { get; }
+        BigInteger StartIndex { get; }
         byte[] Payload { get; }
         string FileName { get; }
-        long MaxPayloadSizeInBytes {get;}
     }
 }

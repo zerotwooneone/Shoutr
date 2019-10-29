@@ -5,26 +5,17 @@ namespace Library.Message
 {
     public class FileWriteRequest : IFileWriteRequest
     {
-        public FileWriteRequest(Guid broadcastId, 
-            BigInteger? payloadIndex, 
+        public FileWriteRequest(BigInteger startIndex, 
             byte[] payload, 
-            string fileName, 
-            bool isLast,
-            long maxPayloadSizeInBytes)
+            string fileName)
         {
-            BroadcastId = broadcastId;
-            PayloadIndex = payloadIndex;
+            StartIndex = startIndex;
             Payload = payload;
-            IsLast = isLast;
             FileName = fileName;
-            MaxPayloadSizeInBytes = maxPayloadSizeInBytes;
         }
         
-        public Guid BroadcastId { get; }
-        public BigInteger? PayloadIndex { get; }
+        public BigInteger StartIndex { get; }
         public byte[] Payload { get; }
-        public bool? IsLast { get; }
         public string FileName { get; }
-        public long MaxPayloadSizeInBytes {get;}
     }
 }
