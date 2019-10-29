@@ -25,6 +25,6 @@ namespace Library.Message
             _payloadCache.HandleFileReady(_headerCache.FileReadyObservable);
         }
 
-        public IObservable<IFileWriteRequest> CachedObservable => _payloadCache.CachedObservable;
+        public IObservable<IFileWriteRequest> FileWriteRequestObservable => _payloadCache.CachedObservable;
     }
 }
