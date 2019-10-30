@@ -49,7 +49,7 @@ namespace Library.Tests.File
         [Fact]
         public void GetBroadcastHeader_ReturnOneByteChunkSize()
         {
-            var actual = _fileMessageService.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkSizeInBytes;
+            var actual = _fileMessageService.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>()).MaxPayloadSizeInBytes;
             const long expected = byteCount;
 
             Assert.Equal(expected, actual);

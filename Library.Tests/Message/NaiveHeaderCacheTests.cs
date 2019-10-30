@@ -56,7 +56,7 @@ namespace Library.Tests.Message
             var observable = new BehaviorSubject<IBroadcastHeader>(mockBroadcastHeader.Object);
 
             mockBroadcastHeader
-                .SetupGet(fh => fh.ChunkSizeInBytes)
+                .SetupGet(fh => fh.MaxPayloadSizeInBytes)
                 .Returns(999);
             mockBroadcastHeader
                 .SetupGet(fh => fh.BroadcastId)
@@ -95,7 +95,7 @@ namespace Library.Tests.Message
 
             const long expected  = 999;
             mockBroadcastHeader
-                .SetupGet(fh => fh.ChunkSizeInBytes)
+                .SetupGet(fh => fh.MaxPayloadSizeInBytes)
                 .Returns(expected);
             mockBroadcastHeader
                 .SetupGet(fh => fh.BroadcastId)
@@ -186,7 +186,7 @@ namespace Library.Tests.Message
                 .Returns(Guid.Empty);
 
             mockMemoryCache
-                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry, new HeaderCacheValue(Guid.Empty){ChunkSizeInBytes = 999 });
+                .SetupGetOrCreate<HeaderCacheKey, HeaderCacheValue>(mockCacheEntry, new HeaderCacheValue(Guid.Empty){MaxPayloadSizeInBytes = 999 });
             
             var actual = naiveHeaderCache
                 .FileReadyObservable

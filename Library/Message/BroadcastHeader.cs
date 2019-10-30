@@ -6,9 +6,9 @@ namespace Library.Message
     {
         public BroadcastHeader(Guid broadcastId, bool? isLast, long chunkSizeInBytes) : base(broadcastId, isLast)
         {
-            ChunkSizeInBytes = chunkSizeInBytes;
+            MaxPayloadSizeInBytes = chunkSizeInBytes;
         }
 
-        public long ChunkSizeInBytes { get; }
+        public long MaxPayloadSizeInBytes { get; }
     }
 }

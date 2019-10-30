@@ -35,7 +35,7 @@ namespace Library.Message
             return new ProtoMessage
             (
                 broadcastId: broadcastHeader.BroadcastId,
-                chunkSizeInBytes: broadcastHeader.ChunkSizeInBytes,
+                maxPayloadSizeInBytes: broadcastHeader.MaxPayloadSizeInBytes,
                 isLast: broadcastHeader.IsLast
             );
         }
@@ -128,7 +128,7 @@ namespace Library.Message
                 {
                     BroadcastHeader = new BroadcastHeader(protoMessage.BroadcastId,
                     protoMessage.IsLast,
-                    protoMessage.ChunkSizeInBytes.Value)
+                    protoMessage.MaxPayloadSizeInBytes.Value)
                 };
             }
         }
@@ -146,7 +146,7 @@ namespace Library.Message
                 payloadIndex: _byteService.GetBytes(payloadIndex),
                 payload: payload,
                 isLast: isLast,
-                chunkSizeInBytes: null, fileName: null, chunkCount: null);
+                maxPayloadSizeInBytes: null, fileName: null, chunkCount: null);
             return Convert(protoMessage);
         }
 
@@ -167,7 +167,7 @@ namespace Library.Message
             [ProtoMember(5)]
             public bool? IsLast { get; set; }
             [ProtoMember(6)]
-            public long? ChunkSizeInBytes { get; set; }
+            public long? MaxPayloadSizeInBytes { get; set; }
             [ProtoMember(7)]
             public string FileName { get; set; }
             [ProtoMember(8)]
@@ -186,7 +186,7 @@ namespace Library.Message
                 byte[] payloadIndex = null,
                  byte[] payload = null,
                 bool? isLast = null,
-                long? chunkSizeInBytes = null,
+                long? maxPayloadSizeInBytes = null,
                 string fileName = null,
                 byte[] chunkCount = null)
             {
@@ -195,7 +195,7 @@ namespace Library.Message
                 PayloadIndex = payloadIndex;
                 Payload = payload;
                 IsLast = isLast.HasValue && isLast.Value;
-                ChunkSizeInBytes = chunkSizeInBytes;
+                MaxPayloadSizeInBytes = maxPayloadSizeInBytes;
                 FileName = fileName;
                 ChunkCountInBytes = chunkCount;
             }

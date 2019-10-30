@@ -35,16 +35,16 @@ namespace Library.Message
                             cacheEntry.SlidingExpiration = _messageCacheConfig.BroadcastCacheExpiration;
                             return new HeaderCacheValue(broadcastId)
                             {
-                                ChunkSizeInBytes = m.ChunkSizeInBytes
+                                MaxPayloadSizeInBytes = m.MaxPayloadSizeInBytes
                             };
                         });
                     if(cacheValue.FileName !=null &&
-                    cacheValue.ChunkSizeInBytes == null)
+                    cacheValue.MaxPayloadSizeInBytes == null)
                     {
                         _fileReadySubject
                         .OnNext(new FileReadyMessage(broadcastId,
                             cacheValue.FileName,
-                            m.ChunkSizeInBytes));
+                            m.MaxPayloadSizeInBytes));
                     }                    
                 });
         }
@@ -70,12 +70,12 @@ namespace Library.Message
                             };
                         });
                     if(cacheValue.FileName == null &&
-                    cacheValue.ChunkSizeInBytes.HasValue)
+                    cacheValue.MaxPayloadSizeInBytes.HasValue)
                     {
                         _fileReadySubject
                         .OnNext(new FileReadyMessage(broadcastId,
                             m.FileName,
-                            cacheValue.ChunkSizeInBytes.Value));
+                            cacheValue.MaxPayloadSizeInBytes.Value));
                     }                    
                 });
         }
@@ -122,7 +122,7 @@ namespace Library.Message
 
             public Guid BroadCastId { get; }
             public string FileName { get; internal set; }
-            public long? ChunkSizeInBytes { get; internal set; }
+            public long? MaxPayloadSizeInBytes { get; internal set; }
         }
     }
 }
