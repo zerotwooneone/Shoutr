@@ -1,5 +1,6 @@
 using Library.Listen;
 using Library.Message;
+using Library.Udp;
 using Moq;
 using System;
 using System.Net;
@@ -64,7 +65,7 @@ namespace Library.Tests.Listen
                 .FirstOrDefaultAsync();
 
             // Assert
-            mockUdpClientFactory.Verify(ucf=>ucf.Create(It.IsAny<IPEndPoint>()), Times.Once);
+            mockUdpClientFactory.Verify(ucf=>ucf.CreateListener(It.IsAny<IPEndPoint>()), Times.Once);
         }
 
         [Fact]
@@ -99,7 +100,7 @@ namespace Library.Tests.Listen
         private void SetupUdpClientFactory()
         {
             mockUdpClientFactory
-                .Setup(ucf => ucf.Create(It.IsAny<IPEndPoint>()))
+                .Setup(ucf => ucf.CreateListener(It.IsAny<IPEndPoint>()))
                 .Returns(_udpListener.Object);
         }
     }

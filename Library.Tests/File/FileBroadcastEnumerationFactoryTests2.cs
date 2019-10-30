@@ -1,17 +1,18 @@
 using Library.File;
 using Library.Message;
 using Moq;
+using System.IO;
 using Xunit;
 
 namespace Library.Tests.File
 {
-    public class FileBroadcastEnumerationFactory_WhenOneByteFile_Should
+    public class FileBroadcastEnumerationFactoryTests2
     {
         private readonly FileBroadcastEnumerationFactory _fileBroadcastEnumerationFactory;
         private readonly Mock<IFileMessageService> _fileMessageService;
         private readonly Mock<IBroadcastMessageConversionService> _mockBroadcastMessageConversionService;
 
-        public FileBroadcastEnumerationFactory_WhenOneByteFile_Should()
+        public FileBroadcastEnumerationFactoryTests2()
         {
             _fileMessageService = new Mock<IFileMessageService>();
             _mockBroadcastMessageConversionService = new Mock<IBroadcastMessageConversionService>();
@@ -19,12 +20,19 @@ namespace Library.Tests.File
         }
 
         [Fact]
-        public void GetEnumeration_NotNull()
+        public void GetEnumeration_WhenOneByteFile_NotNull()
         {
             //act
             var actual = _fileBroadcastEnumerationFactory.GetEnumeration(It.IsAny<string>());
 
             Assert.NotNull(actual);
+        }
+
+        [Fact]
+        public void GetEnumeration_FileNotExists_Throws()
+        {
+            Assert.Throws<FileNotFoundException>(
+                () => _fileBroadcastEnumerationFactory.GetEnumeration(It.IsAny<string>()));
         }
     }
 }

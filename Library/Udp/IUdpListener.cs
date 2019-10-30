@@ -2,9 +2,9 @@
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace Library.Listen
+namespace Library.Udp
 {
-    public interface IUdpListener: IDisposable
+    public interface IUdpListener : IDisposable
     {
         Task<UdpReceiveResult> ReceiveAsync();
     }

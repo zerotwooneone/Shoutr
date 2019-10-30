@@ -2,9 +2,9 @@
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace Library.Listen
+namespace Library.Udp
 {
-    public class UdpClientWrapper : IUdpListener
+    public class UdpClientWrapper : IUdpListener, IUdpBroadcaster
     {
         private readonly UdpClient _udpClient;
 
@@ -23,9 +23,9 @@ namespace Library.Listen
             return _udpClient.ReceiveAsync();
         }
 
-        public void Send(byte[] data, int dataLength, IPEndPoint ipEndPoint)
+        public async Task<int> SendAsync(byte[] data, IPEndPoint ipEndpoint)
         {
-            _udpClient.Send(data, dataLength, ipEndPoint);
+            return await _udpClient.SendAsync(data, data.Length,ipEndpoint);
         }
     }
 }

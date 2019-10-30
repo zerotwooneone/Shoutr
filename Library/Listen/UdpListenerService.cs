@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Linq;
 using Library.Message;
+using Library.Udp;
 
 namespace Library.Listen
 {
@@ -21,7 +22,7 @@ namespace Library.Listen
             _broadcastMessageConversionService = broadcastMessageConversionService;
             IpEndPoint = new IPEndPoint(ipAddress, port);
             _udpReceiveObservable = Observable
-                .Using(()=> _udpClientFactory.Create(IpEndPoint),
+                .Using(()=> _udpClientFactory.CreateListener(IpEndPoint),
                     udpClient=> Observable
                         .FromAsync(udpClient.ReceiveAsync)
                         .Repeat());
