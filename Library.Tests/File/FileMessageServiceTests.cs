@@ -43,11 +43,11 @@ namespace Library.Tests.File
         }
 
         [Fact]
-        public void GetFileHeader_ReturnChunkCountOfOne_WhenOneByteFile()
+        public void GetFileHeader_WhenFirstPayloadIndex_ReturnFirstPayloadIndexOfOne()
         {
-            var actual = _fileMessageService.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>()).ChunkCount;
-            BigInteger expected = 1;
-
+            long expected = 1;
+            var actual = _fileMessageService.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), expected).FirstPayloadIndex;
+            
             Assert.Equal(expected, actual);
         }
 
@@ -108,7 +108,7 @@ namespace Library.Tests.File
         }
 
         [Fact]
-        public void GetFileHeader_ReturnLazyLoadedPayloads_WhenOneByteFile()
+        public void GetPayloadsByChunkIndex_ReturnLazyLoadedPayloads_WhenOneByteFile()
         {
             _fileMessageService
                  .GetPayloadsByChunkIndex(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<BigInteger>());

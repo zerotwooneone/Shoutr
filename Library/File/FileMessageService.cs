@@ -27,10 +27,13 @@ public class FileMessageService: IFileMessageService
         return header;
     }
 
-    public IFileHeader GetFileHeader(string fileName, Guid broadcastId, bool? isLast = null)
+    public IFileHeader GetFileHeader(string fileName, 
+        Guid broadcastId, 
+        IFileMessageConfig fileMessageConfig,
+        long firstPayloadIndex, 
+        bool? isLast = null)
     {
-        BigInteger chunkCount = 1;
-        FileHeader header = new FileHeader(broadcastId, isLast, fileName, chunkCount);
+        FileHeader header = new FileHeader(broadcastId, isLast, fileName, firstPayloadIndex);
         return header;
     }
 

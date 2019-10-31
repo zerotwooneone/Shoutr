@@ -140,6 +140,102 @@ namespace Library.Tests.File
             Assert.True(actual.IsLast);
         }
 
+        [Fact]
+        public async Task GetFileHeaderObservable_NotIsLast_AfterFirstEmission()
+        {
+            // Arrange
+            var factory = this.CreateFactory();
+            string fileName = null;
+
+            mockFileMessageService
+                .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
+                .Returns(new FileHeader(Guid.Empty, false, null, 1));
+            
+            SetupDefaultScheduler();
+
+            mockFileMessageConfig
+                .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
+                .Returns(TimeSpan.MaxValue);
+
+            // Act
+            var actual = await factory.GetFileHeaderObservable(
+                fileName,
+                mockFileMessageConfig.Object,
+                Observable.Never<object>())
+                .FirstOrDefaultAsync();
+
+            // Assert
+            Assert.False(actual.IsLast);
+        }        
+
+        [Fact]
+        public async Task GetFileHeaderObservable_Rebroadcasts_AfterRebroadcastInterval()
+        {
+            // Arrange
+            var factory = this.CreateFactory();
+            
+            mockFileMessageService
+                .Setup(fms=>fms.GetFileHeader(It.IsAny<string>(),It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
+                .Returns(new FileHeader(Guid.Empty, false, null, 1));
+
+            SetupDefaultScheduler();
+
+            var rebroadcastInterval = TimeSpan.FromTicks(1);
+            mockFileMessageConfig
+                .SetupGet(fmc=>fmc.HeaderRebroadcastInterval)
+                .Returns(rebroadcastInterval);
+            
+            // Act
+            var actual = await factory.GetFileHeaderObservable(
+                fileName: null,
+                mockFileMessageConfig.Object,
+                Observable.Never<object>(),
+                broadcastId: null)
+                .Do(m=>{ 
+                    if(!_testScheduler.IsEnabled)
+                        _testScheduler.AdvanceBy(rebroadcastInterval.Ticks);
+                    })
+                .Skip(1)
+                .Take(1);
+                        
+            // Assert
+            Assert.False(actual.IsLast);
+        }
+
+        [Fact]
+        public async Task GetFileHeaderObservable_IsLast_WhenSourceCompleted()
+        {
+            // Arrange
+            var factory = this.CreateFactory();
+            string fileName = null;
+
+            mockFileMessageService
+                .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.Is<bool?>(b=>b == null || !b.HasValue)))
+                .Returns(new FileHeader(Guid.Empty, false, null, 1));
+            
+            mockFileMessageService
+                .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.Is<bool?>(b=>b.HasValue && b.Value)))
+                .Returns(new FileHeader(Guid.Empty, true, null, 1));
+
+            SetupDefaultScheduler();
+
+            mockFileMessageConfig
+                .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
+                .Returns(TimeSpan.MaxValue);
+
+            var completedObservable = Observable.Empty<object>();
+            
+            // Act
+            var actual = await factory.GetFileHeaderObservable(
+                fileName,
+                mockFileMessageConfig.Object,
+                completedObservable)
+                .LastOrDefaultAsync();
+
+            // Assert
+            Assert.True(actual.IsLast);
+        }
+
         private void SetupDefaultScheduler()
         {
             mockSchedulerProvider

@@ -14,5 +14,6 @@ namespace Library.ByteTransfer
         BigInteger GetBigInteger(byte[] bytes);
         Guid GetGuid(byte[] bytes);
         BigInteger? GetNullableBigInteger(byte[] bytes);
+        long GetLong(byte[] bytes);
     }
 }

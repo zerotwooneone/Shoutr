@@ -53,5 +53,34 @@ namespace Library.File
 
             return bcHeaderObservable;
         }
+
+        public IObservable<IFileHeader> GetFileHeaderObservable<TComplete>(string fileName, 
+            IFileMessageConfig fileMessageConfig,
+            IObservable<TComplete> onCompletionObservable,
+            Guid? broadcastId = null,
+            IScheduler scheduler = null)
+        {
+            var bcId = broadcastId ?? Guid.NewGuid();
+            var aScheduler = scheduler ?? _schedulerProvider.Default;
+            var broadcastHeader = _fileMessageService.GetFileHeader(fileName, bcId, fileMessageConfig, 0);
+            
+            var firstObservable = (new IFileHeader[] { broadcastHeader })
+                .ToObservable();
+            
+            var lastObservable = onCompletionObservable
+                .LastOrDefaultAsync()
+                .Select(_=>_fileMessageService.GetFileHeader(fileName, bcId, fileMessageConfig, 0, true));
+
+            var periodicObservable = Observable
+                .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, aScheduler)
+                .TakeUntil(lastObservable)
+                .Select(l=>broadcastHeader);            
+
+            var bcHeaderObservable = firstObservable
+                .Concat(lastObservable)
+                .Merge(periodicObservable);
+
+            return bcHeaderObservable;
+        }
     }
 }

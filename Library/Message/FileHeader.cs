@@ -5,14 +5,14 @@ namespace Library.Message
 {
     public class FileHeader : MessageHeader, IFileHeader
     {
-        public FileHeader(Guid broadcastId, bool? isLast, string fileName, BigInteger chunkCount) : base(broadcastId, isLast)
+        public FileHeader(Guid broadcastId, bool? isLast, string fileName, long firstPayloadIndex) : base(broadcastId, isLast)
         {
             FileName = fileName;
-            ChunkCount = chunkCount;
+            FirstPayloadIndex = firstPayloadIndex;
         }
 
         public string FileName { get; }
-        public BigInteger ChunkCount { get; }
+        public long FirstPayloadIndex { get; }
 
         public override int GetHashCode()
         {

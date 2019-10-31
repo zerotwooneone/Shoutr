@@ -51,7 +51,7 @@ namespace Library.Message
             return new ProtoMessage
             (
                 broadcastId: fileHeader.BroadcastId,
-                chunkCount: _byteService.GetBytes(fileHeader.ChunkCount),
+                firstPayloadIndex: _byteService.GetBytes(fileHeader.FirstPayloadIndex),
                 fileName: fileHeader.FileName,
                 isLast: fileHeader.IsLast
             );
@@ -114,13 +114,13 @@ namespace Library.Message
 
                 if (protoMessage.FileName != null)
                 {
-                    var chunkCount = _byteService.GetBigInteger(protoMessage.ChunkCountInBytes);
+                    var firstPayloadIndex = _byteService.GetLong(protoMessage.FirstPayloadIndex);
                     return new Messages
                     {
                         FileHeader = new FileHeader(protoMessage.BroadcastId,
                         protoMessage.IsLast,
                         protoMessage.FileName,
-                        chunkCount)
+                        firstPayloadIndex)
                     };
                 }
 
@@ -146,7 +146,7 @@ namespace Library.Message
                 payloadIndex: _byteService.GetBytes(payloadIndex),
                 payload: payload,
                 isLast: isLast,
-                maxPayloadSizeInBytes: null, fileName: null, chunkCount: null);
+                maxPayloadSizeInBytes: null, fileName: null, firstPayloadIndex: null);
             return Convert(protoMessage);
         }
 
@@ -171,7 +171,7 @@ namespace Library.Message
             [ProtoMember(7)]
             public string FileName { get; set; }
             [ProtoMember(8)]
-            public byte[] ChunkCountInBytes { get; set; }
+            public byte[] FirstPayloadIndex { get; set; }
             
             /// <summary>
             /// Parameterless constructor required for protocol buffer deserialization
@@ -188,7 +188,7 @@ namespace Library.Message
                 bool? isLast = null,
                 long? maxPayloadSizeInBytes = null,
                 string fileName = null,
-                byte[] chunkCount = null)
+                byte[] firstPayloadIndex = null)
             {
                 BroadcastId = broadcastId;
                 ChunkIndex = chunkIndex;
@@ -197,7 +197,7 @@ namespace Library.Message
                 IsLast = isLast.HasValue && isLast.Value;
                 MaxPayloadSizeInBytes = maxPayloadSizeInBytes;
                 FileName = fileName;
-                ChunkCountInBytes = chunkCount;
+                FirstPayloadIndex = firstPayloadIndex;
             }
         }
     }

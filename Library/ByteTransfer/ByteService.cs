@@ -39,5 +39,10 @@ namespace Library.ByteTransfer
         {
             return bytes == null ? (BigInteger?) null : new BigInteger(bytes);
         }
+
+        public long GetLong(byte[] bytes)
+        {
+            return BitConverter.ToInt64(bytes, 0);
+        }
     }
 }
