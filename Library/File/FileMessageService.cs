@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Library.Configuration;
 using Library.Message;
-using System.IO;
 using Library.File;
 
 
@@ -19,10 +18,12 @@ public class FileMessageService: IFileMessageService
         _configurationService = configurationService;
     }
 
-    public IBroadcastHeader GetBroadcastHeader (string fileName, Guid broadcastId, bool? isLast = null)
+    public IBroadcastHeader GetBroadcastHeader (string fileName, Guid broadcastId, 
+            IFileMessageConfig fileMessageConfig, bool? isLast = null)
     {
-        long size = _fileDataRepository.GetByteCount(fileName);
-        BroadcastHeader header = new BroadcastHeader(broadcastId, isLast, size);
+        long fileSize = _fileDataRepository.GetByteCount(fileName);
+        var maxPayloadSizeInBytes = Math.Min(fileSize, fileMessageConfig.MaxPayloadSizeInBytes);
+        BroadcastHeader header = new BroadcastHeader(broadcastId, isLast, maxPayloadSizeInBytes);
         return header;
     }
 

@@ -4,9 +4,9 @@ namespace Library.Message
 {
     public class BroadcastHeader : MessageHeader, IBroadcastHeader
     {
-        public BroadcastHeader(Guid broadcastId, bool? isLast, long chunkSizeInBytes) : base(broadcastId, isLast)
+        public BroadcastHeader(Guid broadcastId, bool? isLast, long maxPayloadSizeInBytes) : base(broadcastId, isLast)
         {
-            MaxPayloadSizeInBytes = chunkSizeInBytes;
+            MaxPayloadSizeInBytes = maxPayloadSizeInBytes;
         }
 
         public long MaxPayloadSizeInBytes { get; }
