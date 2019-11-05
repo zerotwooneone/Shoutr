@@ -99,7 +99,9 @@ namespace Library.File
                         .Select(filePage =>
                         {
                             var bytes = (filePage.PageIndex == firstPayloadPageIndex
-                                ? (startingBytes ?? filePage.FileReadResult.Bytes)
+                                ? (startingBytes == null 
+                                    ? filePage.FileReadResult.Bytes
+                                    : startingBytes.AsEnumerable().Concat(filePage.FileReadResult.Bytes))
                                 : filePage.FileReadResult.Bytes)
                                 .ToArray();
                             var payloadSize = Math.Min((int)fileMessageConfig.MaxPayloadSizeInBytes, bytes.Length);
