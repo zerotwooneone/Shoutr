@@ -5,6 +5,8 @@ namespace Library.File
     public class FileWriteResult
     {
         public Exception Exception {get;}
+        public bool Success {get;}
+        public string TechnicalErrorMessage {get;}
 
         public FileWriteResult(string technicalErrorMessage = null)
         {
@@ -20,8 +22,6 @@ namespace Library.File
             TechnicalErrorMessage = technicalErrorMessage;
             Success = false;
         }
-
-        public bool Success {get;}
-        public string TechnicalErrorMessage {get;}
+        
     }
 }

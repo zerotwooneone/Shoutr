@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Library.File
@@ -12,19 +13,39 @@ namespace Library.File
             return new FileInfo(fileName).Length;
         }
 
-        public byte[] GetPage(string fileName, uint pageSize, BigInteger pageIndex)
-        {            
-            using (var fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {                    
-                var startIndex = pageIndex * pageSize;
-                fileStream.Seek((long)startIndex, SeekOrigin.Begin);
-                var result = new byte[pageSize];
-                fileStream.Read(result, 0, (int)pageSize); 
-                return result;
+        public async Task<FileReadResult> GetPage(string fileName, 
+            int pageSize, 
+            long pageIndex, 
+            CancellationToken cancellationToken = default)
+        {
+            var offset = pageIndex * pageSize;
+            var buffer = new byte[pageSize];
+            try
+            {
+                using (var fileStream = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    try
+                    {                        
+                        fileStream.Seek(offset, SeekOrigin.Begin);                        
+                        await fileStream.ReadAsync(buffer, 0, pageSize, cancellationToken);
+                        return new FileReadResult(buffer);
+                    }
+                    catch (Exception writeException)
+                    {
+                        return new FileReadResult(writeException, "Error writing to the file");
+                    }                    
+                }
             }
+            catch (Exception openException)
+            {
+                return new FileReadResult(openException, "Error opening the file for write");
+            }     
         }
 
-        public async Task<FileWriteResult> SetPage(string fileName, BigInteger startIndex, byte[] payload)
+        public async Task<FileWriteResult> SetPage(string fileName, 
+            BigInteger startIndex, 
+            byte[] payload, 
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -33,7 +54,7 @@ namespace Library.File
                     try
                     {
                         fileStream.Seek((long)startIndex, SeekOrigin.Begin);
-                        await fileStream.WriteAsync(payload, 0, payload.Length);
+                        await fileStream.WriteAsync(payload, 0, payload.Length, cancellationToken);
                     }
                     catch (Exception writeException)
                     {

@@ -1,8 +1,10 @@
-using System;
-using System.Numerics;
 using Library.Configuration;
 using Library.File;
 using Moq;
+using System;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Library.Tests.File
@@ -20,8 +22,7 @@ namespace Library.Tests.File
             _mockRepository = new MockRepository(MockBehavior.Strict);
             _configurationService = _mockRepository.Create<IConfigurationService>();
             _mockFileDataRepository = _mockRepository.Create<IFileDataRepository>();
-            _mockFileMessageConfig = _mockRepository.Create<IFileMessageConfig>();
-
+            _mockFileMessageConfig = _mockRepository.Create<IFileMessageConfig>();            
         }
 
         private FileMessageService GetService()
@@ -94,6 +95,131 @@ namespace Library.Tests.File
             
             //assert
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task GetPayloads_ReturnsFirstIndex5_WhenStartIndexIs5()
+        {
+            //assemble
+            var fileMessageService = GetService();
+            long expected = 5;
+
+            _mockFileMessageConfig
+                .SetupGet(fmc=>fmc.MaxPayloadSizeInBytes)
+                .Returns(999);
+
+            _configurationService
+                .SetupGet(cs=>cs.PageSize)
+                .Returns(999);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
+                .Returns(1);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FileReadResult(new byte[]{ 99 }));
+                        
+            //act
+            var actual = await fileMessageService
+                .GetPayloads(It.IsAny<string>(), It.IsAny<Guid>(), _mockFileMessageConfig.Object, startingPayloadIndex: expected)
+                .Take(1);
+
+            //assert
+            Assert.Equal(expected, actual.PayloadIndex);
+        }
+
+        [Fact]
+        public void GetPayloads_DoesNotAwaitGetPage_WhenCalled()
+        {
+            //assemble
+            var fileMessageService = GetService();
+
+            _mockFileMessageConfig
+                .SetupGet(fmc=>fmc.MaxPayloadSizeInBytes)
+                .Returns(999);
+
+            _configurationService
+                .SetupGet(cs=>cs.PageSize)
+                .Returns(999);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
+                .Returns(1);
+                        
+            //act
+            var actual = fileMessageService
+                .GetPayloads(It.IsAny<string>(), It.IsAny<Guid>(), _mockFileMessageConfig.Object);
+
+            //assert
+            _mockFileDataRepository
+                .Verify(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task GetPayloads_CallsGetPageTwice_AfterAwaitingWhen2ByteFileAnd1BytePageSize()
+        {
+            //assemble
+            var fileMessageService = GetService();
+
+            _mockFileMessageConfig
+                .SetupGet(fmc=>fmc.MaxPayloadSizeInBytes)
+                .Returns(999);
+
+            _configurationService
+                .SetupGet(cs=>cs.PageSize)
+                .Returns(1);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
+                .Returns(2);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FileReadResult(new byte[]{ 99 }));
+                        
+            //act
+            var actual = await fileMessageService
+                .GetPayloads(It.IsAny<string>(), It.IsAny<Guid>(), _mockFileMessageConfig.Object);
+
+            //assert
+            _mockFileDataRepository
+                .Verify(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
+        }
+
+        [Fact]
+        public async Task GetPayloads_CallsGetPageOnce_AfterAwaitingOne()
+        {
+            //assemble
+            var fileMessageService = GetService();
+
+            _mockFileMessageConfig
+                .SetupGet(fmc=>fmc.MaxPayloadSizeInBytes)
+                .Returns(999);
+
+            _configurationService
+                .SetupGet(cs=>cs.PageSize)
+                .Returns(1);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetByteCount(It.IsAny<string>()))
+                .Returns(2);
+
+            _mockFileDataRepository
+                .Setup(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new FileReadResult(new byte[]{ 99 }));
+                        
+            //act
+            var actual = await fileMessageService
+                .GetPayloads(It.IsAny<string>(), It.IsAny<Guid>(), _mockFileMessageConfig.Object)
+                .Take(1);
+
+            //assert
+            _mockFileDataRepository
+                .Verify(fr => fr.GetPage(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
+                Times.Once);
         }
     }
 }

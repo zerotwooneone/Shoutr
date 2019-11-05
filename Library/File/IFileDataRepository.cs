@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Library.File
 {
@@ -8,6 +10,8 @@ namespace Library.File
     public interface IFileDataRepository
     {
         long GetByteCount(string fileName);
-        byte[] GetPage(string fileName, uint pageSize, BigInteger pageIndex);
+        
+        Task<FileWriteResult> SetPage(string fileName, BigInteger startIndex, byte[] payload, CancellationToken cancellationToken = default);
+        Task<FileReadResult> GetPage(string fileName, int pageSize, long pageIndex, CancellationToken cancellationToken = default);
     }
 }

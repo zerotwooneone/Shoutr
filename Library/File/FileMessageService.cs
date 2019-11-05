@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Library.Configuration;
 using Library.Message;
+using System;
+using System.Linq;
+using System.Numerics;
+using System.Reactive.Linq;
 
 namespace Library.File
 {
@@ -42,39 +43,86 @@ namespace Library.File
             return new ChunkHeader(broadcastId, chunkIndex, isLast);
         }
 
-        public IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex)
+        public IObservable<IPayloadMessage> GetPayloads(string fileName, 
+            Guid broadcastId,
+            IFileMessageConfig fileMessageConfig, 
+            long startingPayloadIndex = 0,
+            byte[] startingBytes = null)
         {
-            //BigInteger pageIndex = 0;
-            long byteCount = _fileDataRepository.GetByteCount(fileName);
-            uint pageSize = _configurationService.PageSize;
-            int payloadSize = _configurationService.PayloadSizeInBytes;
-            byte[] payload = new byte[payloadSize];
-            BigInteger payloadIndex = 0;
-            int i = 0;
-            int copied = 0;
-            long pages = byteCount % pageSize == 0 ? byteCount / pageSize : byteCount / pageSize + 1;
-            for (BigInteger pageIndex = 0; pageIndex < pages; pageIndex++)
-            {
-                var page = _fileDataRepository.GetPage(fileName, pageSize, pageIndex);
-                for (int j = 0; j < pageSize; i += copied, j += copied)
-                {
-                    copied = (int)(payloadSize - i < pageSize - j ? payloadSize - i : pageSize - j);
-                    copied = copied < page.Length ? copied : page.Length;
-                    Array.Copy(page, j, payload, i, copied);
-                    if (i == payloadSize - 1)
+            var bytesInFile = _fileDataRepository.GetByteCount(fileName);
+            
+            const int convertCountToIndex = 1;
+            var lastByteIndexInFile = bytesInFile - convertCountToIndex;
+            
+            var totalPageCount = (int)Math.Ceiling( bytesInFile / (double)_configurationService.PageSize);
+
+            var allPageIndexes = Enumerable
+                .Range(0, totalPageCount);
+            var filePageDictionary = allPageIndexes
+                .ToDictionary(pageIndex=>pageIndex,
+                pageIndex=>{
+                    return Observable.FromAsync(() =>
                     {
-                        IPayloadMessage pm = new PayloadMessage(broadcastId, payloadIndex, payload, chunkIndex);
-                        payloadIndex++;
-                        i = 0;
-                        yield return pm;
-                    }
-                }
-            }
+                        return _fileDataRepository.GetPage(fileName, (int)_configurationService.PageSize, pageIndex);
+                    });
+                 });
+
+            
+            //need to handle errors
+
+            var payloadCount = (int)Math.Ceiling(bytesInFile / (double)fileMessageConfig.MaxPayloadSizeInBytes);
+            var payloadIndexObservable = Observable
+                .Range((int)startingPayloadIndex, payloadCount);
+
+            var payloadObservable = payloadIndexObservable
+                .Select(payloadIndex=>{ 
+                    var firstPayloadByteIndex = (payloadIndex - startingPayloadIndex) * fileMessageConfig.MaxPayloadSizeInBytes;
+                    var lastPayloadByteIndex = Math.Min(lastByteIndexInFile, firstPayloadByteIndex + fileMessageConfig.MaxPayloadSizeInBytes);
+
+                    int firstPayloadPageIndex = (int)(firstPayloadByteIndex / _configurationService.PageSize);
+                    int lastPayloadPageIndex = (int)(lastPayloadByteIndex / _configurationService.PageSize);
+
+                    const int convertIndexToCount = 1;
+                    int pageCount = lastPayloadPageIndex - firstPayloadPageIndex + convertIndexToCount;
+                    
+                    var pageReadObservable = Observable.Range(firstPayloadPageIndex, pageCount)
+                        .Select(pageIndex=>{ 
+                            return filePageDictionary[pageIndex]
+                                .Select(fileReadResult=>{ 
+                                    var filePage = new FilePage(fileReadResult, pageIndex);
+                                    return filePage;
+                                });
+                        })
+                        .Merge(maxConcurrent: 1);
+
+                    var currentPayloadObservable = pageReadObservable
+                        .Select(filePage =>
+                        {
+                            var bytes = (filePage.PageIndex == firstPayloadPageIndex
+                                ? (startingBytes ?? filePage.FileReadResult.Bytes)
+                                : filePage.FileReadResult.Bytes)
+                                .ToArray();
+                            var payloadSize = Math.Min((int)fileMessageConfig.MaxPayloadSizeInBytes, bytes.Length);
+                            var payload = bytes.Take(payloadSize).ToArray();
+                            const int unusedChunkIndex = 0;
+                            return new PayloadMessage(broadcastId, payloadIndex, payload, unusedChunkIndex);
+                        });
+                    return currentPayloadObservable;
+                 })
+                .Merge();
+                
+            return payloadObservable;
         }
 
-        public IObservable<IPayloadMessage> GetPayloads(string fileName, Guid broadcastId, long startingPayloadIndex = 0, byte[] startingBytes = null)
+        internal class FilePage
         {
-            throw new NotImplementedException();
+            public FileReadResult FileReadResult { get; }
+            public long PageIndex { get; }
+            public FilePage(FileReadResult fileReadResult, long pageIndex)
+            {
+                FileReadResult = fileReadResult;
+                PageIndex = pageIndex;
+            }            
         }
     }
 }

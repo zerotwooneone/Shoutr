@@ -1,7 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Library.Message;
+using System;
+using System.Numerics;
 
 namespace Library.File
 {
@@ -17,8 +16,6 @@ namespace Library.File
             long firstPayloadIndex, 
             bool? isLast = null);
         IChunkHeader GetChunkHeader(string fileName, Guid broadcastId, BigInteger chunkIndex, bool? isLast = null);
-        [Obsolete("This method has been derpecated.")]
-        IEnumerable<IPayloadMessage> GetPayloadsByChunkIndex(string fileName, Guid broadcastId, BigInteger chunkIndex);
         /// <summary>
         /// Returns an observable that represents all of the payloads from a given file
         /// </summary>
@@ -28,7 +25,8 @@ namespace Library.File
         /// <param name="startingBytes">Optional - If this is not the first payload in the broadcast: specify any bytes which should be prepended to the first payload of this series</param>
         /// <returns></returns>
         IObservable<IPayloadMessage> GetPayloads(string fileName, 
-            Guid broadcastId, 
+            Guid broadcastId,
+            IFileMessageConfig fileMessageConfig, 
             long startingPayloadIndex = 0,
             byte[] startingBytes = null);
     }
