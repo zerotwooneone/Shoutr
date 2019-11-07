@@ -1,6 +1,7 @@
 using Library.File;
 using Library.Message;
 using Library.Reactive;
+using Library.Tests.Broadcast;
 using Microsoft.Reactive.Testing;
 using Moq;
 using System;
@@ -65,7 +66,8 @@ namespace Library.Tests.File
             var actual = await factory.GetBroadcastHeaderObservable(
                 fileName,
                 mockFileMessageConfig.Object,
-                Observable.Never<object>())
+                Observable.Never<object>(),
+                Guid.Empty)
                 .FirstOrDefaultAsync();
 
             // Assert
@@ -94,10 +96,10 @@ namespace Library.Tests.File
                 fileName: null,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                broadcastId: null)
+                broadcastId: Guid.Empty)
                 .Do(m=>{ 
                     if(!_testScheduler.IsEnabled)
-                        _testScheduler.AdvanceBy(rebroadcastInterval.Ticks);
+                        _testScheduler.AdvanceBy(rebroadcastInterval);
                     })
                 .Skip(1)
                 .Take(1);
@@ -133,7 +135,8 @@ namespace Library.Tests.File
             var actual = await factory.GetBroadcastHeaderObservable(
                 fileName,
                 mockFileMessageConfig.Object,
-                completedObservable)
+                completedObservable,
+                Guid.Empty)
                 .LastOrDefaultAsync();
 
             // Assert
@@ -161,7 +164,8 @@ namespace Library.Tests.File
             var actual = await factory.GetFileHeaderObservable(
                 fileName,
                 mockFileMessageConfig.Object,
-                Observable.Never<object>())
+                Observable.Never<object>(),
+                Guid.Empty)
                 .FirstOrDefaultAsync();
 
             // Assert
@@ -190,10 +194,10 @@ namespace Library.Tests.File
                 fileName: null,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                broadcastId: null)
+                broadcastId: Guid.Empty)
                 .Do(m=>{ 
                     if(!_testScheduler.IsEnabled)
-                        _testScheduler.AdvanceBy(rebroadcastInterval.Ticks);
+                        _testScheduler.AdvanceBy(rebroadcastInterval);
                     })
                 .Skip(1)
                 .Take(1);
@@ -229,7 +233,8 @@ namespace Library.Tests.File
             var actual = await factory.GetFileHeaderObservable(
                 fileName,
                 mockFileMessageConfig.Object,
-                completedObservable)
+                completedObservable,
+                Guid.Empty)
                 .LastOrDefaultAsync();
 
             // Assert
