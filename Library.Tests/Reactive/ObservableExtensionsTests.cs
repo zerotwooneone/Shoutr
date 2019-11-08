@@ -123,6 +123,94 @@ namespace Library.Tests.Reactive
         }
 
         [Fact]
+        public void TickingThrottle_EmitsSecondValueOnce_AfterExcessiveWaiting()
+        {
+            // Arrange
+            const int target = 5;
+            var timeBetweenEmits = TimeSpan.FromSeconds(1);
+            TimeSpan timeBeforeSecondValue = timeBetweenEmits * 1.1;
+            var source = DelayValues(
+                (99, TimeSpan.Zero),
+                (target, timeBeforeSecondValue));
+                        
+            int actual = 0;
+            const int expected = 1;
+
+            // Act
+            source.TickingThrottle(
+                timeBetweenEmits,
+                _testScheduler).Subscribe(v=>{
+                    if (v == target)
+                    {
+                        actual++;
+                    }
+                });     
+            
+            _testScheduler.AdvanceBy(timeBeforeSecondValue*10);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void TickingThrottle_EmitsSecondValueOnce_AfterExcessiveWaitingWithThrid()
+        {
+            // Arrange
+            const int target = 5;
+            var timeBetweenEmits = TimeSpan.FromSeconds(1);
+            TimeSpan timeBeforeSecondValue = timeBetweenEmits * 1.1;
+            var source = DelayValues(
+                (99, TimeSpan.Zero),
+                (target, timeBeforeSecondValue),
+                (100, TimeSpan.Zero));
+                        
+            int actual = 0;
+            const int expected = 1;
+
+            // Act
+            source.TickingThrottle(
+                timeBetweenEmits,
+                _testScheduler).Subscribe(v=>{
+                    if (v == target)
+                    {
+                        actual++;
+                    }
+                });     
+            
+            _testScheduler.AdvanceBy(timeBeforeSecondValue*10);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void TickingThrottle_EmitsSecondValue_AfterWaitingLargeSecondValueWithThird()
+        {
+            // Arrange
+            const int expected = 5;
+            var timeBetweenEmits = TimeSpan.FromSeconds(1);
+            TimeSpan timeBeforeSecondValue = timeBetweenEmits * 1.1;
+            var source = DelayValues(
+                (99, TimeSpan.Zero),
+                (expected, timeBeforeSecondValue),
+                (199, TimeSpan.Zero));
+                        
+            int? latestValue = null;
+
+            // Act
+            source.TickingThrottle(
+                timeBetweenEmits,
+                _testScheduler).Subscribe(v=>{ 
+                latestValue = v; 
+            });     
+            
+            _testScheduler.AdvanceBy(timeBeforeSecondValue);
+
+            // Assert
+            Assert.Equal(expected, latestValue);
+        }
+
+        [Fact]
         public void TickingThrottle_DoesNotEmitSecondValue_WithoutWaiting()
         {
             // Arrange
@@ -195,7 +283,7 @@ namespace Library.Tests.Reactive
 
         internal IObservable<T> DelayValues<T>(params (T value,TimeSpan delay)[] values)
         {
-            return Observable.Merge(values.Select(tuple =>
+            return Observable.Concat(values.Select(tuple =>
             {
                 if(tuple.delay > TimeSpan.Zero)
                 {
