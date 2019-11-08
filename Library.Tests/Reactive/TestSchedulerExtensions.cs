@@ -1,7 +1,7 @@
 ﻿using Microsoft.Reactive.Testing;
 using System;
 
-namespace Library.Tests.Broadcast
+namespace Library.Tests.Reactive
 {
     public static class TestSchedulerExtensions
     {

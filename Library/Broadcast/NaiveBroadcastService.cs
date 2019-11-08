@@ -25,7 +25,7 @@ namespace Library.Broadcast
             
             var messagesObservable = _broadcastMessageObservableFactory.GetFileBroadcast(fileName, fileMessageConfig, broadcastId, scheduler);
 
-            var throttled = messagesObservable.RealThrottle(TimeSpan.FromSeconds(1), scheduler);
+            var throttled = messagesObservable.TickingThrottle(TimeSpan.FromSeconds(1), scheduler);
 
             var broadcastObservable = throttled
                 .Select(messages =>
@@ -51,28 +51,6 @@ namespace Library.Broadcast
                 .Concat();
 
             await broadcastObservable;
-        }
-    }
-
-    public static class ObservableExtensions
-    {
-        /// <summary>
-        /// Produces an observable which will emit no more frequently than once per timeBetweenEmits. This has the shortcoming that if the source observable does not produce
-        /// before that timespan then multiple source values will be emited to "catch up". 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="timeBetweenEmits"></param>
-        /// <param name="scheduler"></param>
-        /// <returns></returns>
-        public static IObservable<T> RealThrottle<T>(this IObservable<T> source, 
-            TimeSpan timeBetweenEmits,
-            IScheduler scheduler)
-        {
-            var interval = Observable.Interval(timeBetweenEmits,scheduler);
-            
-            return source
-                .Zip(interval, (t,intervalValue)=>t);
         }
     }
 }
