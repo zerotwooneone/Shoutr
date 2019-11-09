@@ -1,4 +1,5 @@
 using Library.Broadcast;
+using Library.Configuration;
 using Library.File;
 using Library.Message;
 using Microsoft.Reactive.Testing;
@@ -18,6 +19,7 @@ namespace Library.Tests.Broadcast
         private Mock<IBroadcastMessageObservableFactory> _broadcastMessageObservableFactory;
         private readonly Mock<IBroadcaster> _mockBroadcaster;
         private readonly Mock<IFileMessageConfig> _mockFileMessageConfig;
+        private readonly Mock<IConfigurationService> _mockConfigurationService;
         private readonly TestScheduler _testScheduler;
 
         public NaiveBroadcastServiceTests()
@@ -27,6 +29,7 @@ namespace Library.Tests.Broadcast
             _broadcastMessageObservableFactory = this._mockRepository.Create<IBroadcastMessageObservableFactory>();
             _mockBroadcaster = _mockRepository.Create<IBroadcaster>();
             _mockFileMessageConfig = _mockRepository.Create<IFileMessageConfig>();
+            _mockConfigurationService = _mockRepository.Create<IConfigurationService>();
             _testScheduler = new TestScheduler();
         }
 
@@ -38,7 +41,8 @@ namespace Library.Tests.Broadcast
         private NaiveBroadcastService CreateService()
         {
             return new NaiveBroadcastService(
-                this._broadcastMessageObservableFactory.Object);
+                this._broadcastMessageObservableFactory.Object,
+                _mockConfigurationService.Object);
         }
 
         [Fact]
@@ -46,6 +50,10 @@ namespace Library.Tests.Broadcast
         {
             // Arrange
             var service = this.CreateService();
+
+            _mockConfigurationService
+                .SetupGet(cs=>cs.TimeBetweenBroadcasts)
+                .Returns(TimeSpan.FromMilliseconds(1));
 
             _mockBroadcaster
                 .Setup(mb => mb.Broadcast(It.IsAny<IBroadcastHeader>()))

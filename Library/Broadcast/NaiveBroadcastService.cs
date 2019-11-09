@@ -1,4 +1,5 @@
-﻿using Library.File;
+﻿using Library.Configuration;
+using Library.File;
 using Library.Reactive;
 using System;
 using System.Reactive.Concurrency;
@@ -10,10 +11,13 @@ namespace Library.Broadcast
     public class NaiveBroadcastService : IBroadcastService
     {
         private readonly IBroadcastMessageObservableFactory _broadcastMessageObservableFactory;
+        private readonly IConfigurationService configurationService;
 
-        public NaiveBroadcastService(IBroadcastMessageObservableFactory broadcastMessageObservableFactory)
+        public NaiveBroadcastService(IBroadcastMessageObservableFactory broadcastMessageObservableFactory,
+            IConfigurationService configurationService)
         {
             this._broadcastMessageObservableFactory = broadcastMessageObservableFactory;
+            this.configurationService = configurationService;
         }
 
         public async Task BroadcastFile(string fileName, 
@@ -25,7 +29,7 @@ namespace Library.Broadcast
             
             var messagesObservable = _broadcastMessageObservableFactory.GetFileBroadcast(fileName, fileMessageConfig, scheduler, broadcastId);
 
-            var throttled = messagesObservable.TickingThrottle(TimeSpan.FromSeconds(1), scheduler);
+            var throttled = messagesObservable.TickingThrottle(configurationService.TimeBetweenBroadcasts.Value, scheduler);
 
             var broadcastObservable = throttled
                 .Select(messages =>
