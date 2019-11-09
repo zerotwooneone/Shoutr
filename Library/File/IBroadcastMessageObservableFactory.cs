@@ -11,12 +11,12 @@ namespace Library.File
         /// </summary>
         /// <param name="fileName">path to the file</param>
         /// <param name="fileMessageConfig">config for reading a file</param>
-        /// <param name="broadcastId">optional broadcast id</param>
-        /// <param name="scheduler">optional scheduler</param>
+        /// <param name="scheduler">the scheduler for timing messages</param>
+        /// <param name="broadcastId">optional broadcast id</param>        
         /// <returns></returns>
         IObservable<IMessages> GetFileBroadcast(string fileName, 
             IFileMessageConfig fileMessageConfig,
-            Guid? broadcastId = null,
-            IScheduler scheduler = null);
+            IScheduler scheduler,
+            Guid? broadcastId = null);
     }
 }

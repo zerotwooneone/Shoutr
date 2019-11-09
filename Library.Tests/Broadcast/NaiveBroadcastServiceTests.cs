@@ -64,8 +64,8 @@ namespace Library.Tests.Broadcast
             _broadcastMessageObservableFactory
                 .Setup(mof => mof.GetFileBroadcast(It.IsAny<string>(),
                     It.IsAny<IFileMessageConfig>(),
-                    It.IsAny<Guid>(),
-                    It.IsAny<IScheduler>()))
+                    It.IsAny<IScheduler>(),
+                    It.IsAny<Guid>()))
                 .Returns(Observable.Return<IMessages>(new Messages() { BroadcastHeader = new BroadcastHeader(broadcastId, false, 999) }));
             
             // Act

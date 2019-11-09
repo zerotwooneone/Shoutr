@@ -1,5 +1,4 @@
 ﻿using Library.Message;
-using Library.Reactive;
 using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -9,18 +8,15 @@ namespace Library.File
     public class MessageObservableFactory : IBroadcastMessageObservableFactory
     {
         private readonly IFileMessageService _fileMessageService;
-        private readonly ISchedulerProvider _schedulerProvider;
 
-        public MessageObservableFactory(IFileMessageService fileMessageService,
-            ISchedulerProvider schedulerProvider)
+        public MessageObservableFactory(IFileMessageService fileMessageService)
         {
             _fileMessageService = fileMessageService;
-            _schedulerProvider = schedulerProvider;
         }
         public IObservable<IMessages> GetFileBroadcast(string fileName, 
             IFileMessageConfig fileMessageConfig,
-            Guid? broadcastId = null,
-            IScheduler scheduler = null)
+            IScheduler scheduler,
+            Guid? broadcastId = null)
         {
             broadcastId = broadcastId ?? Guid.NewGuid();
             var payloadObservable = GetPayloads(fileName, broadcastId.Value, fileMessageConfig);
@@ -51,9 +47,8 @@ namespace Library.File
             IFileMessageConfig fileMessageConfig,
             IObservable<TComplete> onCompletionObservable,
             Guid broadcastId,
-            IScheduler scheduler = null)
+            IScheduler scheduler)
         {
-            var aScheduler = scheduler ?? _schedulerProvider.Default;
             var broadcastHeader = _fileMessageService.GetBroadcastHeader(fileName, broadcastId, fileMessageConfig);
             
             var firstObservable = (new IBroadcastHeader[] { broadcastHeader })
@@ -64,7 +59,7 @@ namespace Library.File
                 .Select(_=>_fileMessageService.GetBroadcastHeader(fileName, broadcastId, fileMessageConfig, true));
 
             var periodicObservable = Observable
-                .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, aScheduler)
+                .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, scheduler)
                 .TakeUntil(lastObservable)
                 .Select(l=>broadcastHeader);            
 
@@ -79,9 +74,8 @@ namespace Library.File
             IFileMessageConfig fileMessageConfig,
             IObservable<TComplete> onCompletionObservable,
             Guid broadcastId,
-            IScheduler scheduler = null)
+            IScheduler scheduler)
         {
-            var aScheduler = scheduler ?? _schedulerProvider.Default;
             var broadcastHeader = _fileMessageService.GetFileHeader(fileName, broadcastId, fileMessageConfig, 0);
             
             var firstObservable = (new IFileHeader[] { broadcastHeader })
@@ -92,7 +86,7 @@ namespace Library.File
                 .Select(_=>_fileMessageService.GetFileHeader(fileName, broadcastId, fileMessageConfig, 0, true));
 
             var periodicObservable = Observable
-                .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, aScheduler)
+                .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, scheduler)
                 .TakeUntil(lastObservable)
                 .Select(l=>broadcastHeader);            
 

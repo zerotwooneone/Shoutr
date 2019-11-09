@@ -23,7 +23,7 @@ namespace Library.Broadcast
         {
             var broadcastId = Guid.NewGuid();
             
-            var messagesObservable = _broadcastMessageObservableFactory.GetFileBroadcast(fileName, fileMessageConfig, broadcastId, scheduler);
+            var messagesObservable = _broadcastMessageObservableFactory.GetFileBroadcast(fileName, fileMessageConfig, scheduler, broadcastId);
 
             var throttled = messagesObservable.TickingThrottle(TimeSpan.FromSeconds(1), scheduler);
 

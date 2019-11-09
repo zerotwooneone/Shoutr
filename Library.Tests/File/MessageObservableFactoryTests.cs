@@ -5,10 +5,7 @@ using Library.Tests.Reactive;
 using Microsoft.Reactive.Testing;
 using Moq;
 using System;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,7 +17,6 @@ namespace Library.Tests.File
 
         private Mock<IFileMessageService> mockFileMessageService;
         private readonly Mock<IFileMessageConfig> mockFileMessageConfig;
-        private readonly Mock<ISchedulerProvider> mockSchedulerProvider;
         private readonly TestScheduler _testScheduler;
 
         public MessageObservableFactoryTests()
@@ -28,8 +24,7 @@ namespace Library.Tests.File
             this.mockRepository = new MockRepository(MockBehavior.Strict);
 
             this.mockFileMessageService = this.mockRepository.Create<IFileMessageService>();
-            mockFileMessageConfig = mockRepository.Create<IFileMessageConfig>();  
-            mockSchedulerProvider = mockRepository.Create<ISchedulerProvider>();
+            mockFileMessageConfig = mockRepository.Create<IFileMessageConfig>();
             _testScheduler = new TestScheduler();
         }
 
@@ -41,8 +36,7 @@ namespace Library.Tests.File
         private MessageObservableFactory CreateFactory()
         {
             return new MessageObservableFactory(
-                this.mockFileMessageService.Object,
-                mockSchedulerProvider.Object);
+                this.mockFileMessageService.Object);
         }
 
         [Fact]
@@ -56,8 +50,6 @@ namespace Library.Tests.File
                 .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<bool?>()))
                 .Returns(new BroadcastHeader(Guid.Empty, false, 1));
             
-            SetupDefaultScheduler();
-
             mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
@@ -67,7 +59,8 @@ namespace Library.Tests.File
                 fileName,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                Guid.Empty)
+                Guid.Empty,
+                _testScheduler)
                 .FirstOrDefaultAsync();
 
             // Assert
@@ -84,8 +77,6 @@ namespace Library.Tests.File
                 .Setup(fms=>fms.GetBroadcastHeader(It.IsAny<string>(),It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<bool?>()))
                 .Returns(new BroadcastHeader(Guid.Empty, false, 1));
 
-            SetupDefaultScheduler();
-
             var rebroadcastInterval = TimeSpan.FromTicks(1);
             mockFileMessageConfig
                 .SetupGet(fmc=>fmc.HeaderRebroadcastInterval)
@@ -96,7 +87,8 @@ namespace Library.Tests.File
                 fileName: null,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                broadcastId: Guid.Empty)
+                broadcastId: Guid.Empty,
+                _testScheduler)
                 .Do(m=>{ 
                     if(!_testScheduler.IsEnabled)
                         _testScheduler.AdvanceBy(rebroadcastInterval);
@@ -123,8 +115,6 @@ namespace Library.Tests.File
                 .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.Is<bool?>(b=>b.HasValue && b.Value)))
                 .Returns(new BroadcastHeader(Guid.Empty, true, 1));
 
-            SetupDefaultScheduler();
-
             mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
@@ -136,7 +126,8 @@ namespace Library.Tests.File
                 fileName,
                 mockFileMessageConfig.Object,
                 completedObservable,
-                Guid.Empty)
+                Guid.Empty,
+                _testScheduler)
                 .LastOrDefaultAsync();
 
             // Assert
@@ -154,8 +145,6 @@ namespace Library.Tests.File
                 .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
                 .Returns(new FileHeader(Guid.Empty, false, null, 1));
             
-            SetupDefaultScheduler();
-
             mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
@@ -165,7 +154,8 @@ namespace Library.Tests.File
                 fileName,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                Guid.Empty)
+                Guid.Empty,
+                _testScheduler)
                 .FirstOrDefaultAsync();
 
             // Assert
@@ -182,8 +172,6 @@ namespace Library.Tests.File
                 .Setup(fms=>fms.GetFileHeader(It.IsAny<string>(),It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
                 .Returns(new FileHeader(Guid.Empty, false, null, 1));
 
-            SetupDefaultScheduler();
-
             var rebroadcastInterval = TimeSpan.FromTicks(1);
             mockFileMessageConfig
                 .SetupGet(fmc=>fmc.HeaderRebroadcastInterval)
@@ -194,7 +182,8 @@ namespace Library.Tests.File
                 fileName: null,
                 mockFileMessageConfig.Object,
                 Observable.Never<object>(),
-                broadcastId: Guid.Empty)
+                broadcastId: Guid.Empty,
+                _testScheduler)
                 .Do(m=>{ 
                     if(!_testScheduler.IsEnabled)
                         _testScheduler.AdvanceBy(rebroadcastInterval);
@@ -221,8 +210,6 @@ namespace Library.Tests.File
                 .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.Is<bool?>(b=>b.HasValue && b.Value)))
                 .Returns(new FileHeader(Guid.Empty, true, null, 1));
 
-            SetupDefaultScheduler();
-
             mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
@@ -234,18 +221,12 @@ namespace Library.Tests.File
                 fileName,
                 mockFileMessageConfig.Object,
                 completedObservable,
-                Guid.Empty)
+                Guid.Empty,
+                _testScheduler)
                 .LastOrDefaultAsync();
 
             // Assert
             Assert.True(actual.IsLast);
-        }
-
-        private void SetupDefaultScheduler()
-        {
-            mockSchedulerProvider
-                            .SetupGet(sp => sp.Default)
-                            .Returns(_testScheduler);
         }
     }
 }
