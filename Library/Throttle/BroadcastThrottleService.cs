@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
-using Library.Configuration;
+using Library.Interface.Configuration;
+using Library.Interface.Throttle;
 
 namespace Library.Throttle
 {

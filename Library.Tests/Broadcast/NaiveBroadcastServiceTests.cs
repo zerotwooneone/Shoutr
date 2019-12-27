@@ -1,13 +1,14 @@
 using Library.Broadcast;
-using Library.Configuration;
-using Library.File;
-using Library.Message;
-using Microsoft.Reactive.Testing;
 using Moq;
 using System;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Library.Interface.Broadcast;
+using Library.Interface.Configuration;
+using Library.Interface.File;
+using Library.Interface.Message;
+using Library.Interface.Reactive;
+using Library.Tests.File;
 using Xunit;
 
 namespace Library.Tests.Broadcast
@@ -58,14 +59,6 @@ namespace Library.Tests.Broadcast
             _mockBroadcaster
                 .Setup(mb => mb.Broadcast(It.IsAny<IBroadcastHeader>()))
                 .Returns(Task.CompletedTask);
-
-            //_mockBroadcaster
-            //    .Setup(mb => mb.Broadcast(It.IsAny<IFileHeader>()))
-            //    .Returns(Task.CompletedTask);
-
-            //_mockBroadcaster
-            //    .Setup(mb=>mb.Broadcast(It.IsAny<IPayloadMessage>()))
-            //    .Returns(Task.CompletedTask);
 
             var broadcastId = Guid.Empty;
             var fileName = "file name";

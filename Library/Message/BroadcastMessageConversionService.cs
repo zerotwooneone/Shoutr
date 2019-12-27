@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using System.Numerics;
-using Library.ByteTransfer;
+using Library.Interface.ByteTransfer;
+using Library.Interface.Message;
 using ProtoBuf;
 
 namespace Library.Message

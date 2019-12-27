@@ -1,5 +1,4 @@
 using Library.Listen;
-using Library.Message;
 using Library.Udp;
 using Moq;
 using System;
@@ -7,6 +6,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Library.Interface.Message;
+using Library.Interface.Udp;
 using Xunit;
 
 namespace Library.Tests.Listen

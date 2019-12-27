@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Library.Broadcast;
-using Library.Configuration;
 using Library.File;
-using Library.Listen;
-using Library.Message;
+using Library.Interface.Broadcast;
+using Library.Interface.Configuration;
+using Library.Interface.File;
+using Library.Interface.Listen;
+using Library.Interface.Message;
+using Library.Interface.Reactive;
 using Library.Reactive;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,10 +40,10 @@ namespace Shoutr.IntegrationTest
             var program = new Program(listenerFactory,
                 config);
 
-            program.Run().Wait();
+            program.Run(serviceProvider).Wait();
         }
 
-        private async Task Run()
+        private async Task Run(IServiceProvider serviceProvider)
         {
             //Console.WriteLine($"Listening on port:{_configuration["listen"]}...");
 
@@ -124,7 +126,8 @@ namespace Shoutr.IntegrationTest
 
     internal class SchedulerProvider : ISchedulerProvider
     {
-        public IScheduler Default => Scheduler.Default;
+        public readonly SchedulerWrapper SchedulerWrapper = new SchedulerWrapper(Scheduler.Default);
+        public Library.Interface.Reactive.IScheduler Default => SchedulerWrapper;
     }
 
     internal class ConfigService : IConfigurationService

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Xunit;
 using System.Numerics;
+using Library.Interface.Message;
 
 namespace Library.Tests.Message
 {

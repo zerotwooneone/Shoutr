@@ -1,7 +1,10 @@
-﻿using Library.Message;
-using System;
-using System.Reactive.Concurrency;
+﻿using System;
 using System.Reactive.Linq;
+using Library.Interface.File;
+using Library.Interface.Message;
+using Library.Interface.Reactive;
+using Library.Reactive;
+using ObservableExtensions = Library.Reactive.ObservableExtensions;
 
 namespace Library.File
 {
@@ -58,7 +61,7 @@ namespace Library.File
                 .LastOrDefaultAsync()
                 .Select(_=>_fileMessageService.GetBroadcastHeader(fileName, broadcastId, fileMessageConfig, true));
 
-            var periodicObservable = Observable
+            var periodicObservable = ObservableExtensions
                 .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, scheduler)
                 .TakeUntil(lastObservable)
                 .Select(l=>broadcastHeader);            
@@ -85,7 +88,7 @@ namespace Library.File
                 .LastOrDefaultAsync()
                 .Select(_=>_fileMessageService.GetFileHeader(fileName, broadcastId, fileMessageConfig, 0, true));
 
-            var periodicObservable = Observable
+            var periodicObservable = ObservableExtensions
                 .Timer(fileMessageConfig.HeaderRebroadcastInterval, fileMessageConfig.HeaderRebroadcastInterval, scheduler)
                 .TakeUntil(lastObservable)
                 .Select(l=>broadcastHeader);            

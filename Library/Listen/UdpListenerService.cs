@@ -2,8 +2,10 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Reactive.Linq;
-using Library.Message;
+using Library.Interface.Listen;
+using Library.Interface.Message;
 using Library.Udp;
+using UdpReceivedMessage = Library.Message.UdpReceivedMessage;
 
 namespace Library.Listen
 {

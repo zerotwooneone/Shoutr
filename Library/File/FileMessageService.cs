@@ -1,9 +1,10 @@
-using Library.Configuration;
-using Library.Message;
 using System;
 using System.Linq;
 using System.Numerics;
 using System.Reactive.Linq;
+using Library.Interface.Configuration;
+using Library.Interface.File;
+using Library.Interface.Message;
 
 namespace Library.File
 {

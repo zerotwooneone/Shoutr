@@ -6,9 +6,9 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
+using Library.Interface.Message;
 using Library.Tests.Extensions.Caching.Memory;
 using Xunit;
-using IFileHeader = Library.Message.IFileHeader;
 using static Library.Message.NaiveHeaderCache;
 
 namespace Library.Tests.Message

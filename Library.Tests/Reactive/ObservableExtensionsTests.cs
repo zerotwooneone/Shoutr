@@ -1,10 +1,9 @@
 using Library.Reactive;
-using Microsoft.Reactive.Testing;
 using Moq;
 using System;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
+using Library.Tests.File;
 using Xunit;
 
 namespace Library.Tests.Reactive
@@ -287,7 +286,7 @@ namespace Library.Tests.Reactive
             {
                 if(tuple.delay > TimeSpan.Zero)
                 {
-                    return Observable.Return(tuple.value).Delay(tuple.delay, _testScheduler);
+                    return Observable.Return(tuple.value).Delay(tuple.delay, _testScheduler.Scheduler);
                 }
                 return Observable.Return(tuple.value);
             }));

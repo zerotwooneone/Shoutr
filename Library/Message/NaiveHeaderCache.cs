@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using Library.Interface.Message;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Library.Message

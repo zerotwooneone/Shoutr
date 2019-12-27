@@ -1,12 +1,11 @@
 using Library.File;
-using Library.Message;
-using Library.Reactive;
-using Library.Tests.Reactive;
-using Microsoft.Reactive.Testing;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Library.Interface.File;
+using Library.Interface.Message;
 using Xunit;
 
 namespace Library.Tests.File
@@ -15,16 +14,16 @@ namespace Library.Tests.File
     {
         private MockRepository mockRepository;
 
-        private Mock<IFileMessageService> mockFileMessageService;
-        private readonly Mock<IFileMessageConfig> mockFileMessageConfig;
+        private Mock<IFileMessageService> _mockFileMessageService;
+        private readonly Mock<IFileMessageConfig> _mockFileMessageConfig;
         private readonly TestScheduler _testScheduler;
 
         public MessageObservableFactoryTests()
         {
             this.mockRepository = new MockRepository(MockBehavior.Strict);
 
-            this.mockFileMessageService = this.mockRepository.Create<IFileMessageService>();
-            mockFileMessageConfig = mockRepository.Create<IFileMessageConfig>();
+            this._mockFileMessageService = this.mockRepository.Create<IFileMessageService>();
+            _mockFileMessageConfig = mockRepository.Create<IFileMessageConfig>();
             _testScheduler = new TestScheduler();
         }
 
@@ -36,7 +35,7 @@ namespace Library.Tests.File
         private MessageObservableFactory CreateFactory()
         {
             return new MessageObservableFactory(
-                this.mockFileMessageService.Object);
+                this._mockFileMessageService.Object);
         }
 
         [Fact]
@@ -46,18 +45,18 @@ namespace Library.Tests.File
             var factory = this.CreateFactory();
             string fileName = null;
 
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<bool?>()))
                 .Returns(new BroadcastHeader(Guid.Empty, false, 1));
             
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
 
             // Act
             var actual = await factory.GetBroadcastHeaderObservable(
                 fileName,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 Observable.Never<object>(),
                 Guid.Empty,
                 _testScheduler)
@@ -73,19 +72,19 @@ namespace Library.Tests.File
             // Arrange
             var factory = this.CreateFactory();
             
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms=>fms.GetBroadcastHeader(It.IsAny<string>(),It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<bool?>()))
                 .Returns(new BroadcastHeader(Guid.Empty, false, 1));
 
             var rebroadcastInterval = TimeSpan.FromTicks(1);
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc=>fmc.HeaderRebroadcastInterval)
                 .Returns(rebroadcastInterval);
             
             // Act
             var actual = await factory.GetBroadcastHeaderObservable(
                 fileName: null,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 Observable.Never<object>(),
                 broadcastId: Guid.Empty,
                 _testScheduler)
@@ -107,15 +106,15 @@ namespace Library.Tests.File
             var factory = this.CreateFactory();
             string fileName = null;
 
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.Is<bool?>(b=>b == null || !b.HasValue)))
                 .Returns(new BroadcastHeader(Guid.Empty, false, 1));
             
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.Is<bool?>(b=>b.HasValue && b.Value)))
                 .Returns(new BroadcastHeader(Guid.Empty, true, 1));
 
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
 
@@ -124,7 +123,7 @@ namespace Library.Tests.File
             // Act
             var actual = await factory.GetBroadcastHeaderObservable(
                 fileName,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 completedObservable,
                 Guid.Empty,
                 _testScheduler)
@@ -141,18 +140,18 @@ namespace Library.Tests.File
             var factory = this.CreateFactory();
             string fileName = null;
 
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
                 .Returns(new FileHeader(Guid.Empty, false, null, 1));
             
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
 
             // Act
             var actual = await factory.GetFileHeaderObservable(
                 fileName,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 Observable.Never<object>(),
                 Guid.Empty,
                 _testScheduler)
@@ -168,19 +167,19 @@ namespace Library.Tests.File
             // Arrange
             var factory = this.CreateFactory();
             
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms=>fms.GetFileHeader(It.IsAny<string>(),It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
                 .Returns(new FileHeader(Guid.Empty, false, null, 1));
 
             var rebroadcastInterval = TimeSpan.FromTicks(1);
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc=>fmc.HeaderRebroadcastInterval)
                 .Returns(rebroadcastInterval);
             
             // Act
             var actual = await factory.GetFileHeaderObservable(
                 fileName: null,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 Observable.Never<object>(),
                 broadcastId: Guid.Empty,
                 _testScheduler)
@@ -202,15 +201,15 @@ namespace Library.Tests.File
             var factory = this.CreateFactory();
             string fileName = null;
 
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.Is<bool?>(b=>b == null || !b.HasValue)))
                 .Returns(new FileHeader(Guid.Empty, false, null, 1));
             
-            mockFileMessageService
+            _mockFileMessageService
                 .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.Is<bool?>(b=>b.HasValue && b.Value)))
                 .Returns(new FileHeader(Guid.Empty, true, null, 1));
 
-            mockFileMessageConfig
+            _mockFileMessageConfig
                 .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
                 .Returns(TimeSpan.MaxValue);
 
@@ -219,7 +218,7 @@ namespace Library.Tests.File
             // Act
             var actual = await factory.GetFileHeaderObservable(
                 fileName,
-                mockFileMessageConfig.Object,
+                _mockFileMessageConfig.Object,
                 completedObservable,
                 Guid.Empty,
                 _testScheduler)
@@ -227,6 +226,46 @@ namespace Library.Tests.File
 
             // Assert
             Assert.True(actual.IsLast);
+        }
+
+        [Fact]
+        public void GetFileBroadcast_HasMessages_BeforeWaiting()
+        {
+            // Arrange
+            var factory = this.CreateFactory();
+            
+            _mockFileMessageService
+                .Setup(fms => fms.GetBroadcastHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<bool?>()))
+                .Returns(new BroadcastHeader(Guid.Empty, false, 1));
+            
+            _mockFileMessageConfig
+                .SetupGet(fmc => fmc.HeaderRebroadcastInterval)
+                .Returns(TimeSpan.MaxValue);
+
+            _mockFileMessageService
+                .Setup(fms => fms.GetFileHeader(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<bool?>()))
+                .Returns(new FileHeader(Guid.Empty, false, null, 1));
+            
+            _mockFileMessageService
+                .Setup(fms=>fms.GetPayloads(It.IsAny<string>(), It.IsAny<Guid>(),It.IsAny<IFileMessageConfig>(), It.IsAny<long>(), It.IsAny<byte[]>()))
+                .Returns(Observable.Return<IPayloadMessage>(new PayloadMessage(Guid.Empty, 0, new byte[]{ 99 }, 0)));
+
+            var messages = new List<IMessages>();
+
+            // Act
+            factory.GetFileBroadcast(
+                "file name",
+                _mockFileMessageConfig.Object,
+                _testScheduler)
+                .Take(1)
+                .Subscribe(m=>{
+                    messages.Add(m);
+                });
+
+            _testScheduler.Start();
+
+            // Assert
+            Assert.True(messages.Count > 0);
         }
     }
 }

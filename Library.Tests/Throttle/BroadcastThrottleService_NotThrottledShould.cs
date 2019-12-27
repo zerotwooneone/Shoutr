@@ -1,5 +1,6 @@
 using System;
-using Library.Configuration;
+using Library.Interface.Configuration;
+using Library.Interface.Throttle;
 using Library.Throttle;
 using Moq;
 using Xunit;

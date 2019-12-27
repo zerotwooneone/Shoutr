@@ -1,0 +1,12 @@
+using System;
+using System.Numerics;
+
+namespace Library.Interface.Message
+{
+    public interface IPayloadCache
+    {
+        void HandleFileReady(IObservable<IFileReadyMessage> observable);
+        void HandlePayload(IObservable<IPayloadMessage> observable, Func<Guid, BigInteger, BigInteger, string> getFileName);
+        IObservable<IFileWriteRequest> CachedObservable { get; }
+    }
+}

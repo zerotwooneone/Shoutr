@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Library.Interface.ByteTransfer;
 
 namespace Library.ByteTransfer
 {

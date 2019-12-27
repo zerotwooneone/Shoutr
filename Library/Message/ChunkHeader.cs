@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Library.Interface.Message;
 
 namespace Library.Message
 {

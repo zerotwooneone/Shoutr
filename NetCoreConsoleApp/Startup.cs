@@ -1,4 +1,7 @@
 ﻿using Library.ByteTransfer;
+using Library.Interface.ByteTransfer;
+using Library.Interface.Listen;
+using Library.Interface.Message;
 using Library.Listen;
 using Library.Message;
 using Library.Udp;

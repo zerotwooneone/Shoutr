@@ -1,10 +1,11 @@
-using Library.Configuration;
 using Library.File;
 using Moq;
 using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Library.Interface.Configuration;
+using Library.Interface.File;
 using Xunit;
 
 namespace Library.Tests.File

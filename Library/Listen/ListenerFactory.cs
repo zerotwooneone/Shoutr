@@ -1,5 +1,6 @@
 ﻿using System.Net;
-using Library.Message;
+using Library.Interface.Listen;
+using Library.Interface.Message;
 using Library.Udp;
 
 namespace Library.Listen

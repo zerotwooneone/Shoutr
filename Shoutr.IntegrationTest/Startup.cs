@@ -1,7 +1,4 @@
-﻿using Library.ByteTransfer;
-using Library.Listen;
-using Library.Message;
-using Library.Udp;
+﻿using Library.ServiceCollection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +15,7 @@ namespace Shoutr.IntegrationTest
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services
-                .AddSingleton<IListenerFactory, ListenerFactory>()
-                .AddSingleton<IBroadcastMessageConversionService, BroadcastMessageConversionService>()
-                .AddSingleton<IByteService, ByteService>()
-                .AddSingleton<UdpClientFactory>();
+            services.AddShoutr();                
         }
     }
 }

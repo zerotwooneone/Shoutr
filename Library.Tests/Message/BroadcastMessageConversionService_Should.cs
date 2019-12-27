@@ -1,9 +1,8 @@
 using System;
-using System.Linq;
-using Library.ByteTransfer;
+using Library.Interface.ByteTransfer;
+using Library.Interface.Message;
 using Library.Message;
 using Moq;
-using Xunit;
 
 namespace Library.Tests.Message
 {
