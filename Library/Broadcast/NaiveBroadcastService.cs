@@ -53,7 +53,7 @@ namespace Library.Broadcast
                         return Observable.Empty<System.Reactive.Unit>();
                     }
                 })              
-                .Concat();
+                .Merge(); //merge causes an integration error
 
             await broadcastObservable;
         }

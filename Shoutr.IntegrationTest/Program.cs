@@ -14,22 +14,34 @@ using Library.Reactive;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using IScheduler = Library.Interface.Reactive.IScheduler;
 
 namespace Shoutr.IntegrationTest
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private readonly IConfiguration _configuration;
+
+        private readonly IListenerFactory _listenerFactory;
+
+        public Program(IListenerFactory listenerFactory,
+            IConfiguration configuration)
+        {
+            _listenerFactory = listenerFactory;
+            _configuration = configuration;
+        }
+
+        private static void Main(string[] args)
         {
             var builder = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", false, true)
-                    .AddCommandLine(args);
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .AddCommandLine(args);
 
             IConfiguration config = builder
                 .Build();
 
-            ServiceCollection serviceCollection = new ServiceCollection();
+            var serviceCollection = new ServiceCollection();
 
             var startup = new Startup(config);
             startup.ConfigureServices(serviceCollection);
@@ -55,7 +67,7 @@ namespace Shoutr.IntegrationTest
             //Console.WriteLine($"Received {JsonConvert.SerializeObject(messages)}");
 
             var schedulerProvider = new SchedulerProvider();
-            ConfigService configurationService = new ConfigService();
+            var configurationService = new ConfigService();
             var m = new NaiveBroadcastService(
                 new MessageObservableFactory(
                     new FileMessageService(
@@ -68,52 +80,58 @@ namespace Shoutr.IntegrationTest
                 await m.BroadcastFile("glowMaggot.png", new FileConfig(), broadcaster, schedulerProvider.Default);
             }
         }
-
-        private readonly IListenerFactory _listenerFactory;
-        private readonly IConfiguration _configuration;
-
-        public Program(IListenerFactory listenerFactory,
-            IConfiguration configuration)
-        {
-            _listenerFactory = listenerFactory;
-            _configuration = configuration;
-        }
     }
 
     internal class MockBroadcaster : IBroadcaster, IDisposable
     {
-        private StreamWriter _fileStream;
+        private readonly string _fileName;
 
         public MockBroadcaster()
         {
-            _fileStream = new StreamWriter(new FileStream($"glowMaggot.{DateTime.Now.ToString("hhmmssffff")}.json", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite));
+            _fileName = $"glowMaggot.{DateTime.Now:hhmmssffff}.json";
         }
 
         public async Task Broadcast(IBroadcastHeader header)
         {
-            await _fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            using (var fileStream = GetFileStream())
+            {
+                await fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            }
         }
 
         public async Task Broadcast(IFileHeader header)
         {
-            await _fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            using (var fileStream = GetFileStream())
+            {
+                await fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            }
         }
 
         public async Task Broadcast(IChunkHeader header)
         {
-            await _fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            using (var fileStream = GetFileStream())
+            {
+                await fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            }
         }
 
         public async Task Broadcast(IPayloadMessage header)
         {
-            await _fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            using (var fileStream = GetFileStream())
+            {
+                await fileStream.WriteLineAsync(JsonConvert.SerializeObject(header));
+            }
         }
 
         public void Dispose()
         {
-            _fileStream.Flush();
-            _fileStream.Dispose();
-            _fileStream = null;
+            
+        }
+
+        private StreamWriter GetFileStream()
+        {
+            return new StreamWriter(new FileStream(_fileName, FileMode.OpenOrCreate, FileAccess.Write,
+                FileShare.ReadWrite));
         }
     }
 
@@ -127,7 +145,7 @@ namespace Shoutr.IntegrationTest
     internal class SchedulerProvider : ISchedulerProvider
     {
         public readonly SchedulerWrapper SchedulerWrapper = new SchedulerWrapper(Scheduler.Default);
-        public Library.Interface.Reactive.IScheduler Default => SchedulerWrapper;
+        public IScheduler Default => SchedulerWrapper;
     }
 
     internal class ConfigService : IConfigurationService
