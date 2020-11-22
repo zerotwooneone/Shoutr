@@ -22,3 +22,20 @@ We intend the default method of "filling in the gaps" (missing or bad data) is g
 * One broadcaster broadcasts the entirety of her message
 * Listeners acquire and download a .torrent which is seeded by the broadcaster
   - BitTorrent will handle identifying missing or bad data. It will also take advantage of the fact that different listeners might have successfully received different parts of the broadcast.
+
+## Project Layout
+* Shoutr
+  * Shoutr.Console
+    * Console App which listens and broadcasts
+  * Shoutr.Gui
+    * Gui App which listens and broadcasts
+  * Shoutr.Core
+    * Library with all crutial components
+  * Shoutr.Core.Interfaces
+    * Library with all crutial interfaces
+  * Shoutr.Core.Reactive
+    * Library implementing reactive interfaces
+  * Shoutr.Core.Reactive.Interfaces
+    * Library with all reactive interfaces
+  * Shoutr.Core.Reactive.Extensions
+    * Library extending interfaces with reactive members and methods
