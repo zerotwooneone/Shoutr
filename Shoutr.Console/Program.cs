@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
@@ -136,34 +138,47 @@ namespace Shoutr.Console
                     return packetList.AsEnumerable();
                 })
                 .Concat(partialPacketCache.Select(kvp => kvp.Value).ToObservable());
-            try
-            {
-                await packetObservable
-                    .ObserveOn(taskPoolScheduler)
-                    .Select((array, index) =>
+            //try
+            //{
+            //    await packetObservable
+            //        .ObserveOn(taskPoolScheduler)
+            //        .Select((array, index) =>
+            //        {
+            //            try
+            //            {
+            //                System.Console.WriteLine(
+            //                    $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
+            //            }
+            //            catch (Exception e)
+            //            {
+            //                System.Console.WriteLine($"{index} .error writing line {e}");
+            //            }
+
+            //            return 0;
+            //        })
+            //        .ToTask(token);
+            //}
+            //catch (Exception e)
+            //{
+            //    System.Console.WriteLine(e);
+            //}
+
+            UdpClient sender = new UdpClient(3036);
+            IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, 3036);
+            
+            await packetObservable
+                .ObserveOn(taskPoolScheduler)
+                .SelectMany((array, index) =>
+                {
+                    return Observable.FromAsync(async c =>
                     {
-                        try
-                        {
-                            System.Console.WriteLine(
-                                $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
-                        }
-                        catch (Exception e)
-                        {
-                            System.Console.WriteLine($"{index} .error writing line {e}");
-                        }
-
+                        await sender.SendAsync(array, array.Length, destination);
+                        System.Console.WriteLine(
+                            $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
                         return 0;
-                    })
-                    .ToTask(token);
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine(e);
-            }
-
-            //UdpClient sender = new UdpClient(3036);
-            //IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, 3036);
-            //sender.Connect(destination);
+                    });
+                })
+                .ToTask(token);
 
         }
 
