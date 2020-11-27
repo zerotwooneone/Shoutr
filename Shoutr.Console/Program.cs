@@ -173,8 +173,8 @@ namespace Shoutr.Console
                     return Observable.FromAsync(async c =>
                     {
                         await sender.SendAsync(array, array.Length, destination);
-                        System.Console.WriteLine(
-                            $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
+                        //System.Console.WriteLine(
+                        //    $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
                         return 0;
                     });
                 })
