@@ -5,11 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using ProtoBuf;
 
 namespace Shoutr.Console
 {
@@ -35,7 +38,17 @@ namespace Shoutr.Console
         {
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(programToken);
             var token = cancellationTokenSource.Token;
-            
+
+            //ProtoMessage message;
+            //using (var memoryStream = new MemoryStream(buff))
+            //{
+            //    var protoMessage = Serializer.Deserialize<ProtoMessage>(memoryStream);
+            //    message = protoMessage;
+            //}
+
+            //System.Console.WriteLine($"Buff bytes {buff.Length}");
+            //System.Console.WriteLine($"id:{new Guid(message.BroadcastId)} {JsonConvert.SerializeObject(message)}");
+
             var fileName = "test.7z";
             var file = new FileInfo(fileName);
             var stream = file.OpenRead();
@@ -77,17 +90,20 @@ namespace Shoutr.Console
             //{
             //    System.Console.WriteLine($"{count} {Newtonsoft.Json.JsonConvert.SerializeObject(new { array = x.array.Take(3), x.array.Length, startIndex = x.startPayloadIndex }, Formatting.Indented)}");
             //    return x;
-            //}); //.ToTask(token);
+            //}); //.ToTask(token).ConfigureAwait(false);
 
-            var packetSize = 1400;
+            const long typicalMaxTransmitUnit = 1400;
+            const long broadcastIdByteCount = 16; //guid bytes
+            const long fudgeAmount = 100;
+            var packetSize = typicalMaxTransmitUnit - broadcastIdByteCount - fudgeAmount;
             var partialPacketCache = new ConcurrentDictionary<long, byte[]>();
-            var packetObservable = pageObservable
+            var payloadObservable = pageObservable
                 .ObserveOn(taskPoolScheduler)
                 .SelectMany(page =>
                 {
                     var firstPacketIndex = page.startPayloadIndex / packetSize;
                     var hasFirstFragmented = (page.startPayloadIndex % packetSize) != 0;
-                    var packetList = new List<byte[]>();
+                    var packetList = new List<PayloadWrapper>();
                     
                     var firstPartialPacketIndex = hasFirstFragmented
                         ? firstPacketIndex
@@ -100,7 +116,8 @@ namespace Shoutr.Console
                         var partialBuffer = new byte[firstPartialLength];
                         Array.Copy(page.array, partialBuffer, firstPartialLength);
                         var firstPartialPacket = partialBuffer;
-                        CachePartialPacket(partialPacketCache, firstPartialPacketIndex.Value, firstPartialPacket, packetList);
+                        var firstPayload = new PayloadWrapper(){PayloadIndex = firstPartialPacketIndex.Value, bytes = firstPartialPacket};
+                        CachePartialPacket(partialPacketCache, firstPayload, packetList);
                     }
 
                     var firstFullPacketIndex = hasFirstFragmented
@@ -123,7 +140,8 @@ namespace Shoutr.Console
                         var packetBuffer = new byte[packetSize];
                         var startPageIndex = ((packetIndex - firstFullPacketIndex) * packetSize) + firstPartialLength;
                         Array.Copy(page.array, startPageIndex, packetBuffer, 0, packetSize);
-                        packetList.Add(packetBuffer);
+                        var payload = new PayloadWrapper(){PayloadIndex = packetIndex, bytes = packetBuffer};
+                        packetList.Add(payload);
                     }
 
                     if (hasLastPartialPacket)
@@ -132,15 +150,16 @@ namespace Shoutr.Console
                         var lastPartialPageIndex = page.array.Length - lastPartialLength;
                         var lastPartialPacketIndex = lastPacketIndex;
                         Array.Copy(page.array, lastPartialPageIndex, partialBuffer, 0, lastPartialLength);
-                        CachePartialPacket(partialPacketCache, lastPartialPacketIndex, partialBuffer, packetList);
+                        var lastPayload = new PayloadWrapper(){PayloadIndex = lastPartialPacketIndex, bytes = partialBuffer};
+                        CachePartialPacket(partialPacketCache, lastPayload, packetList);
                     }
 
                     return packetList.AsEnumerable();
                 })
-                .Concat(partialPacketCache.Select(kvp => kvp.Value).ToObservable());
+                .Concat(partialPacketCache.Select(kvp => new PayloadWrapper(){PayloadIndex = kvp.Key, bytes = kvp.Value}).ToObservable());
             //try
             //{
-            //    await packetObservable
+            //    await payloadObservable
             //        .ObserveOn(taskPoolScheduler)
             //        .Select((array, index) =>
             //        {
@@ -156,12 +175,50 @@ namespace Shoutr.Console
 
             //            return 0;
             //        })
-            //        .ToTask(token);
+            //        .ToTask(token).ConfigureAwait(false);
             //}
             //catch (Exception e)
             //{
             //    System.Console.WriteLine(e);
             //}
+
+            var broadcastId = Guid.NewGuid();
+
+            var serializedPayloadObservable = payloadObservable
+                .Select(payloadWrapper =>
+                {
+                    byte[] serializedPayload;
+                    var packetCount = (long) Math.Ceiling((double) file.Length / packetSize);
+                    var rebroadcastTime = TimeSpan.FromSeconds(1);
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        Serializer.Serialize(memoryStream,
+                            new ProtoMessage(broadcastId, payloadWrapper.PayloadIndex, payloadWrapper.bytes, null, null, null));
+                        serializedPayload = memoryStream.ToArray();
+                    }
+
+                    return serializedPayload;
+                });
+
+            
+            byte[] serializedHeader;
+            var packetCount = (long)Math.Ceiling((double) file.Length / packetSize);
+            var rebroadcastTime = TimeSpan.FromSeconds(1);
+            using (var memoryStream = new MemoryStream())
+            {
+                Serializer.Serialize(memoryStream, new ProtoMessage(broadcastId, null, null, packetSize, fileName, packetCount));
+                serializedHeader = memoryStream.ToArray();
+            }
+            var headerObservable = Observable.Return(serializedHeader)
+                .Concat(
+                    Observable.Interval(rebroadcastTime, Scheduler.Default)
+                        .TakeUntil(serializedPayloadObservable.LastOrDefaultAsync())
+                        .Select(_ => serializedHeader)
+                )
+                .Concat(Observable.Return(serializedHeader));
+
+            var packetObservable = /*headerObservable
+                .Merge(*/serializedPayloadObservable; //);
 
             UdpClient sender = new UdpClient(3036);
             IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, 3036);
@@ -172,35 +229,76 @@ namespace Shoutr.Console
                 {
                     return Observable.FromAsync(async c =>
                     {
-                        await sender.SendAsync(array, array.Length, destination);
+                        await sender.SendAsync(array, array.Length, destination).ConfigureAwait(false);
                         //System.Console.WriteLine(
                         //    $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
-                        return 0;
+                        return Unit.Default;
                     });
                 })
-                .ToTask(token);
+                .ToTask(token).ConfigureAwait(false);
 
         }
 
-        private static void CachePartialPacket(ConcurrentDictionary<long, byte[]> partialPacketCache, long packetIndex, byte[] packet,
-            List<byte[]> packetSubject)
+        private static void CachePartialPacket(ConcurrentDictionary<long, byte[]> partialPacketCache, PayloadWrapper payload,
+            List<PayloadWrapper> packetList)
         {
             var shouldDelete = false;
-            var r = partialPacketCache.AddOrUpdate(packetIndex,
-                packet,
+            var r = partialPacketCache.AddOrUpdate(payload.PayloadIndex,
+                payload.bytes,
                 (_, cachedPartial) =>
                 {
                     shouldDelete = true;
-                    var packetBuffer = new byte[cachedPartial.Length + packet.Length];
+                    var packetBuffer = new byte[cachedPartial.Length + payload.bytes.Length];
                     Array.Copy(cachedPartial, packetBuffer, cachedPartial.Length);
-                    Array.Copy(packet, 0, packetBuffer, cachedPartial.Length, packet.Length);
-                    packetSubject.Add(packetBuffer);
+                    Array.Copy(payload.bytes, 0, packetBuffer, cachedPartial.Length, payload.bytes.Length);
+                    packetList.Add(payload);
                     return cachedPartial;
                 });
             if (shouldDelete)
             {
-                partialPacketCache.TryRemove(packetIndex, out _);
+                partialPacketCache.TryRemove(payload.PayloadIndex, out _);
             }
+        }
+    }
+
+    internal record PayloadWrapper
+    {
+        internal long PayloadIndex { get; init; }
+        internal byte[] bytes { get; init; }
+    }
+
+    /// <summary>
+    /// This message class is specific to the serialization library being used in this service, ProtocolBuffers. This represents the shape of the data that is actually sent as bytes over the network.
+    /// </summary>
+    [ProtoContract]
+    internal class ProtoMessage
+    {
+        [ProtoMember(1)]
+        public byte[] BroadcastId { get; set; }
+        [ProtoMember(2)]
+        public long? PayloadIndex { get; set; }
+        [ProtoMember(3)]
+        public byte[] Payload { get; set; }
+        [ProtoMember(4)]
+        public long? PayloadMaxSize { get; set; }
+        [ProtoMember(5)]
+        public string FileName { get; set; }
+        [ProtoMember(6)]
+        public long? PayloadCount { get; set; }
+            
+        /// <summary>
+        /// Parameterless constructor required for protocol buffer deserialization
+        /// </summary>
+        internal ProtoMessage() {}
+
+        internal ProtoMessage(Guid broadcastId, long? payloadIndex, byte[] payload, long? payloadMaxSize, string fileName, long? payloadCount)
+        {
+            BroadcastId = broadcastId.ToByteArray();
+            PayloadIndex = payloadIndex;
+            Payload = payload;
+            PayloadMaxSize = payloadMaxSize;
+            FileName = fileName;
+            PayloadCount = payloadCount;
         }
     }
 }
