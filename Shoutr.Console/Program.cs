@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using ProtoBuf;
 
@@ -21,6 +22,11 @@ namespace Shoutr.Console
         static void Main(string[] args)
         {
             System.Console.WriteLine("Hello World!");
+
+            var config = new ConfigurationBuilder()
+                .AddCommandLine(args)
+                .Build();
+
             var tokenSource = new CancellationTokenSource();
             void OnCancelKey(object sender, ConsoleCancelEventArgs e)
             {
@@ -28,13 +34,21 @@ namespace Shoutr.Console
             }
             System.Console.CancelKeyPress += OnCancelKey;
             var program = new Program();
-            program.Do(tokenSource.Token)
-                   .Wait(tokenSource.Token);
+
+            if (config["listen"] != null)
+            {
+                System.Console.WriteLine("Going to listen");
+            } else if (config["broadcast"] != null)
+            {
+                System.Console.WriteLine("Going to broadcast");
+                program.Broadcast(tokenSource.Token)
+                    .Wait(tokenSource.Token);
+            }
         }
 
         private Program(){ }
 
-        private async Task Do(CancellationToken programToken)
+        private async Task Broadcast(CancellationToken programToken)
         {
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(programToken);
             var token = cancellationTokenSource.Token;
