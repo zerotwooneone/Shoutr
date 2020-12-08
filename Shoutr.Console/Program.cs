@@ -35,20 +35,23 @@ namespace Shoutr.Console
             System.Console.CancelKeyPress += OnCancelKey;
             var program = new Program();
 
+            const string fileName = "test.7z";
+            const int port = 3036;
+
             if (config["listen"] != null)
             {
                 System.Console.WriteLine("Going to listen");
             } else if (config["broadcast"] != null)
             {
                 System.Console.WriteLine("Going to broadcast");
-                program.Broadcast(tokenSource.Token)
+                program.Broadcast(fileName, port, tokenSource.Token)
                     .Wait(tokenSource.Token);
             }
         }
 
         private Program(){ }
 
-        private async Task Broadcast(CancellationToken programToken)
+        private async Task Broadcast(string fileName, int port, CancellationToken programToken)
         {
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(programToken);
             var token = cancellationTokenSource.Token;
@@ -63,7 +66,6 @@ namespace Shoutr.Console
             //System.Console.WriteLine($"Buff bytes {buff.Length}");
             //System.Console.WriteLine($"id:{new Guid(message.BroadcastId)} {JsonConvert.SerializeObject(message)}");
 
-            var fileName = "test.7z";
             var file = new FileInfo(fileName);
             var stream = file.OpenRead();
 
@@ -234,8 +236,8 @@ namespace Shoutr.Console
             var packetObservable = /*headerObservable
                 .Merge(*/serializedPayloadObservable; //);
 
-            UdpClient sender = new UdpClient(3036);
-            IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, 3036);
+            UdpClient sender = new UdpClient(port);
+            IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, port);
             
             await packetObservable
                 .ObserveOn(taskPoolScheduler)
