@@ -408,7 +408,7 @@ namespace Shoutr.Console
             var fileStoppedSub = fileStoppedObservable.Subscribe();
             token.Register(() => fileStoppedSub.Dispose());
 
-            UdpClient receiver = new UdpClient(3036);
+            UdpClient receiver = new UdpClient(port);
             IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
             while (!token.IsCancellationRequested)
             {
