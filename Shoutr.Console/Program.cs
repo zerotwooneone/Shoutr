@@ -249,7 +249,8 @@ namespace Shoutr.Console
                 .Merge(serializedPayloadObservable);
 
             UdpClient sender = new UdpClient(port);
-            IPEndPoint destination = new IPEndPoint(IPAddress.Broadcast, port);
+            sender.EnableBroadcast = true; //may not be needed
+            IPEndPoint destination = new IPEndPoint(IPAddress.Parse("192.168.1.255"), port);
 
             await packetObservable
                 .ObserveOn(taskPoolScheduler)
@@ -409,6 +410,7 @@ namespace Shoutr.Console
             token.Register(() => fileStoppedSub.Dispose());
 
             UdpClient receiver = new UdpClient(port);
+            receiver.EnableBroadcast = true;
             IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
             while (!token.IsCancellationRequested)
             {
