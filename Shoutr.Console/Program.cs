@@ -311,14 +311,14 @@ namespace Shoutr.Console
                         message = protoMessage;
                     }
 
-                    System.Console.WriteLine(
-                        $"id:{new Guid(message.BroadcastId)} {JsonConvert.SerializeObject(message)}");
+                    //System.Console.WriteLine(
+                    //    $"id:{new Guid(message.BroadcastId)} {JsonConvert.SerializeObject(message)}");
                     return message;
                 });
 
-            var headerCache = new ConcurrentDictionary<Guid, ProtoMessage>();
+            var headerCache = new ConcurrentDictionary<Guid, Header>();
             var payloadCache = new ConcurrentDictionary<Guid, List<ProtoMessage>>();
-
+            
             var fileWriteRequestSubject = new Subject<FileWriteWrapper>();
 
             var headerObservable = protoMessageObservable
@@ -326,7 +326,14 @@ namespace Shoutr.Console
 
             var payloadObservable = protoMessageObservable
                 .Where(message => message.PayloadIndex.HasValue && message.Payload != null);
-
+            string GetFileName(ProtoMessage header)
+            {
+                return $"{System.DateTime.Now:HHmmssffff}.{header.FileName}";
+            }
+            Header ConvertToHeader(ProtoMessage header)
+            {
+                return new Header { BroadcastId = header.GetBroadcastId(), FileName = GetFileName(header), PayloadCount = header.PayloadCount.Value, PayloadMaxBytes = header.PayloadMaxSize.Value};
+            }
             headerObservable
                 .ObserveOn(observableScheduler)
                 .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
@@ -336,10 +343,10 @@ namespace Shoutr.Console
                         {
                             foreach (var payload in payloads)
                             {
-                                fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
+                                fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = ConvertToHeader(header), Payload = payload});
                             }
                         }
-                        return header;
+                        return ConvertToHeader(header);
                     },
                     (bcid, m) => m));
 
@@ -350,7 +357,7 @@ namespace Shoutr.Console
                 {
                     if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
                     {
-                        fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
+                        fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload });
                     }
                     else
                     {
@@ -370,30 +377,31 @@ namespace Shoutr.Console
                 });
 
             var writeCompleteObservable = fileWriteRequestSubject
-                .ObserveOn(observableScheduler)
-                .SelectMany(writeRequest =>
+                //.ObserveOn(observableScheduler)
+                .Select(writeRequest =>
                 {
                     return Observable.FromAsync(async () =>
                     {
-                        var file = new FileInfo($"{System.DateTime.Now:HHmmssffff}.{writeRequest.Header.FileName}");
-                        var stream = file.OpenWrite();
-                        var writeIndex = writeRequest.Payload.PayloadIndex.Value * writeRequest.Header.PayloadMaxSize.Value;
-                        stream.Seek(writeIndex, SeekOrigin.Begin);
-                        await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
+                        var file = new FileInfo(writeRequest.Header.FileName);
+                        using(var stream = file.OpenWrite()){
+                            var writeIndex = writeRequest.Payload.PayloadIndex.Value * writeRequest.Header.PayloadMaxBytes;
+                            stream.Seek(writeIndex, SeekOrigin.Begin);
+                            await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
+                        }
                         return writeRequest.Header;
                     });
-                });
+                }).Merge(1);
 
             var fileWriteObservable = writeCompleteObservable
                 .ObserveOn(observableScheduler)
-                .GroupBy(w => w.GetBroadcastId());
+                .GroupBy(w => w.BroadcastId);
 
             var fileTimeout = TimeSpan.FromSeconds(10);
-            Func<IGroupedObservable<Guid, ProtoMessage>, IObservable<ProtoMessage>> createAmb = null;
-            IObservable<ProtoMessage> CreateAmb(IGroupedObservable<Guid, ProtoMessage> g)
+            Func<IGroupedObservable<Guid, Header>, IObservable<Header>> createAmb = null;
+            IObservable<Header> CreateAmb(IGroupedObservable<Guid, Header> g)
             {
                 var nextAmb = g.FirstOrDefaultAsync().Select(x=>createAmb(g)).Switch();
-                var timeoutObservable = (IObservable<ProtoMessage>)Observable.Return(g).FirstOrDefaultAsync().Delay(fileTimeout);
+                var timeoutObservable = Observable.Return(g).Merge().FirstOrDefaultAsync().Delay(fileTimeout);
                 return Observable.Amb( nextAmb, timeoutObservable);
             }
             createAmb = CreateAmb;
@@ -410,19 +418,27 @@ namespace Shoutr.Console
             token.Register(() => fileStoppedSub.Dispose());
 
             UdpClient receiver = new UdpClient(port);
-            receiver.EnableBroadcast = true;
-            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+            //receiver.EnableBroadcast = true;
+            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("192.168.1.255"), 0);
             while (!token.IsCancellationRequested)
             {
                 var received = await receiver.ReceiveAsync().ConfigureAwait(false);
-                System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
+                //System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
                 packetBufferObservable.OnNext(received.Buffer);
             }
         }
     }
 
+    internal record Header
+    {
+        internal Guid BroadcastId {get; init; }
+        internal string FileName {get; init;}
+        internal long PayloadMaxBytes {get;init;}
+        internal long PayloadCount {get;init;}
+    }
+
     internal record FileWriteWrapper {
-        internal ProtoMessage Header { get; init; }
+        internal Header Header { get; init; }
         internal ProtoMessage Payload { get; init; }
     }
 
