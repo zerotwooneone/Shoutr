@@ -383,11 +383,14 @@ namespace Shoutr.Console
                     return Observable.FromAsync(async () =>
                     {
                         var file = new FileInfo(writeRequest.Header.FileName);
-                        using(var stream = file.OpenWrite()){
-                            var writeIndex = writeRequest.Payload.PayloadIndex.Value * writeRequest.Header.PayloadMaxBytes;
+                        using (var stream = file.OpenWrite())
+                        {
+                            var writeIndex = writeRequest.Payload.PayloadIndex.Value *
+                                             writeRequest.Header.PayloadMaxBytes;
                             stream.Seek(writeIndex, SeekOrigin.Begin);
                             await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
                         }
+
                         return writeRequest.Header;
                     });
                 }).Merge(1);
