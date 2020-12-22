@@ -16,8 +16,8 @@ namespace Shoutr.Contracts
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task BroadcastFile(string fileName,
-            int port = 3036,
-            int mtu = 1400,
+            int port = Defaults.Port,
+            int mtu = Defaults.Mtu,
             float headerRebroadcastSeconds = 1,
             string subnet = "192.168.1.255",
             CancellationToken cancellationToken = default);

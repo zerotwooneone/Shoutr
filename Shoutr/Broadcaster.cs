@@ -1,5 +1,6 @@
 ﻿using ProtoBuf;
 using Shoutr.Contracts;
+using Shoutr.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,8 +19,8 @@ namespace Shoutr
     public class Broadcaster : IBroadcaster
     {
         public async Task BroadcastFile(string fileName, 
-            int port = 3036, 
-            int mtu = 1400, 
+            int port = Defaults.Port, 
+            int mtu = Defaults.Mtu, 
             float headerRebroadcastSeconds = 1,
             string subnet = "192.168.1.255",
             CancellationToken cancellationToken = default)
@@ -239,3 +240,4 @@ namespace Shoutr
         }
     }
 }
+
