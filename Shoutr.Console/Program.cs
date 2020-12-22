@@ -2,14 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -229,25 +225,32 @@ namespace Shoutr.Console
     [ProtoContract]
     internal class ProtoMessage
     {
-        [ProtoMember(1)]
+        [ProtoMember(1)] 
         public byte[] BroadcastId { get; set; }
-        [ProtoMember(2)]
+        [ProtoMember(2)] 
         public long? PayloadIndex { get; set; }
-        [ProtoMember(3)]
+        [ProtoMember(3)] 
         public byte[] Payload { get; set; }
-        [ProtoMember(4)]
+        [ProtoMember(4)] 
         public long? PayloadMaxSize { get; set; }
-        [ProtoMember(5)]
+        [ProtoMember(5)] 
         public string FileName { get; set; }
-        [ProtoMember(6)]
+        [ProtoMember(6)] 
         public long? PayloadCount { get; set; }
-            
+
         /// <summary>
         /// Parameterless constructor required for protocol buffer deserialization
         /// </summary>
-        internal ProtoMessage() {}
+        internal ProtoMessage()
+        {
+        }
 
-        internal ProtoMessage(Guid broadcastId, long? payloadIndex, byte[] payload, long? payloadMaxSize, string fileName, long? payloadCount)
+        internal ProtoMessage(Guid broadcastId,
+            long? payloadIndex,
+            byte[] payload,
+            long? payloadMaxSize,
+            string fileName,
+            long? payloadCount)
         {
             BroadcastId = broadcastId.ToByteArray();
             PayloadIndex = payloadIndex;

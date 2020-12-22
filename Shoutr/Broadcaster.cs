@@ -237,13 +237,5 @@ namespace Shoutr
                 partialPacketCache.TryRemove(payload.PayloadIndex, out _);
             }
         }
-
-    internal record PayloadWrapper
-    {
-        internal long PayloadIndex { get; init; }
-        internal byte[] bytes { get; init; }
     }
-    }
-
-    
 }
