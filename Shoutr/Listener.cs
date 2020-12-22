@@ -73,7 +73,9 @@ namespace Shoutr
                     {
                         if (payloadCache.TryRemove(bcid, out var payloads))
                         {
-                            foreach (var payload in payloads)
+                            var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
+                            payloads.Clear();
+                            foreach (var payload in p)
                             {
                                 fileWriteRequestSubject.OnNext(new FileWriteWrapper()
                                     {Header = ConvertToHeader(header), Payload = payload});
@@ -162,7 +164,7 @@ namespace Shoutr
             while (!token.IsCancellationRequested)
             {
                 var received = await receiver.ReceiveAsync().ConfigureAwait(false);
-                //System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
+                System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
                 packetBufferObservable.OnNext(received.Buffer);
             }
         }

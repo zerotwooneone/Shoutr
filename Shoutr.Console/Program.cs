@@ -34,7 +34,7 @@ namespace Shoutr.Console
                     {
                         System.Console.WriteLine($"bcid:{r.BroadcastId} file:{r.FileName}");
                     };
-                    l.Listen();
+                    l.Listen().Wait(tokenSource.Token);
                 }
                 else if (config["broadcast"] != null)
                 {
