@@ -6,11 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="protobuf-net" Version="3.0.73" />
-    <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Shoutr.Contracts\Shoutr.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <StartupObject>Shoutr.Console.Program</StartupObject>
-    <AssemblyName>Shoutr</AssemblyName>
+    <AssemblyName>Shoutr.Console</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +12,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="protobuf-net" Version="3.0.73" />
     <PackageReference Include="System.Reactive.Linq" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shoutr\Shoutr.csproj" />
   </ItemGroup>
 
   <ItemGroup>
