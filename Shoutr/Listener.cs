@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf;
 using Shoutr.Contracts;
+using Shoutr.Reactive;
 using Shoutr.Serialization;
 
 namespace Shoutr
@@ -135,25 +137,9 @@ namespace Shoutr
                 .ObserveOn(observableScheduler)
                 .GroupBy(w => w.BroadcastId);
 
-            var fileTimeout = TimeSpan.FromSeconds(10);
-            Func<IGroupedObservable<Guid, Header>, IObservable<Header>> createAmb = null;
-
-            IObservable<Header> CreateAmb(IGroupedObservable<Guid, Header> g)
-            {
-                var nextAmb = g.FirstOrDefaultAsync().Select(x => createAmb(g)).Switch();
-                var timeoutObservable = Observable.Return(g).Merge().FirstOrDefaultAsync().Delay(fileTimeout);
-                return Observable.Amb(nextAmb, timeoutObservable);
-            }
-
-            createAmb = CreateAmb;
-
-            var fileStoppedObservable = fileWriteObservable
-                .SelectMany(g => CreateAmb(g))
-                .Select(p =>
-                {
-                    OnBroadcastEnded(new BroadcastResult(p.BroadcastId, p.FileName));
-                    return p.FileName;
-                });
+            const int fileCompleteTimeout = 10;
+            var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
+            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, observableScheduler);
 
             var fileStoppedSub = fileStoppedObservable.Subscribe();
             token.Register(() => fileStoppedSub.Dispose());
@@ -167,6 +153,30 @@ namespace Shoutr
                 System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
                 packetBufferObservable.OnNext(received.Buffer);
             }
+        }
+
+        private IObservable<string> CreateTimeoutObservable(TimeSpan completeTimeout,
+            IObservable<IGroupedObservable<Guid, Header>> observable,
+            IScheduler scheduler)
+        {
+            var fileStoppedObservable = observable
+                .SelectMany(fileWriteObservable =>
+                {
+                    return Observable.FromAsync(async () =>
+                    {
+                        var first = await fileWriteObservable.FirstOrDefaultAsync();
+                        if (first == null)
+                        {
+                            return Observable.Empty<Header>();
+                        }
+
+                        return fileWriteObservable.WhenStopped((Header) first, completeTimeout, scheduler);
+                    });
+                })
+                .Merge()
+                .Select(h => h.FileName);
+
+            return fileStoppedObservable;
         }
 
         public event EventHandler<IBroadcastResult> BroadcastEnded;
