@@ -141,7 +141,10 @@ namespace Shoutr
             var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
             var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, observableScheduler);
 
-            var fileStoppedSub = fileStoppedObservable.Subscribe();
+            var fileStoppedSub = fileStoppedObservable.Subscribe(header =>
+            {
+                OnBroadcastEnded(new BroadcastResult(header.BroadcastId, header.FileName));
+            });
             token.Register(() => fileStoppedSub.Dispose());
 
             UdpClient receiver = new UdpClient(port);
@@ -150,12 +153,12 @@ namespace Shoutr
             while (!token.IsCancellationRequested)
             {
                 var received = await receiver.ReceiveAsync().ConfigureAwait(false);
-                System.Console.WriteLine($"Buff bytes {received.Buffer.Length}");
+                Console.WriteLine($"Buff bytes {received.Buffer.Length}");
                 packetBufferObservable.OnNext(received.Buffer);
             }
         }
 
-        private IObservable<string> CreateTimeoutObservable(TimeSpan completeTimeout,
+        private IObservable<Header> CreateTimeoutObservable(TimeSpan completeTimeout,
             IObservable<IGroupedObservable<Guid, Header>> observable,
             IScheduler scheduler)
         {
@@ -173,8 +176,7 @@ namespace Shoutr
                         return fileWriteObservable.WhenStopped((Header) first, completeTimeout, scheduler);
                     });
                 })
-                .Merge()
-                .Select(h => h.FileName);
+                .Merge();
 
             return fileStoppedObservable;
         }
