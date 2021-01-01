@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf;
 using Shoutr.Contracts;
+using Shoutr.Contracts.ByteTransport;
 using Shoutr.Reactive;
 using Shoutr.Serialization;
 
@@ -38,8 +39,8 @@ namespace Shoutr
                         message = protoMessage;
                     }
 
-                    //System.Console.WriteLine(
-                    //    $"id:{new Guid(message.BroadcastId)} {JsonConvert.SerializeObject(message)}");
+                    //DdsLog(
+                    //    $"id:{new Guid(message.BroadcastId)} {Newtonsoft.Json.JsonConvert.SerializeObject(message)}");
                     return message;
                 });
 
@@ -153,9 +154,154 @@ namespace Shoutr
             while (!token.IsCancellationRequested)
             {
                 var received = await receiver.ReceiveAsync().ConfigureAwait(false);
-                Console.WriteLine($"Buff bytes {received.Buffer.Length}");
+                DdsLog($"Buff bytes {received.Buffer.Length}");
                 packetBufferObservable.OnNext(received.Buffer);
             }
+        }
+        
+        public async Task Listen(IByteReceiver byteReceiver,
+            CancellationToken cancellationToken = default)
+        {
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var token = cancellationTokenSource.Token;
+
+            var packetBufferObservable = new Subject<byte[]>();
+            var observableScheduler =
+                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+            var protoMessageObservable = packetBufferObservable
+                .ObserveOn(observableScheduler)
+                .Select(bytes =>
+                {
+                    ProtoMessage message;
+                    using (var memoryStream = new MemoryStream(bytes))
+                    {
+                        var protoMessage = Serializer.Deserialize<ProtoMessage>(memoryStream);
+                        message = protoMessage;
+                    }
+
+                    //DdsLog($"deserialized \r\n {Newtonsoft.Json.JsonConvert.SerializeObject(new {bcid= message.GetBroadcastId(), message.PayloadCount, message.PayloadIndex, payloadLength=message.Payload?.Length})}", true);
+                    return message;
+                });
+
+            var headerCache = new ConcurrentDictionary<Guid, Header>();
+            var payloadCache = new ConcurrentDictionary<Guid, List<ProtoMessage>>();
+
+            var fileWriteRequestSubject = new Subject<FileWriteWrapper>();
+
+            var headerObservable = protoMessageObservable
+                .Where(message => !string.IsNullOrWhiteSpace(message.FileName) && message.PayloadCount.HasValue);
+
+            var payloadObservable = protoMessageObservable
+                .Where(message => message.PayloadIndex.HasValue && message.Payload != null);
+
+            string GetFileName(ProtoMessage header)
+            {
+                return $"{System.DateTime.Now:HHmmssffff}.{header.FileName}";
+            }
+
+            Header ConvertToHeader(ProtoMessage header)
+            {
+                return new Header
+                {
+                    BroadcastId = header.GetBroadcastId(), FileName = GetFileName(header),
+                    PayloadCount = header.PayloadCount.Value, PayloadMaxBytes = header.PayloadMaxSize.Value
+                };
+            }
+
+            headerObservable
+                .ObserveOn(observableScheduler)
+                .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
+                    bcid =>
+                    {
+                        if (payloadCache.TryRemove(bcid, out var payloads))
+                        {
+                            var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
+                            payloads.Clear();
+                            DdsLog($"empty cache {p.Length}");
+                            foreach (var payload in p)
+                            {
+                                DdsLog($"cached write request {payload.PayloadIndex}");
+                                fileWriteRequestSubject.OnNext(new FileWriteWrapper()
+                                    {Header = ConvertToHeader(header), Payload = payload});
+                            }
+                        }
+
+                        return ConvertToHeader(header);
+                    },
+                    (bcid, m) => m));
+
+
+            payloadObservable
+                .ObserveOn(observableScheduler)
+                .Subscribe(payload =>
+                {
+                    if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
+                    {
+                        DdsLog($"write request {payload.PayloadIndex}");
+                        fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
+                    }
+                    else
+                    {
+                        DdsLog($"write cached {payload.PayloadIndex}");
+                        payloadCache.AddOrUpdate(payload.GetBroadcastId(),
+                            bcid =>
+                            {
+                                var list = new List<ProtoMessage>();
+                                list.Add(payload);
+                                return list;
+                            },
+                            (bcid, list) =>
+                            {
+                                list.Add(payload);
+                                return list;
+                            });
+                    }
+                });
+
+            var writeCompleteObservable = fileWriteRequestSubject
+                //.ObserveOn(observableScheduler)
+                .Select(writeRequest =>
+                {
+                    return Observable.FromAsync(async () =>
+                    {
+                        var file = new FileInfo(writeRequest.Header.FileName);
+                        await using (var stream = file.OpenWrite())
+                        {
+                            var writeIndex = writeRequest.Payload.PayloadIndex.Value *
+                                             writeRequest.Header.PayloadMaxBytes;
+                            stream.Seek(writeIndex, SeekOrigin.Begin);
+                            await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
+                        }
+                        DdsLog($"write complete {writeRequest.Payload.PayloadIndex}");
+                        return writeRequest.Header;
+                    });
+                }).Merge(1);
+
+            var fileWriteObservable = writeCompleteObservable
+                .ObserveOn(observableScheduler)
+                .GroupBy(w => w.BroadcastId);
+
+            const int fileCompleteTimeout = 10;
+            var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
+            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, observableScheduler);
+
+            var fileStoppedSub = fileStoppedObservable.Subscribe(header =>
+            {
+                OnBroadcastEnded(new BroadcastResult(header.BroadcastId, header.FileName));
+            });
+            token.Register(() => fileStoppedSub.Dispose());
+
+            void OnBytesReceived(object sender, IBytesReceived bytesReceived)
+            {
+//DdsLog($"bytes received {bytesReceived.Bytes.Length}");
+                packetBufferObservable.OnNext(bytesReceived.Bytes);
+            }
+            byteReceiver.BytesReceived += OnBytesReceived;
+            cancellationToken.Register(() =>
+            {
+                byteReceiver.BytesReceived -= OnBytesReceived;
+            });
+            await byteReceiver.Listen(cancellationToken);
         }
 
         private IObservable<Header> CreateTimeoutObservable(TimeSpan completeTimeout,
@@ -179,6 +325,17 @@ namespace Shoutr
                 .Merge();
 
             return fileStoppedObservable;
+        }
+
+        internal static void DdsLog(string message, 
+            bool includeDetails = false,
+            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
+        {
+            if (includeDetails)
+            {
+                Console.Write($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
+            }
+            Console.WriteLine($"{message}");
         }
 
         public event EventHandler<IBroadcastResult> BroadcastEnded;

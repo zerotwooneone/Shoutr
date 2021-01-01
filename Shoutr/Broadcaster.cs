@@ -6,44 +6,29 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
+using Shoutr.Contracts.ByteTransport;
 
 namespace Shoutr
 {
     public class Broadcaster : IBroadcaster
     {
         public async Task BroadcastFile(string fileName, 
-            int port = Defaults.Port, 
-            int mtu = Defaults.Mtu, 
+            IByteSender byteSender, 
             float headerRebroadcastSeconds = 1,
-            string subnet = "192.168.1.255",
             CancellationToken cancellationToken = default)
         {
-            const int minMtu = 1;
-            if (mtu < minMtu)
-            {
-                throw new ArgumentOutOfRangeException(nameof(mtu));
-            }
-            const int minPort = 1;
-            const int maxPort = 65535;
-            if(port < minPort || port > maxPort)
-            {
-                throw new ArgumentException(nameof(port));
-            }
+            
             if(headerRebroadcastSeconds < 0)
             {
                 throw new ArgumentException(nameof(headerRebroadcastSeconds));
             }
-            if(!IPAddress.TryParse("192.168.1.255", out var subnetIpAddress))
-            {
-                throw new ArgumentException(nameof(subnetIpAddress));
-            }
+            
 
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = cancellationTokenSource.Token;
@@ -55,7 +40,7 @@ namespace Shoutr
             var pageSize = 8 * byteToMegabyteFactor;
 
             var taskPoolScheduler =
-                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token));
+                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
             var pageObservable = Observable.While(
                 // while there is data to be read
                 () => stream.CanRead && stream.Position < stream.Length,
@@ -87,13 +72,13 @@ namespace Shoutr
             //    .ObserveOn(taskPoolScheduler)
             //    .Select((x, count) =>
             //{
-            //    System.Console.WriteLine($"{count} {Newtonsoft.Json.JsonConvert.SerializeObject(new { array = x.array.Take(3), x.array.Length, startIndex = x.startPayloadIndex }, Formatting.Indented)}");
+            //    DdsLog($"{count} {Newtonsoft.Json.JsonConvert.SerializeObject(new { array = x.array.Take(3), x.array.Length, startIndex = x.startPayloadIndex }, Formatting.Indented)}");
             //    return x;
             //}); //.ToTask(token).ConfigureAwait(false);
 
             const long broadcastIdByteCount = 16; //guid bytes
             const long fudgeAmount = 100;
-            var packetSize = mtu - broadcastIdByteCount - fudgeAmount;
+            var packetSize = byteSender.MaximumTransmittableBytes - broadcastIdByteCount - fudgeAmount;
             var partialPacketCache = new ConcurrentDictionary<long, byte[]>();
             var payloadObservable = pageObservable
                 .ObserveOn(taskPoolScheduler)
@@ -157,7 +142,7 @@ namespace Shoutr
                     return packetList.AsEnumerable();
                 })
                 .Concat(partialPacketCache
-                    .Select(kvp => new PayloadWrapper() {PayloadIndex = kvp.Key, bytes = kvp.Value}).ToObservable());
+                    .Select(kvp => new PayloadWrapper {PayloadIndex = kvp.Key, bytes = kvp.Value}).ToObservable());
             
             var broadcastId = Guid.NewGuid();
 
@@ -165,18 +150,24 @@ namespace Shoutr
                 .Select(payloadWrapper =>
                 {
                     byte[] serializedPayload;
+                    var protoMessage = new ProtoMessage(broadcastId, payloadWrapper.PayloadIndex, payloadWrapper.bytes, null, null,
+                        null);
                     using (var memoryStream = new MemoryStream())
                     {
                         Serializer.Serialize(memoryStream,
-                            new ProtoMessage(broadcastId, payloadWrapper.PayloadIndex, payloadWrapper.bytes, null, null,
-                                null));
+                            protoMessage);
                         serializedPayload = memoryStream.ToArray();
                     }
-
+                    // DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedPayload.Take(10).ToArray(), serializedPayload.Length, payloadWrapper.PayloadIndex}, Newtonsoft.Json.Formatting.Indented)}",
+                    //     true);
                     return serializedPayload;
-                });
-
-
+                })
+                .Finally(() =>
+                {
+                    DdsLog($"finally serializedPayloadObservable");
+                })
+                .Publish();
+            
             byte[] serializedHeader;
             var packetCount = (long) Math.Ceiling((double) file.Length / packetSize);
             var rebroadcastTime = TimeSpan.FromSeconds(headerRebroadcastSeconds);
@@ -191,30 +182,57 @@ namespace Shoutr
                 .Concat(
                     Observable.Interval(rebroadcastTime, taskPoolScheduler)
                         .TakeUntil(serializedPayloadObservable.LastOrDefaultAsync())
-                        .Select(_ => serializedHeader)
+                        .Select(_ =>
+                        {
+                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length}, Newtonsoft.Json.Formatting.Indented)}",
+                                true);
+                            return serializedHeader;
+                        })
                 )
-                .Concat(Observable.Return(serializedHeader));
+                .Concat(Observable.Return(serializedHeader))
+                .Finally(() =>
+                {
+                    DdsLog($"headerObservable finally");
+                });
 
             var packetObservable = headerObservable
-                .Merge(serializedPayloadObservable);
+                .Merge(serializedPayloadObservable)
+                .Finally(() =>
+                {
+                    DdsLog($"packetObservable finally");
+                });
 
-            UdpClient sender = new UdpClient(port);
-            sender.EnableBroadcast = true; //may not be needed
-            IPEndPoint destination = new IPEndPoint(subnetIpAddress, port);
+            serializedPayloadObservable.Connect();
 
-            await packetObservable
+            var sendObservable = packetObservable
                 .ObserveOn(taskPoolScheduler)
                 .SelectMany((array, index) =>
                 {
                     return Observable.FromAsync(async c =>
                     {
-                        await sender.SendAsync(array, array.Length, destination).ConfigureAwait(false);
-                        //System.Console.WriteLine(
-                        //    $"{index} {JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Formatting.Indented)}");
+                        await byteSender.Send(array).ConfigureAwait(false);
+                        // DdsLog($"after byteSender.Send  {index} {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Newtonsoft.Json.Formatting.Indented)}",
+                        //     true);
                         return Unit.Default;
                     });
                 })
+                .Finally(() =>
+                {
+                    DdsLog($"sendObservable finally");
+                });
+            await sendObservable
                 .ToTask(token).ConfigureAwait(false);
+        }
+        
+        internal static void DdsLog(string message, 
+            bool includeDetails = false,
+            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
+        {
+            if (includeDetails)
+            {
+                Console.Write($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
+            }
+            Console.WriteLine($"{message}");
         }
 
         private static void CachePartialPacket(ConcurrentDictionary<long, byte[]> partialPacketCache,

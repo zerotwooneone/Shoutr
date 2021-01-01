@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Contracts", "Shoutr.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Tests", "Shoutr.Tests\Shoutr.Tests.csproj", "{AC7396A2-1F04-4091-A623-10512034E62C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Integration", "Shoutr.Integration\Shoutr.Integration.csproj", "{B6908396-CE83-412A-88D4-74A96F079252}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,18 @@ Global
 		{AC7396A2-1F04-4091-A623-10512034E62C}.Release|x64.Build.0 = Release|Any CPU
 		{AC7396A2-1F04-4091-A623-10512034E62C}.Release|x86.ActiveCfg = Release|Any CPU
 		{AC7396A2-1F04-4091-A623-10512034E62C}.Release|x86.Build.0 = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|x64.Build.0 = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Debug|x86.Build.0 = Debug|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x64.ActiveCfg = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x64.Build.0 = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x86.ActiveCfg = Release|Any CPU
+		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

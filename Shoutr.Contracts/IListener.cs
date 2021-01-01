@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Shoutr.Contracts.ByteTransport;
 
 namespace Shoutr.Contracts
 {
     public interface IListener
     {
-        Task Listen(int port = Defaults.Port,
+        Task Listen(IByteReceiver byteReceiver,
             CancellationToken cancellationToken = default);
 
         event EventHandler<IBroadcastResult> BroadcastEnded;

@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Extensions.Configuration;
 using ProtoBuf;
+using Shoutr.Contracts;
 
 namespace Shoutr.Console
 {
@@ -29,12 +30,12 @@ namespace Shoutr.Console
                 if (config["listen"] != null)
                 {
                     System.Console.WriteLine("Going to listen");
-                    var l = new Listener();
+                    IListener l = new Listener();
                     l.BroadcastEnded += (s, r) =>
                     {
                         System.Console.WriteLine($"bcid:{r.BroadcastId} file:{r.FileName}");
                     };
-                    l.Listen().Wait(tokenSource.Token);
+                    l.ListenUdpBroadcast(cancellationToken: tokenSource.Token).Wait(tokenSource.Token);
                 }
                 else if (config["broadcast"] != null)
                 {
@@ -42,7 +43,7 @@ namespace Shoutr.Console
 
                     System.Console.WriteLine($"Going to broadcast {fileName}");
                     var b = new Broadcaster();
-                    b.BroadcastFile(fileName, cancellationToken: tokenSource.Token).Wait(tokenSource.Token);
+                    b.BroadcastFileUdp(fileName, cancellationToken: tokenSource.Token).Wait(tokenSource.Token);
                 }
             }
             catch (Exception e)

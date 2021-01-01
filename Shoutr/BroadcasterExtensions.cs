@@ -1,0 +1,23 @@
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Shoutr.ByteTransport;
+using Shoutr.Contracts;
+
+namespace Shoutr
+{
+    public static class BroadcasterExtensions
+    {
+        public static Task BroadcastFileUdp(this IBroadcaster broadcaster,
+            string fileName,
+            int port = Defaults.Port,
+            int mtu = Defaults.Mtu,
+            float headerRebroadcastSeconds = 1,
+            string subnet = "192.168.1.255",
+            CancellationToken cancellationToken = default)
+        {
+            var udpBroadcastSender = UdpBroadcastSender.Factory(subnet, mtu, port);
+            return broadcaster.BroadcastFile(fileName, udpBroadcastSender,
+                headerRebroadcastSeconds, cancellationToken);
+        }
+    }
+}
