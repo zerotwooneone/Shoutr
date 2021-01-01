@@ -213,6 +213,7 @@ namespace Shoutr
                 .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
                     bcid =>
                     {
+                        DdsLog($"header addOrUpdate {bcid}");
                         if (payloadCache.TryRemove(bcid, out var payloads))
                         {
                             var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
@@ -228,7 +229,8 @@ namespace Shoutr
 
                         return ConvertToHeader(header);
                     },
-                    (bcid, m) => m));
+                    (bcid, m) => m)
+                );
 
 
             payloadObservable

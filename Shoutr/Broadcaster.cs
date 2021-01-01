@@ -158,7 +158,7 @@ namespace Shoutr
                             protoMessage);
                         serializedPayload = memoryStream.ToArray();
                     }
-                    // DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedPayload.Take(10).ToArray(), serializedPayload.Length, payloadWrapper.PayloadIndex}, Newtonsoft.Json.Formatting.Indented)}",
+                    //DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedPayload.Take(10).ToArray(), serializedPayload.Length, payloadWrapper.PayloadIndex}, Newtonsoft.Json.Formatting.Indented)}",
                     //     true);
                     return serializedPayload;
                 })
@@ -178,18 +178,29 @@ namespace Shoutr
                 serializedHeader = memoryStream.ToArray();
             }
 
-            var headerObservable = Observable.Return(serializedHeader)
+            var headerObservable = Observable
+                .Return(serializedHeader)
+                .Select(h =>
+                {
+                    DdsLog($"first header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                    return h;
+                })
                 .Concat(
                     Observable.Interval(rebroadcastTime, taskPoolScheduler)
                         .TakeUntil(serializedPayloadObservable.LastOrDefaultAsync())
                         .Select(_ =>
                         {
-                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length}, Newtonsoft.Json.Formatting.Indented)}",
+                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}",
                                 true);
                             return serializedHeader;
                         })
                 )
-                .Concat(Observable.Return(serializedHeader))
+                .Concat(Observable.Return(serializedHeader)
+                    .Select(h =>
+                    {
+                        DdsLog($"last header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                        return h;
+                    }))
                 .Finally(() =>
                 {
                     DdsLog($"headerObservable finally");
@@ -211,8 +222,8 @@ namespace Shoutr
                     return Observable.FromAsync(async c =>
                     {
                         await byteSender.Send(array).ConfigureAwait(false);
-                        // DdsLog($"after byteSender.Send  {index} {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Newtonsoft.Json.Formatting.Indented)}",
-                        //     true);
+                        DdsLog($"after byteSender.Send  {index} {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Newtonsoft.Json.Formatting.Indented)}",
+                             true);
                         return Unit.Default;
                     });
                 })
