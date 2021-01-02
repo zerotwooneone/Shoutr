@@ -208,31 +208,32 @@ namespace Shoutr
         {
             return Observable
                 .Return(serializedHeader)
-                .Select(h =>
-                {
-                    DdsLog($"first header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
-                    return h;
-                })
+                // .Select(h =>
+                // {
+                //     DdsLog($"first header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                //     return h;
+                // })
                 .Concat(
                     Observable.Interval(rebroadcastTime, scheduler)
                         .TakeUntil(payloadObservable.LastOrDefaultAsync())
                         .Select(_ =>
                         {
-                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}",
-                                true);
+                            // DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}",
+                            //     true);
                             return serializedHeader;
                         })
                 )
-                .Concat(Observable.Return(serializedHeader)
-                    .Select(h =>
-                    {
-                        DdsLog($"last header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
-                        return h;
-                    }))
-                .Finally(() =>
-                {
-                    DdsLog($"headerObservable finally");
-                });
+                .Concat(Observable.Return(serializedHeader))
+                    // .Select(h =>
+                    // {
+                    //     DdsLog($"last header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                    //     return h;
+                    // })
+                // .Finally(() =>
+                // {
+                //     DdsLog($"headerObservable finally");
+                // })
+                ;
         }
 
         internal static void DdsLog(string message, 
