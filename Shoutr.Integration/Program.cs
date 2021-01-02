@@ -54,11 +54,11 @@ namespace Shoutr.Integration
                     Name = nameof(PageObservableTest),
                     Test = u => PageObservableTest(u, tokenSource.Token)
                 },
-                // new RegisteredTest
-                // {
-                //     Name = nameof(BroadcastWithoutLossTest),
-                //     Test = u => BroadcastWithoutLossTest(u, tokenSource.Token)
-                // }
+                new RegisteredTest
+                {
+                    Name = nameof(BroadcastWithoutLossTest),
+                    Test = u => BroadcastWithoutLossTest(u, tokenSource.Token)
+                }
             };
 
             var context = new MyContext();
@@ -132,7 +132,7 @@ namespace Shoutr.Integration
             {
                 try
                 {
-                    listener.Listen(transporter, cancellationToken).Wait(cancellationToken);
+                    listener.Listen(transporter, streamFactory, cancellationToken).Wait(cancellationToken);
                 }
                 catch (Exception e)
                 {

@@ -10,5 +10,11 @@ namespace Shoutr.Io
             var file = new FileInfo(fileName);
             return ReadableStream.Factory(file.OpenRead());
         }
+
+        public IWriter CreateWriter(string fileName)
+        {
+            var file = new FileInfo(fileName);
+            return WriteableStream.Factory(file.OpenWrite());
+        }
     }
 }

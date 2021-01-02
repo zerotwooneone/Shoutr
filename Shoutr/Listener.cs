@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using ProtoBuf;
 using Shoutr.Contracts;
 using Shoutr.Contracts.ByteTransport;
+using Shoutr.Contracts.Io;
 using Shoutr.Reactive;
 using Shoutr.Serialization;
 
@@ -20,16 +21,19 @@ namespace Shoutr
     public class Listener : IListener
     {
         public async Task Listen(IByteReceiver byteReceiver,
+            IStreamFactory streamFactory,
             CancellationToken cancellationToken = default)
         {
             var observableScheduler =
                 System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
             await Listen(byteReceiver,
+                streamFactory,
                 observableScheduler,
                 cancellationToken).ConfigureAwait(false);
         }
         
         public async Task Listen(IByteReceiver byteReceiver,
+            IStreamFactory streamFactory,
             IScheduler scheduler,
             CancellationToken cancellationToken = default)
         {
@@ -135,14 +139,10 @@ namespace Shoutr
                 {
                     return Observable.FromAsync(async () =>
                     {
-                        var file = new FileInfo(writeRequest.Header.FileName);
-                        await using (var stream = file.OpenWrite())
-                        {
-                            var writeIndex = writeRequest.Payload.PayloadIndex.Value *
-                                             writeRequest.Header.PayloadMaxBytes;
-                            stream.Seek(writeIndex, SeekOrigin.Begin);
-                            await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
-                        }
+                        using var writer = streamFactory.CreateWriter(writeRequest.Header.FileName);
+                        var writeIndex = writeRequest.Payload.PayloadIndex.Value *
+                                         writeRequest.Header.PayloadMaxBytes;
+                        await writer.Write(writeIndex, writeRequest.Payload.Payload, token).ConfigureAwait(false);
                         DdsLog($"write complete {writeRequest.Payload.PayloadIndex}");
                         return writeRequest.Header;
                     });

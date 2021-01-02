@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Shoutr.ByteTransport;
 using Shoutr.Contracts;
+using Shoutr.Io;
 
 namespace Shoutr
 {
@@ -11,7 +12,10 @@ namespace Shoutr
             int port = Defaults.Port,
             CancellationToken cancellationToken = default)
         {
-            return listener.Listen(UdpBroadcastReceiver.Factory(port),
+            var byteReceiver = UdpBroadcastReceiver.Factory(port);
+            var streamFactory= new StreamFactory();
+            return listener.Listen(byteReceiver,
+                streamFactory,
                 cancellationToken);
         }
     }

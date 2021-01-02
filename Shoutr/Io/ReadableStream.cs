@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace Shoutr.Io
             return await _stream.ReadAsync(buffer, 0, readLength, cancellationToken).ConfigureAwait(false);
         }
 
-        public static ReadableStream Factory(FileStream fileStream)
+        public static ReadableStream Factory([NotNull] FileStream fileStream)
         {
             if (!fileStream.CanRead || !fileStream.CanSeek)
             {
