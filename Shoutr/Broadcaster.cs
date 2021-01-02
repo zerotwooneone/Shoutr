@@ -13,6 +13,8 @@ using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using Shoutr.Contracts.ByteTransport;
+using Shoutr.Contracts.Io;
+using Shoutr.Io;
 
 namespace Shoutr
 {
@@ -20,6 +22,24 @@ namespace Shoutr
     {
         public async Task BroadcastFile(string fileName, 
             IByteSender byteSender, 
+            IStreamFactory streamFactory,
+            float headerRebroadcastSeconds = 1,
+            CancellationToken cancellationToken = default)
+        {
+            var taskPoolScheduler =
+                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+            await BroadcastFile(fileName,
+                byteSender,
+                streamFactory,
+                taskPoolScheduler,
+                headerRebroadcastSeconds,
+                cancellationToken);
+        }
+        
+        public async Task BroadcastFile(string fileName, 
+            IByteSender byteSender, 
+            IStreamFactory streamFactory,
+            IScheduler scheduler,
             float headerRebroadcastSeconds = 1,
             CancellationToken cancellationToken = default)
         {
@@ -29,44 +49,15 @@ namespace Shoutr
                 throw new ArgumentException(nameof(headerRebroadcastSeconds));
             }
             
-
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = cancellationTokenSource.Token;
 
-            var file = new FileInfo(fileName);
-            var stream = file.OpenRead();
+            var reader = streamFactory.CreateReader(fileName);
 
             const int byteToMegabyteFactor = 1000000;
             var pageSize = 8 * byteToMegabyteFactor;
 
-            var taskPoolScheduler =
-                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
-            var pageObservable = Observable.While(
-                // while there is data to be read
-                () => stream.CanRead && stream.Position < stream.Length,
-                // iteratively invoke the observable factory, which will
-                // "recreate" it such that it will start from the current
-                // stream position - hence "0" for offset
-                Observable.FromAsync(async () =>
-                    {
-                        var buffer = new byte[pageSize];
-                        var readBytes = await stream.ReadAsync(buffer, 0, pageSize, token).ConfigureAwait(false);
-                        return new
-                        {
-                            readBytes,
-                            startIndex = stream.Position - readBytes,
-                            buffer
-                        };
-                    })
-                    .ObserveOn(taskPoolScheduler)
-                    .Select(readResult =>
-                    {
-                        return new
-                        {
-                            array = readResult.buffer.Take(readResult.readBytes).ToArray(),
-                            startPayloadIndex = readResult.startIndex
-                        };
-                    }));
+            var pageObservable = reader.PageObservable(pageSize, token);
 
             ///*await*/ var pageTest = pageObservable
             //    .ObserveOn(taskPoolScheduler)
@@ -81,23 +72,23 @@ namespace Shoutr
             var packetSize = byteSender.MaximumTransmittableBytes - broadcastIdByteCount - fudgeAmount;
             var partialPacketCache = new ConcurrentDictionary<long, byte[]>();
             var payloadObservable = pageObservable
-                .ObserveOn(taskPoolScheduler)
+                .ObserveOn(scheduler)
                 .SelectMany(page =>
                 {
-                    var firstPacketIndex = page.startPayloadIndex / packetSize;
-                    var hasFirstFragmented = (page.startPayloadIndex % packetSize) != 0;
+                    var firstPacketIndex = page.PageIndex / packetSize;
+                    var hasFirstFragmented = (page.PageIndex % packetSize) != 0;
                     var packetList = new List<PayloadWrapper>();
 
                     var firstPartialPacketIndex = hasFirstFragmented
                         ? firstPacketIndex
                         : (long?) null;
                     var secondPacketPayloadIndex = (firstPartialPacketIndex + 1) * packetSize;
-                    var firstPartialLength = (secondPacketPayloadIndex - page.startPayloadIndex) ?? 0;
+                    var firstPartialLength = (secondPacketPayloadIndex - page.PageIndex) ?? 0;
 
                     if (hasFirstFragmented)
                     {
                         var partialBuffer = new byte[firstPartialLength];
-                        Array.Copy(page.array, partialBuffer, firstPartialLength);
+                        Array.Copy(page.Bytes, partialBuffer, firstPartialLength);
                         var firstPartialPacket = partialBuffer;
                         var firstPayload = new PayloadWrapper()
                             {PayloadIndex = firstPartialPacketIndex.Value, bytes = firstPartialPacket};
@@ -108,10 +99,10 @@ namespace Shoutr
                         ? firstPacketIndex + 1
                         : firstPacketIndex;
 
-                    var lastPageByteIndex = page.array.Length - 1;
-                    var lastBytePayloadIndex = page.startPayloadIndex + lastPageByteIndex;
+                    var lastPageByteIndex = page.Bytes.Length - 1;
+                    var lastBytePayloadIndex = page.PageIndex + lastPageByteIndex;
                     var lastPacketIndex = lastBytePayloadIndex / packetSize;
-                    var lastPartialLength = (page.array.Length - firstPartialLength) % packetSize;
+                    var lastPartialLength = (page.Bytes.Length - firstPartialLength) % packetSize;
                     var hasLastPartialPacket = lastPacketIndex > firstPacketIndex &&
                                                (lastPartialLength > 0);
                     var lastFullPacketIndex = hasLastPartialPacket
@@ -123,7 +114,7 @@ namespace Shoutr
                     {
                         var packetBuffer = new byte[packetSize];
                         var startPageIndex = ((packetIndex - firstFullPacketIndex) * packetSize) + firstPartialLength;
-                        Array.Copy(page.array, startPageIndex, packetBuffer, 0, packetSize);
+                        Array.Copy(page.Bytes, startPageIndex, packetBuffer, 0, packetSize);
                         var payload = new PayloadWrapper() {PayloadIndex = packetIndex, bytes = packetBuffer};
                         packetList.Add(payload);
                     }
@@ -131,9 +122,9 @@ namespace Shoutr
                     if (hasLastPartialPacket)
                     {
                         var partialBuffer = new byte[lastPartialLength];
-                        var lastPartialPageIndex = page.array.Length - lastPartialLength;
+                        var lastPartialPageIndex = page.Bytes.Length - lastPartialLength;
                         var lastPartialPacketIndex = lastPacketIndex;
-                        Array.Copy(page.array, lastPartialPageIndex, partialBuffer, 0, lastPartialLength);
+                        Array.Copy(page.Bytes, lastPartialPageIndex, partialBuffer, 0, lastPartialLength);
                         var lastPayload = new PayloadWrapper()
                             {PayloadIndex = lastPartialPacketIndex, bytes = partialBuffer};
                         CachePartialPacket(partialPacketCache, lastPayload, packetList);
@@ -169,7 +160,7 @@ namespace Shoutr
                 .Publish();
             
             byte[] serializedHeader;
-            var packetCount = (long) Math.Ceiling((double) file.Length / packetSize);
+            var packetCount = (long) Math.Ceiling((double) reader.Length / packetSize);
             var rebroadcastTime = TimeSpan.FromSeconds(headerRebroadcastSeconds);
             using (var memoryStream = new MemoryStream())
             {
@@ -186,7 +177,7 @@ namespace Shoutr
                     return h;
                 })
                 .Concat(
-                    Observable.Interval(rebroadcastTime, taskPoolScheduler)
+                    Observable.Interval(rebroadcastTime, scheduler)
                         .TakeUntil(serializedPayloadObservable.LastOrDefaultAsync())
                         .Select(_ =>
                         {
@@ -216,7 +207,7 @@ namespace Shoutr
             serializedPayloadObservable.Connect();
 
             var sendObservable = packetObservable
-                .ObserveOn(taskPoolScheduler)
+                .ObserveOn(scheduler)
                 .SelectMany((array, index) =>
                 {
                     return Observable.FromAsync(async c =>
@@ -234,7 +225,7 @@ namespace Shoutr
             await sendObservable
                 .ToTask(token).ConfigureAwait(false);
         }
-        
+
         internal static void DdsLog(string message, 
             bool includeDetails = false,
             [System.Runtime.CompilerServices.CallerMemberName] string caller = "")

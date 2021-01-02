@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Shoutr.ByteTransport;
 using Shoutr.Contracts;
+using Shoutr.Io;
 
 namespace Shoutr
 {
@@ -16,7 +17,10 @@ namespace Shoutr
             CancellationToken cancellationToken = default)
         {
             var udpBroadcastSender = UdpBroadcastSender.Factory(subnet, mtu, port);
-            return broadcaster.BroadcastFile(fileName, udpBroadcastSender,
+            var streamFactory = new StreamFactory();
+            return broadcaster.BroadcastFile(fileName, 
+                udpBroadcastSender,
+                streamFactory,
                 headerRebroadcastSeconds, cancellationToken);
         }
     }

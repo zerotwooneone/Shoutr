@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Shoutr.Contracts.ByteTransport;
+using Shoutr.Contracts.Io;
 
 namespace Shoutr.Contracts
 {
@@ -16,6 +17,7 @@ namespace Shoutr.Contracts
         /// <returns></returns>
         Task BroadcastFile(string fileName,
             IByteSender byteSender,
+            IStreamFactory streamFactory,
             float headerRebroadcastSeconds = 1,
             CancellationToken cancellationToken = default);
     }
