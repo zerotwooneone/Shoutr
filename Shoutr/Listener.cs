@@ -19,157 +19,26 @@ namespace Shoutr
 {
     public class Listener : IListener
     {
-        public async Task Listen(int port = Defaults.Port,
-            CancellationToken cancellationToken = default)
-        {
-            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var token = cancellationTokenSource.Token;
-
-            var packetBufferObservable = new Subject<byte[]>();
-            var observableScheduler =
-                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token));
-            var protoMessageObservable = packetBufferObservable
-                .ObserveOn(observableScheduler)
-                .Select(bytes =>
-                {
-                    ProtoMessage message;
-                    using (var memoryStream = new MemoryStream(bytes))
-                    {
-                        var protoMessage = Serializer.Deserialize<ProtoMessage>(memoryStream);
-                        message = protoMessage;
-                    }
-
-                    //DdsLog(
-                    //    $"id:{new Guid(message.BroadcastId)} {Newtonsoft.Json.JsonConvert.SerializeObject(message)}");
-                    return message;
-                });
-
-            var headerCache = new ConcurrentDictionary<Guid, Header>();
-            var payloadCache = new ConcurrentDictionary<Guid, List<ProtoMessage>>();
-
-            var fileWriteRequestSubject = new Subject<FileWriteWrapper>();
-
-            var headerObservable = protoMessageObservable
-                .Where(message => !string.IsNullOrWhiteSpace(message.FileName) && message.PayloadCount.HasValue);
-
-            var payloadObservable = protoMessageObservable
-                .Where(message => message.PayloadIndex.HasValue && message.Payload != null);
-
-            string GetFileName(ProtoMessage header)
-            {
-                return $"{System.DateTime.Now:HHmmssffff}.{header.FileName}";
-            }
-
-            Header ConvertToHeader(ProtoMessage header)
-            {
-                return new Header
-                {
-                    BroadcastId = header.GetBroadcastId(), FileName = GetFileName(header),
-                    PayloadCount = header.PayloadCount.Value, PayloadMaxBytes = header.PayloadMaxSize.Value
-                };
-            }
-
-            headerObservable
-                .ObserveOn(observableScheduler)
-                .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
-                    bcid =>
-                    {
-                        if (payloadCache.TryRemove(bcid, out var payloads))
-                        {
-                            var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
-                            payloads.Clear();
-                            foreach (var payload in p)
-                            {
-                                fileWriteRequestSubject.OnNext(new FileWriteWrapper()
-                                    {Header = ConvertToHeader(header), Payload = payload});
-                            }
-                        }
-
-                        return ConvertToHeader(header);
-                    },
-                    (bcid, m) => m));
-
-
-            payloadObservable
-                .ObserveOn(observableScheduler)
-                .Subscribe(payload =>
-                {
-                    if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
-                    {
-                        fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
-                    }
-                    else
-                    {
-                        payloadCache.AddOrUpdate(payload.GetBroadcastId(),
-                            bcid =>
-                            {
-                                var list = new List<ProtoMessage>();
-                                list.Add(payload);
-                                return list;
-                            },
-                            (bcid, list) =>
-                            {
-                                list.Add(payload);
-                                return list;
-                            });
-                    }
-                });
-
-            var writeCompleteObservable = fileWriteRequestSubject
-                //.ObserveOn(observableScheduler)
-                .Select(writeRequest =>
-                {
-                    return Observable.FromAsync(async () =>
-                    {
-                        var file = new FileInfo(writeRequest.Header.FileName);
-                        using (var stream = file.OpenWrite())
-                        {
-                            var writeIndex = writeRequest.Payload.PayloadIndex.Value *
-                                             writeRequest.Header.PayloadMaxBytes;
-                            stream.Seek(writeIndex, SeekOrigin.Begin);
-                            await stream.WriteAsync(writeRequest.Payload.Payload, token).ConfigureAwait(false);
-                        }
-
-                        return writeRequest.Header;
-                    });
-                }).Merge(1);
-
-            var fileWriteObservable = writeCompleteObservable
-                .ObserveOn(observableScheduler)
-                .GroupBy(w => w.BroadcastId);
-
-            const int fileCompleteTimeout = 10;
-            var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
-            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, observableScheduler);
-
-            var fileStoppedSub = fileStoppedObservable.Subscribe(header =>
-            {
-                OnBroadcastEnded(new BroadcastResult(header.BroadcastId, header.FileName));
-            });
-            token.Register(() => fileStoppedSub.Dispose());
-
-            UdpClient receiver = new UdpClient(port);
-            //receiver.EnableBroadcast = true;
-            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("192.168.1.255"), 0);
-            while (!token.IsCancellationRequested)
-            {
-                var received = await receiver.ReceiveAsync().ConfigureAwait(false);
-                DdsLog($"Buff bytes {received.Buffer.Length}");
-                packetBufferObservable.OnNext(received.Buffer);
-            }
-        }
-        
         public async Task Listen(IByteReceiver byteReceiver,
             CancellationToken cancellationToken = default)
         {
+            var observableScheduler =
+                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+            await Listen(byteReceiver,
+                observableScheduler,
+                cancellationToken).ConfigureAwait(false);
+        }
+        
+        public async Task Listen(IByteReceiver byteReceiver,
+            IScheduler scheduler,
+            CancellationToken cancellationToken = default)
+        {
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = cancellationTokenSource.Token;
 
             var packetBufferObservable = new Subject<byte[]>();
-            var observableScheduler =
-                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
             var protoMessageObservable = packetBufferObservable
-                .ObserveOn(observableScheduler)
+                .ObserveOn(scheduler)
                 .Select(bytes =>
                 {
                     ProtoMessage message;
@@ -209,7 +78,7 @@ namespace Shoutr
             }
 
             headerObservable
-                .ObserveOn(observableScheduler)
+                .ObserveOn(scheduler)
                 .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
                     bcid =>
                     {
@@ -234,7 +103,7 @@ namespace Shoutr
 
 
             payloadObservable
-                .ObserveOn(observableScheduler)
+                .ObserveOn(scheduler)
                 .Subscribe(payload =>
                 {
                     if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
@@ -280,12 +149,12 @@ namespace Shoutr
                 }).Merge(1);
 
             var fileWriteObservable = writeCompleteObservable
-                .ObserveOn(observableScheduler)
+                .ObserveOn(scheduler)
                 .GroupBy(w => w.BroadcastId);
 
             const int fileCompleteTimeout = 10;
             var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
-            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, observableScheduler);
+            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, scheduler);
 
             var fileStoppedSub = fileStoppedObservable.Subscribe(header =>
             {

@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
@@ -169,33 +170,7 @@ namespace Shoutr
                 serializedHeader = memoryStream.ToArray();
             }
 
-            var headerObservable = Observable
-                .Return(serializedHeader)
-                .Select(h =>
-                {
-                    DdsLog($"first header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
-                    return h;
-                })
-                .Concat(
-                    Observable.Interval(rebroadcastTime, scheduler)
-                        .TakeUntil(serializedPayloadObservable.LastOrDefaultAsync())
-                        .Select(_ =>
-                        {
-                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}",
-                                true);
-                            return serializedHeader;
-                        })
-                )
-                .Concat(Observable.Return(serializedHeader)
-                    .Select(h =>
-                    {
-                        DdsLog($"last header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
-                        return h;
-                    }))
-                .Finally(() =>
-                {
-                    DdsLog($"headerObservable finally");
-                });
+            var headerObservable = GetHeaderObservable(serializedHeader, rebroadcastTime, serializedPayloadObservable, scheduler);
 
             var packetObservable = headerObservable
                 .Merge(serializedPayloadObservable)
@@ -224,6 +199,40 @@ namespace Shoutr
                 });
             await sendObservable
                 .ToTask(token).ConfigureAwait(false);
+        }
+
+        public IObservable<byte[]> GetHeaderObservable(byte[] serializedHeader, 
+            TimeSpan rebroadcastTime, 
+            IObservable<byte[]> payloadObservable, 
+            IScheduler scheduler)
+        {
+            return Observable
+                .Return(serializedHeader)
+                .Select(h =>
+                {
+                    DdsLog($"first header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                    return h;
+                })
+                .Concat(
+                    Observable.Interval(rebroadcastTime, scheduler)
+                        .TakeUntil(payloadObservable.LastOrDefaultAsync())
+                        .Select(_ =>
+                        {
+                            DdsLog($"header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}",
+                                true);
+                            return serializedHeader;
+                        })
+                )
+                .Concat(Observable.Return(serializedHeader)
+                    .Select(h =>
+                    {
+                        DdsLog($"last header {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedHeader.Take(10).ToArray(), serializedHeader.Length})}");
+                        return h;
+                    }))
+                .Finally(() =>
+                {
+                    DdsLog($"headerObservable finally");
+                });
         }
 
         internal static void DdsLog(string message, 
