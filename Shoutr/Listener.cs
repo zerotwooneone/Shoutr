@@ -86,12 +86,12 @@ namespace Shoutr
                 .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
                     bcid =>
                     {
-                        DdsLog($"header addOrUpdate {bcid}");
+                        //DdsLog($"header addOrUpdate {bcid}");
                         if (payloadCache.TryRemove(bcid, out var payloads))
                         {
                             var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
                             payloads.Clear();
-                            DdsLog($"empty cache {p.Length}");
+                            //DdsLog($"empty cache {p.Length}");
                             foreach (var payload in p)
                             {
                                 DdsLog($"cached write request {payload.PayloadIndex}");
@@ -112,12 +112,12 @@ namespace Shoutr
                 {
                     if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
                     {
-                        DdsLog($"write request {payload.PayloadIndex}");
+                        //DdsLog($"write request {payload.PayloadIndex} {payload.GetHashString()}");
                         fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
                     }
                     else
                     {
-                        DdsLog($"write cached {payload.PayloadIndex}");
+                        DdsLog($"write cached {payload.PayloadIndex} {payload.GetHashString()}");
                         payloadCache.AddOrUpdate(payload.GetBroadcastId(),
                             bcid =>
                             {
@@ -143,7 +143,7 @@ namespace Shoutr
                         var writeIndex = writeRequest.Payload.PayloadIndex.Value *
                                          writeRequest.Header.PayloadMaxBytes;
                         await writer.Write(writeIndex, writeRequest.Payload.Payload, token).ConfigureAwait(false);
-                        DdsLog($"write complete {writeRequest.Payload.PayloadIndex}");
+                        //DdsLog($"write complete {writeRequest.Payload.PayloadIndex} {writeRequest.Payload.GetHashString()}");
                         return writeRequest.Header;
                     });
                 }).Merge(1);

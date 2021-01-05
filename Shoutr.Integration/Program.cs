@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -124,37 +126,46 @@ namespace Shoutr.Integration
             var sender = container.Resolve<IByteSender>();
             var streamFactory = container.Resolve<IStreamFactory>();
             var transporter = new MockByteTransporter(sender);
+            var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             transporter.ConfigureSendWithoutLoss();
 
             var taskFactory = new TaskFactory();
-            var listenThread = taskFactory.StartNew(() =>
+            string outputFilePath = null;
+            //var listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var listenTask = taskFactory.StartNew(() =>
             {
-                try
-                {
-                    listener.Listen(transporter, streamFactory, cancellationToken).Wait(cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
-            }, cancellationToken);
-            var sendThread = taskFactory.StartNew(() =>
-            {
-                try
-                {
-                    broadcaster.BroadcastFile("test.7z", transporter, streamFactory, cancellationToken: cancellationToken)
-                        .Wait(cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
-            }, cancellationToken);
+                listener.BroadcastEnded += (s, b) =>
+                    {
+                        Console.WriteLine($"broadcast complete {b.BroadcastId} {b.FileName}");
+                        outputFilePath = b.FileName;
+                        //listenCts.Cancel();
+                        transporter.StopListening();
+                    };
+                    listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
+            }, cts.Token);
+            
+            var inputFilePath = "test.7z";
+            await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
 
-            await Task.WhenAll(listenThread, sendThread);
+            await listenTask;
+
+            var inputFile = new FileInfo(inputFilePath);
+            
+            var outputFile = new FileInfo(outputFilePath);
+            Assert.IsTrue(outputFile.Exists);
+
+            Assert.AreEqual(inputFile.Length, outputFile.Length);
+            
+            var inputBytes = File.ReadAllBytes(inputFilePath);
+            var outputBytes = File.ReadAllBytes(outputFilePath);
+            using (var md5 = MD5.Create())
+            {
+                var inputHash = md5.ComputeHash(inputBytes);
+                var outputHash = md5.ComputeHash(outputBytes);
+                CollectionAssert.AreEqual(inputHash, outputHash);
+            }
+            CollectionAssert.AreEqual(inputBytes, outputBytes);
         }
 
         private static void Register(UnityContainer container)

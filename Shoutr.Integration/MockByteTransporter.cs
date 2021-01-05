@@ -63,5 +63,10 @@ namespace Shoutr.Integration
         {
             BytesReceived?.Invoke(this, e);
         }
+
+        public void StopListening()
+        {
+            _listTask.SetResult();
+        }
     }
 }

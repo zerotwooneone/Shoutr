@@ -11,6 +11,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Shoutr.Contracts.ByteTransport;
@@ -59,17 +60,9 @@ namespace Shoutr
             var pageSize = 8 * byteToMegabyteFactor;
 
             var pageObservable = reader.PageObservable(pageSize, token);
-
-            ///*await*/ var pageTest = pageObservable
-            //    .ObserveOn(taskPoolScheduler)
-            //    .Select((x, count) =>
-            //{
-            //    DdsLog($"{count} {Newtonsoft.Json.JsonConvert.SerializeObject(new { array = x.array.Take(3), x.array.Length, startIndex = x.startPayloadIndex }, Formatting.Indented)}");
-            //    return x;
-            //}); //.ToTask(token).ConfigureAwait(false);
-
+            
             const long broadcastIdByteCount = 16; //guid bytes
-            const long fudgeAmount = 100;
+            const long fudgeAmount = 100; //the hash alg chosen has to be equal to or smaller than this
             var packetSize = byteSender.MaximumTransmittableBytes - broadcastIdByteCount - fudgeAmount;
             var partialPacketCache = new ConcurrentDictionary<long, byte[]>();
             var payloadObservable = pageObservable
@@ -138,25 +131,35 @@ namespace Shoutr
             
             var broadcastId = Guid.NewGuid();
 
+            var md5 = MD5.Create();
             var serializedPayloadObservable = payloadObservable
                 .Select(payloadWrapper =>
                 {
                     byte[] serializedPayload;
+                    var hash = md5.ComputeHash(payloadWrapper.bytes);
                     var protoMessage = new ProtoMessage(broadcastId, payloadWrapper.PayloadIndex, payloadWrapper.bytes, null, null,
-                        null);
+                        null, hash);
                     using (var memoryStream = new MemoryStream())
                     {
                         Serializer.Serialize(memoryStream,
                             protoMessage);
                         serializedPayload = memoryStream.ToArray();
                     }
-                    //DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = serializedPayload.Take(10).ToArray(), serializedPayload.Length, payloadWrapper.PayloadIndex}, Newtonsoft.Json.Formatting.Indented)}",
-                    //     true);
+
+                    var obj = new
+                    {
+                        payloadWrapper.PayloadIndex,
+                        hash = protoMessage.GetHashString(),
+                        array = serializedPayload.Take(10).ToArray(), 
+                        serializedPayload.Length,
+                    };
+                    DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.None)}");
                     return serializedPayload;
                 })
                 .Finally(() =>
                 {
                     DdsLog($"finally serializedPayloadObservable");
+                    md5.Dispose();
                 })
                 .Publish();
             
@@ -166,7 +169,7 @@ namespace Shoutr
             using (var memoryStream = new MemoryStream())
             {
                 Serializer.Serialize(memoryStream,
-                    new ProtoMessage(broadcastId, null, null, packetSize, fileName, packetCount));
+                    new ProtoMessage(broadcastId, null, null, packetSize, fileName, packetCount, null));
                 serializedHeader = memoryStream.ToArray();
             }
 
@@ -174,10 +177,11 @@ namespace Shoutr
 
             var packetObservable = headerObservable
                 .Merge(serializedPayloadObservable)
-                .Finally(() =>
-                {
-                    DdsLog($"packetObservable finally");
-                });
+                // .Finally(() =>
+                // {
+                //     DdsLog($"packetObservable finally");
+                // })
+                ;
 
             serializedPayloadObservable.Connect();
 
@@ -188,15 +192,16 @@ namespace Shoutr
                     return Observable.FromAsync(async c =>
                     {
                         await byteSender.Send(array).ConfigureAwait(false);
-                        DdsLog($"after byteSender.Send  {index} {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Newtonsoft.Json.Formatting.Indented)}",
-                             true);
+                        // DdsLog($"after byteSender.Send  {index} {Newtonsoft.Json.JsonConvert.SerializeObject(new {array = array.Take(10).ToArray(), array.Length}, Newtonsoft.Json.Formatting.Indented)}",
+                        //      true);
                         return Unit.Default;
                     });
                 })
-                .Finally(() =>
-                {
-                    DdsLog($"sendObservable finally");
-                });
+                // .Finally(() =>
+                // {
+                //     DdsLog($"sendObservable finally");
+                // })
+                ;
             await sendObservable
                 .ToTask(token).ConfigureAwait(false);
         }
