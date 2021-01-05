@@ -148,24 +148,40 @@ namespace Shoutr.Integration
             var inputFilePath = "test.7z";
             await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
 
-            await listenTask;
-
-            var inputFile = new FileInfo(inputFilePath);
-            
-            var outputFile = new FileInfo(outputFilePath);
-            Assert.IsTrue(outputFile.Exists);
-
-            Assert.AreEqual(inputFile.Length, outputFile.Length);
-            
-            var inputBytes = File.ReadAllBytes(inputFilePath);
-            var outputBytes = File.ReadAllBytes(outputFilePath);
-            using (var md5 = MD5.Create())
+            try
             {
-                var inputHash = md5.ComputeHash(inputBytes);
-                var outputHash = md5.ComputeHash(outputBytes);
-                CollectionAssert.AreEqual(inputHash, outputHash);
+                await listenTask;
+
+                var inputFile = new FileInfo(inputFilePath);
+            
+                var outputFile = new FileInfo(outputFilePath);
+                Assert.IsTrue(outputFile.Exists);
+
+                Assert.AreEqual(inputFile.Length, outputFile.Length);
+            
+                var inputBytes = File.ReadAllBytes(inputFilePath);
+                var outputBytes = File.ReadAllBytes(outputFilePath);
+                using (var md5 = MD5.Create())
+                {
+                    var inputHash = md5.ComputeHash(inputBytes);
+                    var outputHash = md5.ComputeHash(outputBytes);
+                    CollectionAssert.AreEqual(inputHash, outputHash);
+                }
+                CollectionAssert.AreEqual(inputBytes, outputBytes);
             }
-            CollectionAssert.AreEqual(inputBytes, outputBytes);
+            finally
+            {
+                if (!string.IsNullOrWhiteSpace(outputFilePath))
+                {
+                    var outputFile = new FileInfo(outputFilePath);
+                    outputFile.Refresh();
+                    if (outputFile.Exists)
+                    {
+                        outputFile.Delete();
+                    }
+                }
+                
+            }
         }
 
         private static void Register(UnityContainer container)
