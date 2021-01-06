@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
-using ProtoBuf;
 using Shoutr.Contracts;
 
 namespace Shoutr.Console

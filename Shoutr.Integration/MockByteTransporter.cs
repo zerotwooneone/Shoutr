@@ -41,22 +41,8 @@ namespace Shoutr.Integration
 
         public async Task Send(byte[] bytes)
         {
-            //DdsLog($"about to send {bytes.Length}", true);
             await _sender.Send(bytes);
-            //DdsLog($"about to receive {bytes.Length}", true);
             onReceive?.Invoke(bytes,SimulateReceived);
-            //DdsLog($"received {bytes.Length}", true);
-        }
-        
-        internal static void DdsLog(string message, 
-            bool includeDetails = false,
-            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
-        {
-            if (includeDetails)
-            {
-                Console.WriteLine($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
-            }
-            Console.WriteLine($"{message}");
         }
 
         protected virtual void OnBytesReceived(IBytesReceived e)

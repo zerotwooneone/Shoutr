@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 using Shoutr.Reactive;

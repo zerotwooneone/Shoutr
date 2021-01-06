@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Shoutr.Contracts.Io
+﻿namespace Shoutr.Contracts.Io
 {
     public interface IStreamFactory
     {

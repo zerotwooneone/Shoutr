@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -132,24 +130,21 @@ namespace Shoutr.Integration
 
             var taskFactory = new TaskFactory();
             string outputFilePath = null;
-            //var listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var listenTask = taskFactory.StartNew(() =>
             {
                 listener.BroadcastEnded += (s, b) =>
                     {
-                        //Console.WriteLine($"broadcast complete {b.BroadcastId} {b.FileName}");
                         outputFilePath = b.FileName;
-                        //listenCts.Cancel();
                         transporter.StopListening();
                     };
                 listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
             }, cts.Token);
             
             var inputFilePath = "test.7z";
-            await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
-            
             try
             {
+                await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
+            
                 await listenTask;
 
                 var inputFile = new FileInfo(inputFilePath);
@@ -187,17 +182,6 @@ namespace Shoutr.Integration
                 return UdpBroadcastSender.Factory();
             });
             container.RegisterType<IStreamFactory, StreamFactory>();
-        }
-        
-        internal static void DdsLog(string message, 
-            bool includeDetails = false,
-            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
-        {
-            if (includeDetails)
-            {
-                Console.Write($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
-            }
-            Console.WriteLine($"{message}");
         }
     }
 

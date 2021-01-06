@@ -2,8 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -31,7 +29,7 @@ namespace Shoutr
                 observableScheduler,
                 cancellationToken).ConfigureAwait(false);
         }
-        
+
         public async Task Listen(IByteReceiver byteReceiver,
             IStreamFactory streamFactory,
             IScheduler scheduler,
@@ -52,7 +50,6 @@ namespace Shoutr
                         message = protoMessage;
                     }
 
-                    //DdsLog($"deserialized \r\n {Newtonsoft.Json.JsonConvert.SerializeObject(new {bcid= message.GetBroadcastId(), message.PayloadCount, message.PayloadIndex, payloadLength=message.Payload?.Length})}", true);
                     return message;
                 });
 
@@ -87,10 +84,8 @@ namespace Shoutr
                 {
                     var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
                     payloads.Clear();
-                    //DdsLog($"empty cache {p.Length}");
                     foreach (var payload in p)
                     {
-                        //DdsLog($"write from cache {payload.PayloadIndex}");
                         fileWriteRequestSubject.OnNext(new FileWriteWrapper()
                             {Header = header1, Payload = payload});
                     }
@@ -102,7 +97,6 @@ namespace Shoutr
                 .Subscribe(protoHeader => headerCache.AddOrUpdate(protoHeader.GetBroadcastId(),
                     bcid =>
                     {
-                        //DdsLog($"header add {bcid}");
                         var header = ConvertToHeader(protoHeader);
                         HandleCachedPayloads(bcid, header);
 
@@ -122,12 +116,10 @@ namespace Shoutr
                 {
                     if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
                     {
-                        //DdsLog($"write request {payload.PayloadIndex} {payload.GetHashString()}");
                         fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
                     }
                     else
                     {
-                        //DdsLog($"payload cached {payload.PayloadIndex} {payload.GetHashString()}");
                         payloadCache.AddOrUpdate(payload.GetBroadcastId(),
                             bcid =>
                             {
@@ -153,7 +145,6 @@ namespace Shoutr
                         var writeIndex = writeRequest.Payload.PayloadIndex.Value *
                                          writeRequest.Header.PayloadMaxBytes;
                         await writer.Write(writeIndex, writeRequest.Payload.Payload, token).ConfigureAwait(false);
-                        //DdsLog($"write complete {writeRequest.Payload.PayloadIndex} {writeRequest.Payload.GetHashString()}");
                         return writeRequest.Header;
                     });
                 }).Merge(1);
@@ -174,14 +165,11 @@ namespace Shoutr
 
             void OnBytesReceived(object sender, IBytesReceived bytesReceived)
             {
-//DdsLog($"bytes received {bytesReceived.Bytes.Length}");
                 packetBufferObservable.OnNext(bytesReceived.Bytes);
             }
+
             byteReceiver.BytesReceived += OnBytesReceived;
-            cancellationToken.Register(() =>
-            {
-                byteReceiver.BytesReceived -= OnBytesReceived;
-            });
+            cancellationToken.Register(() => { byteReceiver.BytesReceived -= OnBytesReceived; });
             await byteReceiver.Listen(cancellationToken);
         }
 
@@ -206,17 +194,6 @@ namespace Shoutr
                 .Merge();
 
             return fileStoppedObservable;
-        }
-
-        internal static void DdsLog(string message, 
-            bool includeDetails = false,
-            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
-        {
-            if (includeDetails)
-            {
-                Console.Write($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
-            }
-            Console.WriteLine($"{message}");
         }
 
         public event EventHandler<IBroadcastResult> BroadcastEnded;
