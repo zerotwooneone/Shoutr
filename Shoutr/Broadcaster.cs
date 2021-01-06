@@ -158,7 +158,7 @@ namespace Shoutr
                 })
                 .Finally(() =>
                 {
-                    DdsLog($"finally serializedPayloadObservable");
+                    //DdsLog($"finally serializedPayloadObservable");
                     md5.Dispose();
                 })
                 .Publish();

@@ -90,7 +90,7 @@ namespace Shoutr
                     //DdsLog($"empty cache {p.Length}");
                     foreach (var payload in p)
                     {
-                        DdsLog($"write from cache {payload.PayloadIndex}");
+                        //DdsLog($"write from cache {payload.PayloadIndex}");
                         fileWriteRequestSubject.OnNext(new FileWriteWrapper()
                             {Header = header1, Payload = payload});
                     }
@@ -127,7 +127,7 @@ namespace Shoutr
                     }
                     else
                     {
-                        DdsLog($"payload cached {payload.PayloadIndex} {payload.GetHashString()}");
+                        //DdsLog($"payload cached {payload.PayloadIndex} {payload.GetHashString()}");
                         payloadCache.AddOrUpdate(payload.GetBroadcastId(),
                             bcid =>
                             {

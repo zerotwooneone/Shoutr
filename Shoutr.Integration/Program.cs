@@ -135,7 +135,6 @@ namespace Shoutr.Integration
             //var listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var listenTask = taskFactory.StartNew(() =>
             {
-                DdsLog($"before listen", true);
                 listener.BroadcastEnded += (s, b) =>
                     {
                         //Console.WriteLine($"broadcast complete {b.BroadcastId} {b.FileName}");
@@ -144,15 +143,10 @@ namespace Shoutr.Integration
                         transporter.StopListening();
                     };
                 listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
-                DdsLog($"after listen", true);
             }, cts.Token);
             
             var inputFilePath = "test.7z";
-            DdsLog($"before wait", true);
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            DdsLog($"before broadcast", true);
             await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
-            DdsLog($"after broadcast", true);
             
             try
             {
