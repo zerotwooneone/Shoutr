@@ -35,7 +35,7 @@ namespace Shoutr.Tests
         }
         
         [Test]
-        public async Task GetHeaderObservable_ReturnsExtra_WhenOnePayloadDelayed()
+        public void GetHeaderObservable_ReturnsExtra_WhenOnePayloadDelayed()
         {   
             var bc = new Broadcaster();
             var serializedHeader = new byte[] { 1, 2, 3, 4};
