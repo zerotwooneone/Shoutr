@@ -23,7 +23,7 @@ namespace Shoutr
             CancellationToken cancellationToken = default)
         {
             var observableScheduler =
-                System.Reactive.Concurrency.Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
             await Listen(byteReceiver,
                 streamFactory,
                 observableScheduler,
