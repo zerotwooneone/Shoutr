@@ -69,7 +69,7 @@ namespace Shoutr
 
             string GetFileName(ProtoMessage header)
             {
-                return $"{System.DateTime.Now:HHmmssffff}.{header.FileName}";
+                return $"{System.DateTime.Now:HH-mm-ss-ffff}.{header.FileName}";
             }
 
             Header ConvertToHeader(ProtoMessage header)
@@ -81,28 +81,38 @@ namespace Shoutr
                 };
             }
 
+            void HandleCachedPayloads(Guid guid, Header header1)
+            {
+                if (payloadCache.TryRemove(guid, out var payloads))
+                {
+                    var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
+                    payloads.Clear();
+                    //DdsLog($"empty cache {p.Length}");
+                    foreach (var payload in p)
+                    {
+                        DdsLog($"write from cache {payload.PayloadIndex}");
+                        fileWriteRequestSubject.OnNext(new FileWriteWrapper()
+                            {Header = header1, Payload = payload});
+                    }
+                }
+            }
+
             headerObservable
                 .ObserveOn(scheduler)
-                .Subscribe(header => headerCache.AddOrUpdate(header.GetBroadcastId(),
+                .Subscribe(protoHeader => headerCache.AddOrUpdate(protoHeader.GetBroadcastId(),
                     bcid =>
                     {
-                        //DdsLog($"header addOrUpdate {bcid}");
-                        if (payloadCache.TryRemove(bcid, out var payloads))
-                        {
-                            var p = payloads.ToArray(); //todo:figure out why this bombed - List changed exception
-                            payloads.Clear();
-                            //DdsLog($"empty cache {p.Length}");
-                            foreach (var payload in p)
-                            {
-                                DdsLog($"cached write request {payload.PayloadIndex}");
-                                fileWriteRequestSubject.OnNext(new FileWriteWrapper()
-                                    {Header = ConvertToHeader(header), Payload = payload});
-                            }
-                        }
+                        //DdsLog($"header add {bcid}");
+                        var header = ConvertToHeader(protoHeader);
+                        HandleCachedPayloads(bcid, header);
 
-                        return ConvertToHeader(header);
+                        return header;
                     },
-                    (bcid, m) => m)
+                    (bcid, header) =>
+                    {
+                        HandleCachedPayloads(bcid, header);
+                        return header;
+                    })
                 );
 
 
@@ -117,7 +127,7 @@ namespace Shoutr
                     }
                     else
                     {
-                        DdsLog($"write cached {payload.PayloadIndex} {payload.GetHashString()}");
+                        DdsLog($"payload cached {payload.PayloadIndex} {payload.GetHashString()}");
                         payloadCache.AddOrUpdate(payload.GetBroadcastId(),
                             bcid =>
                             {

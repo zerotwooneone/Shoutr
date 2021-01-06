@@ -135,19 +135,25 @@ namespace Shoutr.Integration
             //var listenCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var listenTask = taskFactory.StartNew(() =>
             {
+                DdsLog($"before listen", true);
                 listener.BroadcastEnded += (s, b) =>
                     {
-                        Console.WriteLine($"broadcast complete {b.BroadcastId} {b.FileName}");
+                        //Console.WriteLine($"broadcast complete {b.BroadcastId} {b.FileName}");
                         outputFilePath = b.FileName;
                         //listenCts.Cancel();
                         transporter.StopListening();
                     };
-                    listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
+                listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
+                DdsLog($"after listen", true);
             }, cts.Token);
             
             var inputFilePath = "test.7z";
+            DdsLog($"before wait", true);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            DdsLog($"before broadcast", true);
             await broadcaster.BroadcastFile(inputFilePath, transporter, streamFactory, cancellationToken: cts.Token);
-
+            DdsLog($"after broadcast", true);
+            
             try
             {
                 await listenTask;
@@ -161,12 +167,6 @@ namespace Shoutr.Integration
             
                 var inputBytes = File.ReadAllBytes(inputFilePath);
                 var outputBytes = File.ReadAllBytes(outputFilePath);
-                using (var md5 = MD5.Create())
-                {
-                    var inputHash = md5.ComputeHash(inputBytes);
-                    var outputHash = md5.ComputeHash(outputBytes);
-                    CollectionAssert.AreEqual(inputHash, outputHash);
-                }
                 CollectionAssert.AreEqual(inputBytes, outputBytes);
             }
             finally
@@ -193,6 +193,17 @@ namespace Shoutr.Integration
                 return UdpBroadcastSender.Factory();
             });
             container.RegisterType<IStreamFactory, StreamFactory>();
+        }
+        
+        internal static void DdsLog(string message, 
+            bool includeDetails = false,
+            [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
+        {
+            if (includeDetails)
+            {
+                Console.Write($"{caller} thread:{System.Threading.Thread.CurrentThread.ManagedThreadId} ");    
+            }
+            Console.WriteLine($"{message}");
         }
     }
 

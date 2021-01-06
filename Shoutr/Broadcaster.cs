@@ -146,14 +146,14 @@ namespace Shoutr
                         serializedPayload = memoryStream.ToArray();
                     }
 
-                    var obj = new
-                    {
-                        payloadWrapper.PayloadIndex,
-                        hash = protoMessage.GetHashString(),
-                        array = serializedPayload.Take(10).ToArray(), 
-                        serializedPayload.Length,
-                    };
-                    DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.None)}");
+                    // var obj = new
+                    // {
+                    //     payloadWrapper.PayloadIndex,
+                    //     hash = protoMessage.GetHashString(),
+                    //     array = serializedPayload.Take(10).ToArray(), 
+                    //     serializedPayload.Length,
+                    // };
+                    //DdsLog($"serialized packet {Newtonsoft.Json.JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.None)}");
                     return serializedPayload;
                 })
                 .Finally(() =>
