@@ -62,20 +62,34 @@ namespace Shoutr.Integration
             };
 
             var context = new MyContext();
+            var passCount = 0;
             for (var testIndex = 0; testIndex < tests.Length; testIndex++)
             {
                 var test = tests[testIndex];
                 Console.WriteLine($"======= Starting test #{testIndex+1} : {test.Name}  ======");
+                bool? passed = null;
                 try
                 {
                     Run(containerFactory, test.Test, context, tokenSource.Token).Wait(tokenSource.Token);
-                    Console.WriteLine($"== test #{testIndex+1} : {test.Name} Finished");
+                    passed = true;
+                    passCount++;
                 }
                 catch (Exception e)
                 {
+                    passed = false;
                     Console.WriteLine(e);
                 }
+
+                var passMessage = passed == null
+                    ? "unknown"
+                    : passed.Value
+                        ? "passed"
+                        : "failed";
+                Console.WriteLine($"== test #{testIndex+1} : {test.Name} Finished - {passMessage}");
             }
+            Console.WriteLine();
+            Console.WriteLine($"{passCount} passed out of {tests.Length}");
+            
         }
 
         private static async Task Run(Func<IUnityContainer> unityContainer,
