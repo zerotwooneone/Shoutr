@@ -5,6 +5,7 @@ using System.IO;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf;
@@ -97,6 +98,7 @@ namespace Shoutr
                 .Subscribe(protoHeader => headerCache.AddOrUpdate(protoHeader.GetBroadcastId(),
                     bcid =>
                     {
+                        //todo: decide if header.payloadCount X headerMaxPayloadSize is too much
                         var header = ConvertToHeader(protoHeader);
                         HandleCachedPayloads(bcid, header);
 
@@ -109,11 +111,44 @@ namespace Shoutr
                     })
                 );
 
+            var md5 = MD5.Create();
+
+            bool CheckHash(ProtoMessage payload)
+            {
+                var expected = payload.Hash;
+                if (expected == null || expected.Length == 0)
+                {
+                    return false;
+                }
+
+                var actual = md5.ComputeHash(payload.Payload);
+                if (actual.Length == 0 || expected.Length != actual.Length)
+                {
+                    return false;
+                }
+
+                for (var index = 0; index < expected.Length; index++)
+                {
+                    var expectedByte = expected[index];
+                    var actualByte = actual[index];
+                    if (expectedByte != actualByte)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
 
             payloadObservable
                 .ObserveOn(scheduler)
                 .Subscribe(payload =>
                 {
+                    if (!CheckHash(payload))
+                    {
+                        throw new InvalidDataException("Hash check failed");
+                        //todo: return error statistics to the caller
+                    }
                     if (headerCache.TryGetValue(payload.GetBroadcastId(), out var header))
                     {
                         fileWriteRequestSubject.OnNext(new FileWriteWrapper() {Header = header, Payload = payload});
