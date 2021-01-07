@@ -174,6 +174,10 @@ namespace Shoutr
                 //.ObserveOn(observableScheduler)
                 .Select(writeRequest =>
                 {
+                    if (writeRequest.Payload.Payload.Length > writeRequest.Header.PayloadMaxBytes)
+                    {
+                        throw new ArgumentException("Payload exceeds max byte length");
+                    }
                     return Observable.FromAsync(async () =>
                     {
                         using var writer = streamFactory.CreateWriter(writeRequest.Header.FileName);
