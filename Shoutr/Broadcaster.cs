@@ -28,7 +28,7 @@ namespace Shoutr
             CancellationToken cancellationToken = default)
         {
             var taskPoolScheduler =
-                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(cancellationToken)); 
             await BroadcastFile(fileName,
                 byteSender,
                 streamFactory,

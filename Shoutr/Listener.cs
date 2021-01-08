@@ -24,7 +24,7 @@ namespace Shoutr
             CancellationToken cancellationToken = default)
         {
             var observableScheduler =
-                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(token)); 
+                new TaskPoolScheduler(new TaskFactory(cancellationToken)); //Scheduler.Default; // 
             await Listen(byteReceiver,
                 streamFactory,
                 observableScheduler,
