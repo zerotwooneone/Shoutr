@@ -6,7 +6,17 @@ namespace Shoutr.Reactive
 {
     public static class ObservableExtensions
     {
-        public static IObservable<TOut> WhenStopped<TIn, TOut>(this IObservable<TIn> observable,
+        /// <summary>
+        /// Repeats the given value every timeout until the source completes
+        /// </summary>
+        /// <param name="observable"></param>
+        /// <param name="value"></param>
+        /// <param name="timeout"></param>
+        /// <param name="scheduler"></param>
+        /// <typeparam name="TIn"></typeparam>
+        /// <typeparam name="TOut"></typeparam>
+        /// <returns></returns>
+        public static IObservable<TOut> RepeatWhile<TIn, TOut>(this IObservable<TIn> observable,
             TOut value,
             TimeSpan timeout,
             IScheduler scheduler)

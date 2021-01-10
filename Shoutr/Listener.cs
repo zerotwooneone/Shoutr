@@ -227,7 +227,7 @@ namespace Shoutr
                             return Observable.Empty<Header>();
                         }
 
-                        return fileWriteObservable.WhenStopped((Header) first, completeTimeout, scheduler);
+                        return fileWriteObservable.RepeatWhile((Header) first, completeTimeout, scheduler);
                     });
                 })
                 .Merge();

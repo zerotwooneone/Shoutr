@@ -16,14 +16,14 @@ namespace Shoutr.Tests.Reactive
         }
 
         [Test]
-        public void WhenStopped_DoesNotEmitUntilTimeout_Never()
+        public void RepeatWhile_DoesNotEmitUntilTimeout_Never()
         {
             var observable = Observable.Never<int>();
             var timeout = TimeSpan.FromSeconds(1);
             var timeoutMinusOne = timeout.Subtract(TimeSpan.FromTicks(1));
 
             const int expected = -999;
-            var result = observable.WhenStopped(expected, timeout, _scheduler);
+            var result = observable.RepeatWhile(expected, timeout, _scheduler);
 
             var didEmit = false;
             int? actual = null;
