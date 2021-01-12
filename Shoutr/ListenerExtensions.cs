@@ -10,12 +10,14 @@ namespace Shoutr
     {
         public static Task ListenUdpBroadcast(this IListener listener, 
             int port = Defaults.Port,
+            string destinationPath = "", 
             CancellationToken cancellationToken = default)
         {
             var byteReceiver = UdpBroadcastReceiver.Factory(port);
             var streamFactory= new StreamFactory();
             return listener.Listen(byteReceiver,
                 streamFactory,
+                destinationPath,
                 cancellationToken);
         }
     }

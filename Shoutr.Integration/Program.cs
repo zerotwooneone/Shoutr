@@ -151,7 +151,7 @@ namespace Shoutr.Integration
                         outputFilePath = b.FileName;
                         transporter.StopListening();
                     };
-                listener.Listen(transporter, streamFactory, cts.Token).Wait(cts.Token);
+                listener.Listen(transporter, streamFactory, destinationPath: "", cts.Token).Wait(cts.Token);
             }, cts.Token);
             
             var inputFilePath = "test.7z";

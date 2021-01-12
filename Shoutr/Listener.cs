@@ -21,6 +21,7 @@ namespace Shoutr
     {
         public async Task Listen(IByteReceiver byteReceiver,
             IStreamFactory streamFactory,
+            string destinationPath = "",
             CancellationToken cancellationToken = default)
         {
             var observableScheduler =
@@ -28,14 +29,24 @@ namespace Shoutr
             await Listen(byteReceiver,
                 streamFactory,
                 observableScheduler,
+                destinationPath,
                 cancellationToken).ConfigureAwait(false);
         }
 
         public async Task Listen(IByteReceiver byteReceiver,
             IStreamFactory streamFactory,
             IScheduler scheduler,
+            string destinationPath = "",
             CancellationToken cancellationToken = default)
         {
+            var basePath = string.IsNullOrWhiteSpace(destinationPath)
+                ? ""
+                : destinationPath;
+            if (basePath != "")
+            {
+                Directory.CreateDirectory(basePath); //does not throw an exception if it does not exist    
+            }
+
             var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = cancellationTokenSource.Token;
 
@@ -180,7 +191,8 @@ namespace Shoutr
                     }
                     return Observable.FromAsync(async () =>
                     {
-                        using var writer = streamFactory.CreateWriter(writeRequest.Header.FileName);
+                        var fullPath = Path.Combine(basePath, writeRequest.Header.FileName);
+                        using var writer = streamFactory.CreateWriter(fullPath);
                         var writeIndex = writeRequest.Payload.PayloadIndex.Value *
                                          writeRequest.Header.PayloadMaxBytes;
                         await writer.Write(writeIndex, writeRequest.Payload.Payload, token).ConfigureAwait(false);
