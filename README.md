@@ -39,3 +39,8 @@ We intend the default method of "filling in the gaps" (missing or bad data) is g
     * Library with all reactive interfaces
   * Shoutr.Core.Reactive.Extensions
     * Library extending interfaces with reactive members and methods
+
+## Generating Protobuf Code
+Use the protoc tool provided in /bin to (re)generate classes when the message needs to be changed
+
+> protoc -I=$SRC_DIR --csharp_out=$DST_DIR $SRC_DIR/shoutr.proto
