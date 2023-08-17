@@ -1,0 +1,14 @@
+syntax = "proto3";
+package shoutr;
+
+option csharp_namespace = "Shoutr.Serialization";
+
+message ProtoMessage {
+    optional bytes BroadcastId = 1;
+    optional int64 PayloadIndex = 2;
+    optional bytes Payload = 3;
+    optional int64 PayloadMaxSize = 4;
+    optional string FileName = 5;
+    optional int64 PayloadCount = 6;
+    optional bytes Hash = 7;
+}
