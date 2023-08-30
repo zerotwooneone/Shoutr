@@ -5,10 +5,17 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ConnectedComponent } from './connected/connected.component';
+import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import { ConnectingComponent } from './connecting/connecting.component';
+import { BackendModule } from './backend/backend.module';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    ConnectedComponent,
+    PageNotFoundComponent,
+    ConnectingComponent,
   ],
   imports: [
     BrowserModule,
@@ -19,7 +26,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
       // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000'
     }),
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    BackendModule
   ],
   providers: [],
   bootstrap: [AppComponent]
