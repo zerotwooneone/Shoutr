@@ -1,1 +1,14 @@
 <p>connected works!</p>
+
+<mat-expansion-panel hideToggle>
+    <mat-expansion-panel-header>
+        <mat-panel-title>
+            User Info
+        </mat-panel-title>
+        <mat-panel-description>
+            User Id (fingerprint): {{(Config | async)?.UserFingerprint}}
+        </mat-panel-description>
+    </mat-expansion-panel-header>
+    <h4>Public Key</h4>
+    <p>{{(Config | async)?.UserPublicKey}}</p>
+</mat-expansion-panel>

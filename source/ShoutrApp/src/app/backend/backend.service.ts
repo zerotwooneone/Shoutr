@@ -46,7 +46,10 @@ export class BackendService {
 
     //pretend to get the config
     await firstValueFrom(of(1).pipe(delay(80)));
-    this._config.next({});
+    this._config.next({
+      UserFingerprint: "UserFingerprint",
+      UserPublicKey: "UserPublicKey dflkjsdlkfja;slkdjflaskdjfaslkdjf;laskdjfalskdjfalskdjf;alskdjf;alksdjflak faslkd jflksdjflaksd jflksj dlfkja sldkfj askldjflksjdf;lksj"
+    });
 
     return of(true);
   }

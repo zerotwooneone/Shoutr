@@ -9,6 +9,7 @@ import { ConnectedComponent } from './connected/connected.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { ConnectingComponent } from './connecting/connecting.component';
 import { BackendModule } from './backend/backend.module';
+import { MaterialModule } from './material/material.module';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { BackendModule } from './backend/backend.module';
       registrationStrategy: 'registerWhenStable:30000'
     }),
     BrowserAnimationsModule,
-    BackendModule
+    BackendModule,
+    MaterialModule
   ],
   providers: [],
   bootstrap: [AppComponent]
