@@ -17,4 +17,9 @@
 - new project
   - `ng new ShoutrApp --prefix=zh --routing --skip-git --strict --style=scss --view-encapsulation=ShadowDom`
   - use `--dry-run` to try it out
-- 
+- add pwa
+  - this will allow the site to be installed like an app
+  - `ng add @angular/pwa`
+- add material
+  - this provides a few UI elements. see https://material.angular.io/components/categories
+  - `ng add @angular/material`
