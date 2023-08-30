@@ -6,7 +6,6 @@ export const connectedGuard: CanActivateFn = (
   next: ActivatedRouteSnapshot,
   state: RouterStateSnapshot) => {
   let backendService = inject(BackendService);
-  console.log(`guard connected:${backendService.Connected}`);
   if (!backendService.Connected) {
     let router = inject(Router);
     return router.navigate(['']);
