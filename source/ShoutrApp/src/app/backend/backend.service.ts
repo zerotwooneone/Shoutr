@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, EMPTY, Observable, delay, firstValueFrom, mergeMap, of } from 'rxjs';
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
+import { Hub } from './hub/hub';
+import { Peer } from './hub/Peer';
 
 @Injectable({
   providedIn: BackendModule
@@ -9,12 +11,14 @@ import { BackendConfig, BackendModel } from './backend-config';
 export class BackendService {
   private readonly _connecting: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   public readonly Connecting$: Observable<boolean>;
+  private readonly _hub: Hub;
   get Connecting(): boolean { return this._connecting.value; }
   private readonly _connected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   public readonly Connected$: Observable<boolean>;
   get Connected(): boolean { return this._connected.value; }
   private readonly _config: BehaviorSubject<BackendModel> = new BehaviorSubject<BackendModel>({});
   public readonly Config$: Observable<BackendConfig>;
+  public readonly PeerChanged$: Observable<PeerX>;
   get Config(): BackendConfig | undefined {
     let config = this._config.value;
     if (this.Validate(config)) {
@@ -30,7 +34,27 @@ export class BackendService {
         return of(<BackendConfig>c);
       }
       return EMPTY;
-    }))
+    }));
+    this._hub = new Hub("frontend");
+    this.PeerChanged$ = this._hub.PeerChanged$.pipe(
+      mergeMap(hubPeer => {
+        const peer = this.ConvertPeer(hubPeer);
+        if (!peer) {
+          return EMPTY;
+        }
+        return of(peer);
+      })
+    )
+  }
+  ConvertPeer(hubPeer: Peer): PeerX | undefined {
+    if (!hubPeer?.id) {
+      return undefined;
+    }
+    return {
+      id: hubPeer.id,
+      nickname: hubPeer.nickname,
+      publicKey: hubPeer.publicKey
+    };
   }
 
   public async connect(): Promise<Observable<boolean>> {
@@ -39,8 +63,9 @@ export class BackendService {
     }
     this._connecting.next(true);
 
-    //pretend to connect
-    await firstValueFrom(of(1).pipe(delay(300)));
+    //try to connect
+    await this._hub.Start();
+    //todo: abort if start fails
     this._connecting.next(false);
     this._connected.next(true);
 
@@ -73,4 +98,10 @@ export class BackendService {
   }
 
 
+}
+
+export interface PeerX {
+  id: string;
+  nickname?: string;
+  publicKey?: string;
 }
