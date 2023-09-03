@@ -1,6 +1,6 @@
 
 export interface Peer {
     id?: string;
-    nickname?: string;
+    nickname: string;
     publicKey?: string;
 }

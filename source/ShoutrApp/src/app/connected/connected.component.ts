@@ -10,18 +10,8 @@ import { BackendConfig } from '../backend/backend-config';
 })
 export class ConnectedComponent {
   readonly Config: Observable<BackendConfig>;
-  readonly Peers: PeerX[] = [];
   constructor(private readonly backendService: BackendService) {
     this.Config = backendService.Config$;
-    this.backendService.PeerChanged$.subscribe(this.OnPeerChanged);
   }
-  OnPeerChanged(peer: PeerX) {
-    const found = this.Peers.find(existing => existing.id === peer.id);
-    if (!found) {
-      this.Peers.push(peer);
-      return;
-    }
-    found.nickname = peer.nickname;
-    found.publicKey = peer.publicKey;
-  }
+
 }

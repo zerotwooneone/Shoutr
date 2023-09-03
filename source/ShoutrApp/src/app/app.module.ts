@@ -10,6 +10,8 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { ConnectingComponent } from './connecting/connecting.component';
 import { BackendModule } from './backend/backend.module';
 import { MaterialModule } from './material/material.module';
+import { PeerListComponent } from './peer/peer-list/peer-list.component';
+import { SelectablePeerComponent } from './peer/selectable-peer/selectable-peer.component';
 
 @NgModule({
   declarations: [
@@ -17,6 +19,8 @@ import { MaterialModule } from './material/material.module';
     ConnectedComponent,
     PageNotFoundComponent,
     ConnectingComponent,
+    PeerListComponent,
+    SelectablePeerComponent,
   ],
   imports: [
     BrowserModule,

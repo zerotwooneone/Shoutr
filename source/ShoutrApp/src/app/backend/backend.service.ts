@@ -102,6 +102,6 @@ export class BackendService {
 
 export interface PeerX {
   id: string;
-  nickname?: string;
+  nickname: string;
   publicKey?: string;
 }
