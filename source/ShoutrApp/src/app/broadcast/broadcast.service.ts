@@ -45,11 +45,17 @@ export class BroadcastService {
   private OnBroadcastChanged(bc: Broadcast) {
     const found = this._knownBroadcasts.get(bc.id);
     if (!found) {
+      if (bc.completed) {
+        return;
+      }
       const newBc = new BroadcastModel(bc.id);
       this._knownBroadcasts.set(bc.id, newBc);
       this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
       return;
     }
-    //todo: update found
+    if (bc.completed) {
+      this._knownBroadcasts.delete(bc.id);
+      this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
+    }
   }
 }

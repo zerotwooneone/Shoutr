@@ -50,8 +50,10 @@ export class BackendService {
     );
     this.BroadcastChanged$ = concat(
       of(<Broadcast>{ id: "first" }),
-      of(<Broadcast>{ id: "second" }).pipe(delay(300)),
-      of(<Broadcast>{ id: "third" }).pipe(delay(1300))) 
+      of(<Broadcast>{ id: "second" }).pipe(delay(1300)),
+      of(<Broadcast>{ id: "third" }).pipe(delay(900)),
+      of(<Broadcast>{ id: "second", completed: true }).pipe(delay(300)),
+      of(<Broadcast>{ id: "third", completed: true }).pipe(delay(1300))) 
   }
   ConvertPeer(hubPeer: HubPeer): Peer | undefined {
     if (!hubPeer?.id) {
