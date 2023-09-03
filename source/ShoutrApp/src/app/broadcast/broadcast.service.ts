@@ -91,4 +91,19 @@ export class BroadcastService {
       found.SetDownloadState("started but unknown");
     }    
   }
+  public UserCancel(id: string): boolean {
+    if (!id) {
+      return false;
+    }
+    const found = this._knownBroadcasts.get(id);
+    if (!found) {
+      console.warn(`Cannot download. Unknown broadcast id:${id}`);
+      return false;
+    }
+    const result = this.backendService.UserCancel(id);
+    if (result) {
+      found.SetDownloadState("user stopped");
+    }
+    return result;
+  }
 }

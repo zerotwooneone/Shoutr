@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { BroadcastModel } from '../broadcast-model';
-import { BehaviorSubject, Observable, Subject, map, of, takeUntil } from 'rxjs';
+import { Observable, Subject, map, of, takeUntil, tap } from 'rxjs';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { BroadcastService } from '../broadcast.service';
 
@@ -13,8 +13,14 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
   @Input() broadcast?: BroadcastModel;
   private behaviorTeardown$: Subject<void>;
   progressMode$: Observable<ProgressBarMode>;
+  progressVisible$: Observable<boolean>;
+  downloadVisible$: Observable<boolean>;
+  cancelVisible$: Observable<boolean>;
   constructor(private readonly broadcastService: BroadcastService) {
     this.progressMode$ = of("indeterminate");
+    this.progressVisible$ = of(false);
+    this.downloadVisible$ = of(false);
+    this.cancelVisible$ = of(false);
     this.behaviorTeardown$ = new Subject<void>();
   }
   ngOnDestroy(): void {
@@ -33,6 +39,51 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
           : "indeterminate"),
         takeUntil(tearDown)
       );
+      this.progressVisible$ = broadcast.downloadState$.Value$.pipe(
+        map(state => {
+          switch (state) {
+            case "in progress":
+            case "started but unknown":
+              return true;
+            case "source stopped":
+            case "user stopped":
+            case "not started":
+            default:
+              return false;
+          }
+        }),
+        takeUntil(tearDown)
+      );
+      this.downloadVisible$ = broadcast.downloadState$.Value$.pipe(
+        map(state => {
+          switch (state) {
+            case "user stopped":
+            case "not started":
+              return true;
+            case "in progress":
+            case "started but unknown":
+            case "source stopped":
+            default:
+              return false;
+          }
+        }),
+        takeUntil(tearDown)
+      );
+      this.cancelVisible$ = broadcast.downloadState$.Value$.pipe(
+        map(state => {
+          switch (state) {
+            case "in progress":
+            case "started but unknown":
+              return true;
+            case "user stopped":
+            case "not started":
+            case "source stopped":
+            default:
+              return false;
+          }
+        }),
+        takeUntil(tearDown)
+      );
     }
   }
   DownloadClick() {
@@ -40,5 +91,11 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
       return;
     }
     this.broadcastService.Download(this.broadcast.id);
+  }
+  StopClick() {
+    if (!this.broadcast) {
+      return;
+    }
+    this.broadcastService.UserCancel(this.broadcast.id);
   }
 }
