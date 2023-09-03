@@ -56,6 +56,8 @@ export class BroadcastService {
     if (bc.completed) {
       this._knownBroadcasts.delete(bc.id);
       this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
+      return;
     }
+    found.SetPercentComplete(bc.percentComplete);
   }
 }

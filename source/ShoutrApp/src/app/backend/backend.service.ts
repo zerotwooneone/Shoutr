@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, mergeMap, of } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, map, mergeMap, of, range } from 'rxjs';
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
 import { Hub } from './hub/hub';
@@ -52,6 +52,9 @@ export class BackendService {
       of(<Broadcast>{ id: "first" }),
       of(<Broadcast>{ id: "second" }).pipe(delay(1300)),
       of(<Broadcast>{ id: "third" }).pipe(delay(900)),
+      range(0, 100).pipe(
+        mergeMap(i => of(<Broadcast>{ id: "second", percentComplete: i }).pipe(delay(300)), 1)
+      ),
       of(<Broadcast>{ id: "second", completed: true }).pipe(delay(300)),
       of(<Broadcast>{ id: "third", completed: true }).pipe(delay(1300))) 
   }
