@@ -32,11 +32,25 @@ export class PeerIconComponent implements OnChanges{
   }
 
   charToHex(input:string){
-    return input.charCodeAt(0).toString(16);
+    let ascii = input.charCodeAt(0);
+    return ((ascii-48) * 25).toString(16);
+  }
+
+  hashCode(input:string) {
+    var hash = 0,
+      i, chr;
+    if (input.length === 0) return hash;
+    for (i = 0; i < input.length; i++) {
+      chr = input.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+    console.log(Math.abs(hash));
+    return Math.abs(hash);
   }
 
   stringToIcon(input:string){
-    let str = this.standardizeLength(input);
+    let str = this.standardizeLength(this.hashCode(input).toString());
     for(let i = 0; i < this.perSide; i++){
       this.icon[i] = [];
     }
