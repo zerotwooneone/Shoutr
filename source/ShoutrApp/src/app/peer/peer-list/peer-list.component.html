@@ -1,4 +1,3 @@
-<p>peer-list works!</p>
 <div *ngFor="let peer of peerService.knownPeers$|async; trackBy:trackPeer">
-    <p>{{peer.nickname$.Value$|async}}</p>
+    <zh-selectable-peer [peer]="peer"></zh-selectable-peer>
 </div>

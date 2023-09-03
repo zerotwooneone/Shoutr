@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { PeerModel } from '../peer-model';
 
 @Component({
   selector: 'zh-selectable-peer',
@@ -6,5 +7,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./selectable-peer.component.scss']
 })
 export class SelectablePeerComponent {
-
+  @Input() peer?: PeerModel;
 }
