@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { BackendService, PeerX } from '../backend/backend.service';
+import { BackendService } from '../backend/backend.service';
+import { Peer } from '../backend/Peer';
 import { Observable } from 'rxjs';
 import { BackendConfig } from '../backend/backend-config';
 

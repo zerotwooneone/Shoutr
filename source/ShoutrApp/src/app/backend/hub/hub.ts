@@ -1,12 +1,12 @@
 import * as signalR from "@microsoft/signalr"
 import { Observable, Subject, interval, map, merge } from "rxjs";
 import { environment } from "src/environments/environment";
-import { Peer } from "./Peer";
+import { HubPeer } from "./Peer";
 
 export class Hub {
     private readonly _connection: signalR.HubConnection;
     private readonly _handlers: handler2[];
-    public readonly PeerChanged$: Observable<Peer>;
+    public readonly PeerChanged$: Observable<HubPeer>;
     constructor(private readonly hubName: string) {
         const logLevel = environment.production
             ? signalR.LogLevel.Warning
@@ -15,15 +15,15 @@ export class Hub {
             .configureLogging(logLevel)
             .withUrl(environment.baseUrl + this.hubName)
             .build();
-        const peerchangedHandler = this.GetHandler<Peer>("peerchanged");
+        const peerchangedHandler = this.GetHandler<HubPeer>("peerchanged");
         this.PeerChanged$ = this.GetFakePeerChanged(); //peerchangedHandler.observable;
         this._handlers = [
             peerchangedHandler
         ];
     }
-    GetFakePeerChanged(): Observable<Peer> {
+    GetFakePeerChanged(): Observable<HubPeer> {
         return interval(1000).pipe(
-            map(n => <Peer>{ id: "some id", nickname: "This is the user's nickname", publicKey: "fdlksfsljkfdsjlkfdj sfj sdfjsdfj;sdfjkdfj fsdjkldfj sdfjdsflk sdjdsjkfsj dfsfd f" })
+            map(n => <HubPeer>{ id: "some id", nickname: "This is the user's nickname", publicKey: "fdlksfsljkfdsjlkfdj sfj sdfjsdfj;sdfjkdfj fsdjkldfj sdfjdsflk sdjdsjkfsj dfsfd f" })
         );
     }
 

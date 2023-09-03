@@ -8,7 +8,7 @@ import { BroadcastService } from 'src/app/broadcast/broadcast.service';
   styleUrls: ['./peer-list.component.scss']
 })
 export class PeerListComponent {
-  constructor(readonly peerService: BroadcastService) { }
+  constructor(readonly broadcastService: BroadcastService) { }
 
   trackPeer(index: number, peer: PeerModel) {
     return peer?.id;

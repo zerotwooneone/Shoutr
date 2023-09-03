@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, delay, firstValueFrom, mergeMap, of } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, mergeMap, of } from 'rxjs';
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
 import { Hub } from './hub/hub';
-import { Peer } from './hub/Peer';
+import { HubPeer } from './hub/Peer';
+import { Peer } from './Peer';
+import { Broadcast } from './Broadcast';
 
 @Injectable({
   providedIn: BackendModule
@@ -18,7 +20,8 @@ export class BackendService {
   get Connected(): boolean { return this._connected.value; }
   private readonly _config: BehaviorSubject<BackendModel> = new BehaviorSubject<BackendModel>({});
   public readonly Config$: Observable<BackendConfig>;
-  public readonly PeerChanged$: Observable<PeerX>;
+  public readonly PeerChanged$: Observable<Peer>;
+  public readonly BroadcastChanged$: Observable<Broadcast>;
   get Config(): BackendConfig | undefined {
     let config = this._config.value;
     if (this.Validate(config)) {
@@ -44,9 +47,13 @@ export class BackendService {
         }
         return of(peer);
       })
-    )
+    );
+    this.BroadcastChanged$ = concat(
+      of(<Broadcast>{ id: "first" }),
+      of(<Broadcast>{ id: "second" }).pipe(delay(300)),
+      of(<Broadcast>{ id: "third" }).pipe(delay(1300))) 
   }
-  ConvertPeer(hubPeer: Peer): PeerX | undefined {
+  ConvertPeer(hubPeer: HubPeer): Peer | undefined {
     if (!hubPeer?.id) {
       return undefined;
     }
@@ -96,12 +103,6 @@ export class BackendService {
     }
     return !!config.UserFingerprint && !!config.UserPublicKey;
   }
-
-
 }
 
-export interface PeerX {
-  id: string;
-  nickname: string;
-  publicKey?: string;
-}
+

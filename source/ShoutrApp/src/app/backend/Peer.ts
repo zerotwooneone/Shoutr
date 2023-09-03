@@ -1,6 +1,6 @@
 
-export interface HubPeer {
-    id?: string;
+export interface Peer {
+    id: string;
     nickname: string;
     publicKey?: string;
 }

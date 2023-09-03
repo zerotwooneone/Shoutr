@@ -1,3 +1,3 @@
-<div *ngFor="let peer of peerService.knownPeers$|async; trackBy:trackPeer">
+<div *ngFor="let peer of broadcastService.knownPeers$|async; trackBy:trackPeer">
     <zh-selectable-peer [peer]="peer"></zh-selectable-peer>
 </div>

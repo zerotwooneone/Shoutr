@@ -12,6 +12,8 @@ import { BackendModule } from './backend/backend.module';
 import { MaterialModule } from './material/material.module';
 import { PeerListComponent } from './peer/peer-list/peer-list.component';
 import { SelectablePeerComponent } from './peer/selectable-peer/selectable-peer.component';
+import { BroadcastItemComponent } from './broadcast/broadcast-item/broadcast-item.component';
+import { BroadcastListComponent } from './broadcast/broadcast-list/broadcast-list.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +23,8 @@ import { SelectablePeerComponent } from './peer/selectable-peer/selectable-peer.
     ConnectingComponent,
     PeerListComponent,
     SelectablePeerComponent,
+    BroadcastItemComponent,
+    BroadcastListComponent,
   ],
   imports: [
     BrowserModule,
