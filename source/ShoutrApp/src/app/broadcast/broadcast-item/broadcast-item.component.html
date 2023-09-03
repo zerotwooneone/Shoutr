@@ -1,14 +1,22 @@
-<div>{{broadcast?.id}}</div>
-<mat-progress-bar class="progress" [mode]="(progressMode$|async) ?? 'indeterminate'"
-    [value]="(broadcast?.percentComplete$?.Value$|async) ?? 0"
-    [style.visibility]="(progressVisible$|async) ?'visible':'collapse'"></mat-progress-bar>
-<div class="controls">
-    <button mat-icon-button color="primary" aria-label="Download button" (click)="DownloadClick()"
-        [style.visibility]="(downloadVisible$|async) ?'visible':'collapse'">
-        <mat-icon>download_for_offline</mat-icon>
-    </button>
-    <button mat-icon-button color="warn" aria-label="Close button" (click)="StopClick()"
-        [style.visibility]="(cancelVisible$|async) ?'visible':'collapse'">
-        <mat-icon>close</mat-icon>
-    </button>
-</div>
+<mat-card appearance="raised">
+    <mat-card-header>
+        <mat-card-title>{{broadcast?.id}}</mat-card-title>
+        <!-- <mat-card-subtitle>Dog Breed</mat-card-subtitle> -->
+    </mat-card-header>
+    <!-- <mat-card-content></mat-card-content> -->
+    <mat-card-actions>
+        <button mat-icon-button color="primary" aria-label="Download button" (click)="DownloadClick()"
+            [style.visibility]="(downloadVisible$|async) ?'visible':'collapse'">
+            <mat-icon>download_for_offline</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" aria-label="Close button" (click)="StopClick()"
+            [style.visibility]="(cancelVisible$|async) ?'visible':'collapse'">
+            <mat-icon>close</mat-icon>
+        </button>
+    </mat-card-actions>
+    <mat-card-footer>
+        <mat-progress-bar class="progress" [mode]="(progressMode$|async) ?? 'indeterminate'"
+            [value]="(broadcast?.percentComplete$?.Value$|async) ?? 0"
+            [style.visibility]="(progressVisible$|async) ?'visible':'collapse'"></mat-progress-bar>
+    </mat-card-footer>
+    </mat-card>
