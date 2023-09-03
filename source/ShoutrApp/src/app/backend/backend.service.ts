@@ -3,9 +3,9 @@ import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, merg
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
 import { Hub } from './hub/hub';
-import { HubPeer } from './hub/Peer';
 import { Peer } from './Peer';
 import { Broadcast } from './Broadcast';
+import { HubPeer } from './hub/hubTypes';
 
 @Injectable({
   providedIn: BackendModule

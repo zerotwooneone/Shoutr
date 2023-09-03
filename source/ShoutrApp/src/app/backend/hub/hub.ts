@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr"
 import { Observable, Subject, interval, map, merge } from "rxjs";
 import { environment } from "src/environments/environment";
-import { HubPeer } from "./Peer";
+import { HubPeer } from "./hubTypes";
 
 export class Hub {
     private readonly _connection: signalR.HubConnection;
