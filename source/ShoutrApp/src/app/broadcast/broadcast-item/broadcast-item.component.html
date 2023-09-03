@@ -1,3 +1,11 @@
-<p>{{broadcast?.id}}</p>
+<div>{{broadcast?.id}}</div>
 <mat-progress-bar class="progress" [mode]="(progressMode$|async) ?? 'indeterminate'"
     [value]="(broadcast?.percentComplete$?.Value$|async) ?? 0"></mat-progress-bar>
+<div class="controls">
+    <button mat-icon-button color="primary" aria-label="Download button" (click)="DownloadClick()">
+        <mat-icon>download_for_offline</mat-icon>
+    </button>
+    <button mat-icon-button color="warn" aria-label="Close button">
+        <mat-icon>close</mat-icon>
+    </button>
+</div>

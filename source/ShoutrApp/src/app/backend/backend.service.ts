@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, map, mergeMap, of, range } from 'rxjs';
+import { BehaviorSubject, EMPTY, NEVER, Observable, Subject, concat, delay, firstValueFrom, map, mergeMap, of, range, tap } from 'rxjs';
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
 import { Hub } from './hub/hub';
@@ -22,6 +22,7 @@ export class BackendService {
   public readonly Config$: Observable<BackendConfig>;
   public readonly PeerChanged$: Observable<Peer>;
   public readonly BroadcastChanged$: Observable<Broadcast>;
+  private readonly fakeBroadcasts = new Subject<Broadcast>();
   get Config(): BackendConfig | undefined {
     let config = this._config.value;
     if (this.Validate(config)) {
@@ -48,15 +49,15 @@ export class BackendService {
         return of(peer);
       })
     );
-    this.BroadcastChanged$ = concat(
-      of(<Broadcast>{ id: "first" }),
+    this.BroadcastChanged$ = this.fakeBroadcasts.asObservable();
+
+    concat(
+      of(<Broadcast>{ id: "first" }).pipe(delay(4300)),
       of(<Broadcast>{ id: "second" }).pipe(delay(1300)),
-      of(<Broadcast>{ id: "third" }).pipe(delay(900)),
-      range(0, 100).pipe(
-        mergeMap(i => of(<Broadcast>{ id: "second", percentComplete: i }).pipe(delay(300)), 1)
-      ),
-      of(<Broadcast>{ id: "second", completed: true }).pipe(delay(300)),
-      of(<Broadcast>{ id: "third", completed: true }).pipe(delay(1300))) 
+      of(<Broadcast>{ id: "third" }).pipe(delay(900)))
+      .subscribe(bc => {
+        return this.fakeBroadcasts.next(bc);
+      });
   }
   ConvertPeer(hubPeer: HubPeer): Peer | undefined {
     if (!hubPeer?.id) {
@@ -107,6 +108,17 @@ export class BackendService {
       return false;
     }
     return !!config.UserFingerprint && !!config.UserPublicKey;
+  }
+  public Download(id: string): boolean {
+
+    concat(
+      of(<Broadcast>{ id: id }).pipe(delay(1300)),
+      range(0, 101).pipe(
+        mergeMap(i => of(<Broadcast>{ id: id, percentComplete: i }).pipe(delay(300)), 1)
+      ),
+      of(<Broadcast>{ id: id, completed: true }).pipe(delay(300)),)
+      .subscribe(bc => this.fakeBroadcasts.next(bc));
+    return true;
   }
 }
 

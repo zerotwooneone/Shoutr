@@ -2,6 +2,7 @@ import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/
 import { BroadcastModel } from '../broadcast-model';
 import { BehaviorSubject, Observable, Subject, map, of, takeUntil } from 'rxjs';
 import { ProgressBarMode } from '@angular/material/progress-bar';
+import { BroadcastService } from '../broadcast.service';
 
 @Component({
   selector: 'zh-broadcast-item',
@@ -12,7 +13,7 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
   @Input() broadcast?: BroadcastModel;
   private behaviorTeardown$: Subject<void>;
   progressMode$: Observable<ProgressBarMode>;
-  constructor() {
+  constructor(private readonly broadcastService: BroadcastService) {
     this.progressMode$ = of("indeterminate");
     this.behaviorTeardown$ = new Subject<void>();
   }
@@ -33,5 +34,11 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
         takeUntil(tearDown)
       );
     }
+  }
+  DownloadClick() {
+    if (!this.broadcast) {
+      return;
+    }
+    this.broadcastService.Download(this.broadcast.id);
   }
 }
