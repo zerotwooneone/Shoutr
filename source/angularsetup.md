@@ -5,6 +5,12 @@
   - `ng serve --open`
     - omit `--open` if you dont want a new browser window each time you run
 
+# To Publish
+
+- Publish for webserver
+  - `ng build --output-path ../publish/webapp --base-href /webapp/`
+  - copy the `webapp` from `publish` directory into `wwwroot` of the webserver
+
 # One Time Dev Setup
 
 - install Node.js
