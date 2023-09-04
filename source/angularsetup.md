@@ -11,6 +11,7 @@
 
 - Publish Angular App (ShoutrApp) for webserver
   - `ng build --output-path ../publish/webapp --base-href /webapp/`
+    - add `--configuration development` for local hosting with debug
   - copy the `webapp` from `publish` directory into `wwwroot` of the webserver
 
 ## One Time Dev Setup
