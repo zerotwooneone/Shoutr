@@ -119,7 +119,8 @@ export class BackendService {
       range(0, 101).pipe(
         mergeMap(i => of(<Broadcast>{ id: id, percentComplete: i }).pipe(delay(30)), 1)
       ),
-      of(<Broadcast>{ id: id, completed: true }).pipe(delay(300)),).pipe(
+      of(<Broadcast>{ id: id, completed: true }).pipe(delay(300)),)
+      .pipe(
         takeUntil(this.cancelFake.pipe(filter(b => b === id)))
       )
       .subscribe(bc => this.fakeBroadcasts.next(bc));
