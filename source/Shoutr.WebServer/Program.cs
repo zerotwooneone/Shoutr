@@ -1,3 +1,4 @@
+using Shoutr.WebServer.Frontend;
 using Shoutr.WebServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+builder.Services.AddFrontend();
 
 var app = builder.Build();
 
