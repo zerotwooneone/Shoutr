@@ -1,17 +1,19 @@
 
-# To Develop
+# Angular
+
+## To Develop
 
 - Build and run local dev server
   - `ng serve --open`
     - omit `--open` if you dont want a new browser window each time you run
 
-# To Publish
+## To Publish
 
-- Publish for webserver
+- Publish Angular App (ShoutrApp) for webserver
   - `ng build --output-path ../publish/webapp --base-href /webapp/`
   - copy the `webapp` from `publish` directory into `wwwroot` of the webserver
 
-# One Time Dev Setup
+## One Time Dev Setup
 
 - install Node.js
   - 18.17.1 at time of writing
@@ -36,3 +38,10 @@
 - add SignalR
   - this is the browser-side of the service which allows the server to call methods in our Typescript classes. Likewise our Typescript classes can call methods on the server. None of these options require a page reload.
   - `npm install @microsoft/signalr`
+
+# C# Web Server
+
+## To Develop
+- visit https://localhost:7125 (visual studio)
+  - or http://localhost:5000 (dotnet commandline)
+  - you should be redirected to `~/webapp/index.html` and the app will start
