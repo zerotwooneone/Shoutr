@@ -15,8 +15,13 @@ export class Hub {
             .configureLogging(logLevel)
             .withUrl(environment.baseUrl + this.hubName)
             .build();
-        const peerchangedHandler = this.GetHandler<HubPeer>("peerchanged");
-        this.PeerChanged$ = this.GetFakePeerChanged(); //peerchangedHandler.observable;
+        const peerchangedHandler = this.GetHandler<HubPeer>("PeerChanged");
+
+        const useFakeData = false;
+
+        this.PeerChanged$ = useFakeData
+          ? this.GetFakePeerChanged()
+          : peerchangedHandler.observable;
         this._handlers = [
             peerchangedHandler
         ];

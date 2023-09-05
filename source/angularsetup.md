@@ -42,6 +42,11 @@
 
 # C# Web Server
 
+## One Time Setup
+- Make sure the app is running in development mode when using the Angular Cli server
+  - set the environment variable `ASPNETCORE_ENVIRONMENT` `Development`
+  - some IDEs let you set this per-project
+
 ## To Develop
 - visit https://localhost:7125 (visual studio)
   - or http://localhost:5000 (dotnet commandline)

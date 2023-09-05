@@ -1,5 +1,6 @@
 using Shoutr.WebServer.Frontend;
 using Shoutr.WebServer.Hubs;
+using Shoutr.WebServer.Reactive;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddFrontend();
+builder.Services.AddReactive();
+
+builder.Services.AddHostedService<StartupService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+});
+
 
 var app = builder.Build();
 
@@ -22,6 +39,12 @@ app.UseHttpsRedirection();
 app.MapHub<FrontEndHub>("/frontend");
 app.UseStaticFiles();
 app.UseRouting();
+
+if (app.Environment.IsDevelopment())
+{
+    //this must be AFTER UseRouting, but BEFORE UseAuthorization
+    app.UseCors();
+}
 
 
 app.MapControllerRoute(
