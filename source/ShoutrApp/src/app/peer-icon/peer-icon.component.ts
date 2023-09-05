@@ -45,7 +45,6 @@ export class PeerIconComponent implements OnChanges{
       hash = ((hash << 5) - hash) + chr;
       hash |= 0; // Convert to 32bit integer
     }
-    console.log(Math.abs(hash));
     return Math.abs(hash);
   }
 
