@@ -1,12 +1,17 @@
 import * as signalR from "@microsoft/signalr"
-import { Observable, Subject, interval, map, merge } from "rxjs";
+import { Observable, Subject, concat, delay, interval, map, merge, mergeMap, of, range } from "rxjs";
 import { environment } from "src/environments/environment";
-import { HubPeer } from "./hubTypes";
+import { HubBroadcast, HubPeer } from "./hubTypes";
 
 export class Hub {
     private readonly _connection: signalR.HubConnection;
     private readonly _handlers: handler2[];
     public readonly PeerChanged$: Observable<HubPeer>;
+    public readonly BroadcastChanged$: Observable<HubBroadcast>;
+
+    /**todo:delete this*/
+    private readonly useFakeData = true;
+
     constructor(private readonly hubName: string) {
         const logLevel = environment.production
             ? signalR.LogLevel.Warning
@@ -16,17 +21,31 @@ export class Hub {
             .withUrl(environment.baseUrl + this.hubName)
             .build();
         const peerchangedHandler = this.GetHandler<HubPeer>("PeerChanged");
+        const broadcastchangedHandler = this.GetHandler<HubPeer>("BroadcastChanged");
 
-        const useFakeData = false;
-
-        this.PeerChanged$ = useFakeData
+        this.PeerChanged$ = this.useFakeData
           ? this.GetFakePeerChanged()
           : peerchangedHandler.observable;
+        this.BroadcastChanged$ = this.useFakeData
+            ? this.GetFakeBroadcastData()
+            : broadcastchangedHandler.observable;
         this._handlers = [
-            peerchangedHandler
+            peerchangedHandler,
+            broadcastchangedHandler
         ];
     }
-    GetFakePeerChanged(): Observable<HubPeer> {
+    private GetFakeBroadcastData(): Observable<HubBroadcast> {
+        return concat(
+            of(<HubBroadcast>{ id: "first" }),
+            of(<HubBroadcast>{ id: "second" }).pipe(delay(1300)),
+            of(<HubBroadcast>{ id: "third" }).pipe(delay(900)),
+            range(0, 100).pipe(
+                mergeMap(i => of(<HubBroadcast>{ id: "second", percentComplete: i }).pipe(delay(300)), 1)
+            ),
+            of(<HubBroadcast>{ id: "second", completed: true }).pipe(delay(300)),
+            of(<HubBroadcast>{ id: "third", completed: true }).pipe(delay(1300)))
+    }
+    private GetFakePeerChanged(): Observable<HubPeer> {
         return interval(1000).pipe(
             map(n => <HubPeer>{ id: "some id", nickname: "This is the user's nickname", publicKey: "fdlksfsljkfdsjlkfdj sfj sdfjsdfj;sdfjkdfj fsdjkldfj sdfjdsflk sdjdsjkfsj dfsfd f" })
         );
@@ -76,10 +95,13 @@ export class Hub {
         return true;
     }
     public async Start(): Promise<void> {
+        if (this.useFakeData) {
+            await of(1).pipe(delay(80));
+            return;
+        }
         await this._connection
             .start()
-            .then(() => console.debug('SignalR Started'))
-            .catch(reason => console.error(`SignalR Error:${reason}`));
+            .then(() => console.debug('SignalR Started'));
         for (const handler of this._handlers) {
             if (!handler) {
                 continue;

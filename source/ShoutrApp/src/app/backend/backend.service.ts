@@ -1,38 +1,38 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, concat, delay, firstValueFrom, map, mergeMap, of, range } from 'rxjs';
+import { EMPTY, Observable, delay, firstValueFrom, mergeMap, of } from 'rxjs';
 import { BackendModule } from './backend.module';
 import { BackendConfig, BackendModel } from './backend-config';
 import { Hub } from './hub/hub';
 import { Peer } from './Peer';
 import { Broadcast } from './Broadcast';
-import { HubPeer } from './hub/hubTypes';
+import { HubBroadcast, HubPeer } from './hub/hubTypes';
+import { ObservableProperty } from '../util/observable-property';
+import { IReadonlyObservableProperty } from '../util/IReadonlyObservableProperty';
 
 @Injectable({
   providedIn: BackendModule
 })
 export class BackendService {
-  private readonly _connecting: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public readonly Connecting$: Observable<boolean>;
+  private readonly _connecting$: ObservableProperty<boolean> = new ObservableProperty<boolean>(false);
+  get Connecting$(): IReadonlyObservableProperty<boolean> { return this._connecting$; }
   private readonly _hub: Hub;
-  get Connecting(): boolean { return this._connecting.value; }
-  private readonly _connected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public readonly Connected$: Observable<boolean>;
-  get Connected(): boolean { return this._connected.value; }
-  private readonly _config: BehaviorSubject<BackendModel> = new BehaviorSubject<BackendModel>({});
+  get Connecting(): boolean { return this._connecting$.Value; }
+  private readonly _connected$: ObservableProperty<boolean> = new ObservableProperty<boolean>(false);
+  get Connected$(): IReadonlyObservableProperty<boolean> { return this._connected$; }
+  get Connected(): boolean { return this._connected$.Value; }
+  private readonly _config$: ObservableProperty<BackendModel> = new ObservableProperty<BackendModel>({});
   public readonly Config$: Observable<BackendConfig>;
   public readonly PeerChanged$: Observable<Peer>;
   public readonly BroadcastChanged$: Observable<Broadcast>;
   get Config(): BackendConfig | undefined {
-    let config = this._config.value;
+    let config = this._config$.Value;
     if (this.Validate(config)) {
       return <BackendConfig>config;
     }
     return undefined;
   }
   constructor() {
-    this.Connecting$ = this._connecting.asObservable();
-    this.Connected$ = this._connected.asObservable();
-    this.Config$ = this._config.asObservable().pipe(mergeMap(c => {
+    this.Config$ = this._config$.Value$.pipe(mergeMap(c => {
       if (this.Validate(c)) {
         return of(<BackendConfig>c);
       }
@@ -48,18 +48,28 @@ export class BackendService {
         return of(peer);
       })
     );
-    this.BroadcastChanged$ = concat(
-      of(<Broadcast>{ id: "first" }),
-      of(<Broadcast>{ id: "second" }).pipe(delay(1300)),
-      of(<Broadcast>{ id: "third" }).pipe(delay(900)),
-      range(0, 100).pipe(
-        mergeMap(i => of(<Broadcast>{ id: "second", percentComplete: i }).pipe(delay(300)), 1)
-      ),
-      of(<Broadcast>{ id: "second", completed: true }).pipe(delay(300)),
-      of(<Broadcast>{ id: "third", completed: true }).pipe(delay(1300))) 
+    this.BroadcastChanged$ = this._hub.BroadcastChanged$.pipe(
+      mergeMap(hubBc => {
+        const bc = this.ConvertBc(hubBc);
+        if (!bc) {
+          return EMPTY;
+        }
+        return of(bc);
+      })
+    )
+  }
+  ConvertBc(hubBc: HubBroadcast): Broadcast | undefined {
+    if (!hubBc?.id) {
+      return undefined;
+    }
+    return {
+      id: hubBc.id,
+      completed: hubBc.completed,
+      percentComplete: hubBc.percentComplete
+    };
   }
   ConvertPeer(hubPeer: HubPeer): Peer | undefined {
-    if (!hubPeer?.id) {
+    if (!hubPeer?.id || !hubPeer?.nickname) {
       return undefined;
     }
     return {
@@ -69,37 +79,40 @@ export class BackendService {
     };
   }
 
-  public async connect(): Promise<Observable<boolean>> {
+  public async connect(): Promise<boolean> {
     if (this.Connecting || this.Connected) {
-      return of(false);
+      return false;
     }
-    this._connecting.next(true);
+    this._connecting$.Value = true;
 
     //try to connect
-    await this._hub.Start();
-    //todo: abort if start fails
-    this._connecting.next(false);
-    this._connected.next(true);
+    try {
+      await this._hub.Start();
+    } finally {
+      this._connecting$.Value = false;
+    }
+
+    this._connected$.Value = true;
 
     //pretend to get the config
     await firstValueFrom(of(1).pipe(delay(80)));
-    this._config.next({
+    this._config$.Value = {
       UserFingerprint: "UserFingerprint",
       UserPublicKey: "UserPublicKey dflkjsdlkfja;slkdjflaskdjfaslkdjf;laskdjfalskdjfalskdjf;alskdjf;alksdjflak faslkd jflksdjflaksd jflksj dlfkja sldkfj askldjflksjdf;lksj"
-    });
+    };
 
-    return of(true);
+    return true;
   }
 
-  public async disconnect(): Promise<Observable<boolean>> {
+  public async disconnect(): Promise<boolean> {
     if (!this.Connected) {
-      return of(false);
+      return false;
     }
     await firstValueFrom(of(1).pipe(delay(300)));
-    this._connecting.next(false);
-    this._connected.next(false);
+    this._connecting$.Value = false;
+    this._connected$.Value = false;
 
-    return of(true);
+    return true;
   }
 
   private Validate(config: BackendModel): boolean {
