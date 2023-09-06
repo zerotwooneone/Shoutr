@@ -10,6 +10,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddFrontend();
 builder.Services.AddReactive();
+builder.Services.AddHubs();
 
 builder.Services.AddHostedService<StartupService>();
 
