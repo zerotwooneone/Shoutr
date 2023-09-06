@@ -14,6 +14,7 @@ import { PeerListComponent } from './peer/peer-list/peer-list.component';
 import { SelectablePeerComponent } from './peer/selectable-peer/selectable-peer.component';
 import { BroadcastItemComponent } from './broadcast/broadcast-item/broadcast-item.component';
 import { BroadcastListComponent } from './broadcast/broadcast-list/broadcast-list.component';
+import { PeerIconComponent } from './peer-icon/peer-icon.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { BroadcastListComponent } from './broadcast/broadcast-list/broadcast-lis
     SelectablePeerComponent,
     BroadcastItemComponent,
     BroadcastListComponent,
+    PeerIconComponent,
   ],
   imports: [
     BrowserModule,
