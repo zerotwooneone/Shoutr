@@ -10,3 +10,8 @@ export interface HubBroadcast {
     percentComplete?: number;
 }
 
+export interface HubConfig {
+    userId?: string;
+    userPublicKey?: string;
+}
+

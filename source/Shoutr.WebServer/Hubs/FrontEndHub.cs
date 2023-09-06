@@ -1,5 +1,4 @@
-﻿using System.Reactive;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Microsoft.AspNetCore.SignalR;
 using Shoutr.WebServer.Reactive;
@@ -41,5 +40,15 @@ public class FrontEndHub: Hub<IFrontEndClient>
     private IObservable<T> AsObservable<T>(Subject<T> subject)
     {
         return subject.AsObservable().ObserveOn(_schedulerProvider.Get("Hub"));
+    }
+
+    public async Task SendBroadcastChanged(HubBroadcast hubBroadcast)
+    {
+        await Clients.All.BroadcastChanged(hubBroadcast);
+    }
+
+    public async Task SendConfig(string connectionId, HubConfig hubConfig)
+    {
+        await Clients.Client(connectionId).SendConfigToClient(hubConfig);
     }
 }

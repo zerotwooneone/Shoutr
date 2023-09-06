@@ -6,13 +6,15 @@ public class StartupService: IHostedService
     {
         //if the service subscribes in the constructor, then nothing more is needed
     }
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         //intentionally empty
+        return Task.CompletedTask;
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
+    public Task StopAsync(CancellationToken cancellationToken)
     {
         //intentionally empty
+        return Task.CompletedTask;
     }
 }

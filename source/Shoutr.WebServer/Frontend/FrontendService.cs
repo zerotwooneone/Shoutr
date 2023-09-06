@@ -21,31 +21,44 @@ public class FrontendService
     {
         _frontEndHub = frontEndHub;
         _schedulerProvider = schedulerProvider;
-        _disposable.Add(_frontEndHub.Connected.Subscribe(OnConnected));
+        _disposable.Add(_frontEndHub.Connected.SubscribeAsync(OnConnected));
         _disposable.Add(_frontEndHub.Disconnected.Subscribe(OnDisconnected));
     }
 
-    private void OnConnected(string connectionId)
+    private async Task OnConnected(string connectionId)
     {
         //cancel and fake data now
         _cancelFake.OnNext();
 
-        Observable.Delay(Observable.Empty<HubPeer>(), TimeSpan.FromSeconds(3))
-            .Concat(Observable.Return(new HubPeer
-            {
-                Id = "First hub peer",
-                Nickname = "First Nickname",
-            }).Delay(TimeSpan.FromMilliseconds(300)))
-            .Concat(Observable.Return(new HubPeer
-            {
-                Id = "Second hub peer",
-                Nickname = "Second Nickname",
-            }).Delay(TimeSpan.FromSeconds(3)))
-            .Concat(Observable.Return(new HubPeer
-            {
-                Id = "Third hub peer",
-                Nickname = "Third Nickname",
-            }).Delay(TimeSpan.FromSeconds(3)))
+        await _frontEndHub.SendConfig(connectionId,
+            new HubConfig("backend user id", "backend public key slkdfjsldkfj fdjskfjsd;kjfasj sdfjsdflkdfs jd"));
+
+        Observable.Empty<HubBroadcast>().Delay(TimeSpan.FromSeconds(3))
+            .Concat(Observable.Return(new HubBroadcast("First backend broadcast")))
+            .Concat(Observable.Return(new HubBroadcast("Second backend broadcast")).Delay(TimeSpan.FromSeconds(1.3)))
+            .Concat(Observable.Return(new HubBroadcast("Third backend broadcast")).Delay(TimeSpan.FromSeconds(0.9)))
+            .Concat(Observable.Range(0,101)
+                .Select(pct => 
+                    Observable.Return(new HubBroadcast("Second backend broadcast"){ PercentComplete = pct})
+                        .Delay(TimeSpan.FromSeconds(0.3)))
+                .Concat())
+            .Concat(Observable.Return(new HubBroadcast("Second backend broadcast"){ Completed = true}).Delay(TimeSpan.FromSeconds(0.3)))
+            .Concat(Observable.Return(new HubBroadcast("Third backend broadcast"){ Completed = true}).Delay(TimeSpan.FromSeconds(1.3)))
+            .TakeUntil(_cancelFake.AsObservable())
+            .SubscribeAsync(async hb =>
+                {
+                    await _frontEndHub.SendBroadcastChanged(hb);
+                },
+                ex =>
+                {
+                    //todo: log this
+                    int x = 0;
+                });
+        
+        Observable.Empty<HubPeer>().Delay(TimeSpan.FromSeconds(3))
+            .Concat(Observable.Return(new HubPeer("First backend peer","First backend Nickname")).Delay(TimeSpan.FromMilliseconds(300)))
+            .Concat(Observable.Return(new HubPeer("Second backend peer","Second backend Nickname")).Delay(TimeSpan.FromSeconds(3)))
+            .Concat(Observable.Return(new HubPeer("Third backend peer","Third backend Nickname")).Delay(TimeSpan.FromSeconds(3)))
             .TakeUntil(_cancelFake.AsObservable())
             .SubscribeAsync(async p =>
                 {
@@ -53,6 +66,7 @@ public class FrontendService
                 },
                 ex =>
                 {
+                    //todo: log this
                     int x = 0;
                 });
     }

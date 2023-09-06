@@ -1,16 +1,17 @@
 import * as signalR from "@microsoft/signalr"
-import { Observable, Subject, concat, delay, interval, map, merge, mergeMap, of, range } from "rxjs";
+import { NEVER, Observable, Subject, concat, delay, interval, map, merge, mergeMap, of, range } from "rxjs";
 import { environment } from "src/environments/environment";
-import { HubBroadcast, HubPeer } from "./hubTypes";
+import { HubBroadcast, HubConfig, HubPeer } from "./hubTypes";
 
 export class Hub {
     private readonly _connection: signalR.HubConnection;
     private readonly _handlers: handler2[];
     public readonly PeerChanged$: Observable<HubPeer>;
     public readonly BroadcastChanged$: Observable<HubBroadcast>;
+    public readonly ConfigChanged$: Observable<HubConfig>;
 
     /**todo:delete this*/
-    private readonly useFakeData = true;
+    private readonly useFakeData: boolean = true;    
 
     constructor(private readonly hubName: string) {
         const logLevel = environment.production
@@ -20,8 +21,9 @@ export class Hub {
             .configureLogging(logLevel)
             .withUrl(environment.baseUrl + this.hubName)
             .build();
+        const sendConfigHandler = this.GetHandler<HubConfig>("SendConfigToClient");
         const peerchangedHandler = this.GetHandler<HubPeer>("PeerChanged");
-        const broadcastchangedHandler = this.GetHandler<HubPeer>("BroadcastChanged");
+        const broadcastchangedHandler = this.GetHandler<HubBroadcast>("BroadcastChanged");
 
         this.PeerChanged$ = this.useFakeData
           ? this.GetFakePeerChanged()
@@ -29,10 +31,21 @@ export class Hub {
         this.BroadcastChanged$ = this.useFakeData
             ? this.GetFakeBroadcastData()
             : broadcastchangedHandler.observable;
+        this.ConfigChanged$ = this.useFakeData
+            ? this.GetFakeConfig()
+            : sendConfigHandler.observable;
         this._handlers = [
             peerchangedHandler,
-            broadcastchangedHandler
+            broadcastchangedHandler,
+            sendConfigHandler,
         ];
+    }
+    private GetFakeConfig(): Observable<HubConfig> {
+        return concat(of({
+            userId: "Fake User Id",
+            userPublicKey: "UserPublicKey dflkjsdlkfja;slkdjflaskdjfaslkdjf;laskdjfalskdjfalskdjf;alskdjf;alksdjflak faslkd jflksdjflaksd jflksj dlfkja sldkfj askldjflksjdf;lksj"
+        }),
+            NEVER);
     }
     private GetFakeBroadcastData(): Observable<HubBroadcast> {
         return concat(
@@ -40,7 +53,9 @@ export class Hub {
             of(<HubBroadcast>{ id: "second" }).pipe(delay(1300)),
             of(<HubBroadcast>{ id: "third" }).pipe(delay(900)),
             range(0, 100).pipe(
-                mergeMap(i => of(<HubBroadcast>{ id: "second", percentComplete: i }).pipe(delay(300)), 1)
+                mergeMap(
+                    i => of(<HubBroadcast>{ id: "second", percentComplete: i }).pipe(delay(300)),
+                    1)
             ),
             of(<HubBroadcast>{ id: "second", completed: true }).pipe(delay(300)),
             of(<HubBroadcast>{ id: "third", completed: true }).pipe(delay(1300)))
