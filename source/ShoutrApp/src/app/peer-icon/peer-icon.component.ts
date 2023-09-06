@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, numberAttribute } from '@angular/core';
 
 @Component({
   selector: 'zh-peer-icon',
@@ -6,8 +6,8 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
   styleUrls: ['./peer-icon.component.scss']
 })
 export class PeerIconComponent implements OnChanges{
-  perSide = 5
-  private stdLength = this.perSide * this.perSide * 3;
+  @Input({transform:numberAttribute})blocksPerSide:number = 5;
+  private readonly stdLength=() => this.blocksPerSide * this.blocksPerSide * 3;
   icon:string[][] = <string[][]>[];
   @Input()peerId:string = '';
 
@@ -20,12 +20,12 @@ export class PeerIconComponent implements OnChanges{
   standardizeLength(input:string){
     let str = input;
 
-    while(str.length < this.stdLength){
+    while(str.length < this.stdLength()){
       str += input;
     }
 
-    if (str.length > this.stdLength){
-      str = str.substring(0, this.stdLength);
+    if (str.length > this.stdLength()){
+      str = str.substring(0, this.stdLength());
     }
 
     return str;
@@ -51,13 +51,13 @@ export class PeerIconComponent implements OnChanges{
 
   stringToIcon(input:string){
     let str = this.standardizeLength(this.hashCode(input).toString());
-    for(let i = 0; i < this.perSide; i++){
+    for(let i = 0; i < this.blocksPerSide; i++){
       this.icon[i] = [];
     }
-    for(let i = 0; i < this.stdLength; i += 3){
+    for(let i = 0; i < this.stdLength(); i += 3){
       let box = i/3;
-      let pos1 = Math.floor(box/this.perSide);
-      let pos2 = box%this.perSide;
+      let pos1 = Math.floor(box/this.blocksPerSide);
+      let pos2 = box%this.blocksPerSide;
 
       let colorBlock = '#' + this.charToHex(str[i]) + this.charToHex(str[i+1]) + this.charToHex(str[i+2]);
       this.icon[pos1][pos2] = colorBlock;
