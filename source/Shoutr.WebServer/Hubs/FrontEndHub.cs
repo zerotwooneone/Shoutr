@@ -5,7 +5,7 @@ using Shoutr.WebServer.Reactive;
 
 namespace Shoutr.WebServer.Hubs;
 
-public class FrontEndHub: Hub<IFrontEndClient>
+public class FrontEndHub: Hub<IFrontEndClient>, IFrontEndHub
 {
     private readonly SchedulerProvider _schedulerProvider;
 

@@ -10,13 +10,13 @@ namespace Shoutr.WebServer.Frontend;
 
 public class FrontendService
 {
-    private readonly FrontEndHub _frontEndHub;
+    private readonly IFrontEndHub _frontEndHub;
     private readonly SchedulerProvider _schedulerProvider;
     private CompositeDisposable _disposable = new();
     private readonly Subject<Unit> _cancelFake = new();
 
     public FrontendService(
-        FrontEndHub frontEndHub,
+        IFrontEndHub frontEndHub,
         SchedulerProvider schedulerProvider)
     {
         _frontEndHub = frontEndHub;
