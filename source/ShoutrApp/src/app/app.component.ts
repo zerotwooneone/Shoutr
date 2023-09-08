@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { BackendService } from './backend/backend.service';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'zh-root',
@@ -17,11 +16,10 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     //todo: change this to an app initializer
     this.backendService.connect()
-      .then(async didConnect$ => {
-        let didConnect = await firstValueFrom(didConnect$)
-
+      .then(async didConnect => {
         if (!didConnect) {
-          console.warn("we did not have to connect");
+          console.warn("we did not connect");
+          return;
         }
         this.router.navigate(['/connected']);
       })

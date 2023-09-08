@@ -4,3 +4,5 @@ export interface Broadcast {
     completed?: boolean;
     percentComplete?: number;
 }
+
+

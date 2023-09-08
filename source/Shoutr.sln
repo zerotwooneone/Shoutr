@@ -1,17 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30523.141
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shoutr.Console", "Shoutr.Console\Shoutr.Console.csproj", "{90DA96FB-9A83-4982-9AB9-F110478489DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr", "Shoutr\Shoutr.csproj", "{7E93DAEE-96EC-42D0-9DD1-D72A4DE0072A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shoutr", "Shoutr\Shoutr.csproj", "{7E93DAEE-96EC-42D0-9DD1-D72A4DE0072A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Contracts", "Shoutr.Contracts\Shoutr.Contracts.csproj", "{F5E4C2DC-CC45-4E59-B969-EAF179D054BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shoutr.Contracts", "Shoutr.Contracts\Shoutr.Contracts.csproj", "{F5E4C2DC-CC45-4E59-B969-EAF179D054BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Tests", "Shoutr.Tests\Shoutr.Tests.csproj", "{AC7396A2-1F04-4091-A623-10512034E62C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shoutr.Tests", "Shoutr.Tests\Shoutr.Tests.csproj", "{AC7396A2-1F04-4091-A623-10512034E62C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.Integration", "Shoutr.Integration\Shoutr.Integration.csproj", "{B6908396-CE83-412A-88D4-74A96F079252}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shoutr.Integration", "Shoutr.Integration\Shoutr.Integration.csproj", "{B6908396-CE83-412A-88D4-74A96F079252}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shoutr.WebServer", "Shoutr.WebServer\Shoutr.WebServer.csproj", "{CAAE79B3-6952-4ACB-987D-428D096F0AE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +85,18 @@ Global
 		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x64.Build.0 = Release|Any CPU
 		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x86.ActiveCfg = Release|Any CPU
 		{B6908396-CE83-412A-88D4-74A96F079252}.Release|x86.Build.0 = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|x64.Build.0 = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Debug|x86.Build.0 = Debug|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|x64.ActiveCfg = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|x64.Build.0 = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAAE79B3-6952-4ACB-987D-428D096F0AE1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

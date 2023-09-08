@@ -6,11 +6,11 @@
             User Info
         </mat-panel-title>
         <mat-panel-description>
-            User Id (fingerprint): {{(Config | async)?.UserFingerprint}}
+            User Id (fingerprint): {{(backendService.HubConfig$ | async)?.userId}}
         </mat-panel-description>
     </mat-expansion-panel-header>
     <h4>Public Key</h4>
-    <p>{{(Config | async)?.UserPublicKey}}</p>
+    <p>{{(backendService.HubConfig$ | async)?.userPublicKey}}</p>
 </mat-expansion-panel>
 <div class="broadcast-container">
     <zh-peer-list></zh-peer-list>
