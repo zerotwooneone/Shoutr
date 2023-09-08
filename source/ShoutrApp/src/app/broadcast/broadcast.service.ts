@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BackendService } from '../backend/backend.service';
 import { Peer } from '../backend/Peer';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, tap } from 'rxjs';
 import { PeerModel } from '../peer/peer-model';
 import { BroadcastModel } from './broadcast-model';
 import { Broadcast } from '../backend/Broadcast';
@@ -43,6 +43,10 @@ export class BroadcastService {
   }
 
   private OnBroadcastChanged(bc: Broadcast) {
+    if (!bc?.id) {
+      console.warn("Received a broadcast without an id");
+      return;
+    }
     const found = this._knownBroadcasts.get(bc.id);
     if (!found) {
       if (bc.completed) {
@@ -50,14 +54,55 @@ export class BroadcastService {
       }
       const newBc = new BroadcastModel(bc.id);
       this._knownBroadcasts.set(bc.id, newBc);
-      this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
+      this.OnKnownBroadcastsChanged();
       return;
     }
     if (bc.completed) {
-      this._knownBroadcasts.delete(bc.id);
-      this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
+      found.SetDownloadState("source stopped");
       return;
     }
     found.SetPercentComplete(bc.percentComplete);
+    if (!!bc.percentComplete) {
+      found.SetDownloadState("in progress");
+    }
+  }
+
+  /**Send the list of known broadcasts out to listeners. This is meant to be called after the list is changed (add or remove) */
+  private OnKnownBroadcastsChanged() {
+    this._knownBroadcasts$.next(Array.from(this._knownBroadcasts.values()));
+  }
+
+  public RemoveBroadcast(id: string) {
+    if (this._knownBroadcasts.delete(id)) {
+      this.OnKnownBroadcastsChanged();
+    }
+  }
+
+  public Download(id: string) {
+    if (!id) {
+      return;
+    }
+    const found = this._knownBroadcasts.get(id);
+    if (!found) {
+      console.warn(`Cannot download. Unknown broadcast id:${id}`);
+      return;
+    }
+    if (this.backendService.Download(id)) {
+      found.SetDownloadState("started but unknown");
+    }    
+  }
+  public UserCancel(id: string): boolean {
+    if (!id) {
+      return false;
+    }
+    const found = this._knownBroadcasts.get(id);
+    if (!found) {
+      return false;
+    }
+    const result = this.backendService.UserCancel(id);
+    if (result) {
+      found.SetDownloadState("user stopped");
+    }
+    return result;
   }
 }

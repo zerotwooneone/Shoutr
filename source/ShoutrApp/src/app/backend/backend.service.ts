@@ -1,5 +1,18 @@
 import { Injectable } from '@angular/core';
-import { EMPTY, Observable, delay, firstValueFrom, mergeMap, of, shareReplay } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  Subject,
+  concat,
+  delay,
+  filter,
+  firstValueFrom,
+  mergeMap,
+  of,
+  range,
+  takeUntil,
+  shareReplay
+} from 'rxjs';
 import { BackendModule } from './backend.module';
 import { Hub } from './hub/hub';
 import { Peer } from './Peer';
@@ -23,6 +36,10 @@ export class BackendService {
   public readonly PeerChanged$: Observable<Peer>;
   public readonly BroadcastChanged$: Observable<Broadcast>;
   public readonly HubConfig$: Observable<HubConfig>;
+
+  private readonly fakeBroadcasts = new Subject<Broadcast>();
+  private readonly cancelFake = new Subject<string>();
+
   constructor() {
     this._hub = new Hub("frontend");
     this.PeerChanged$ = this._hub.PeerChanged$.pipe(
@@ -103,6 +120,25 @@ export class BackendService {
     this._connecting$.Value = false;
     this._connected$.Value = false;
 
+    return true;
+  }
+  public Download(id: string): boolean {
+
+    concat(
+      of(<Broadcast>{ id: id }).pipe(delay(1300)),
+      range(0, 101).pipe(
+        mergeMap(i => of(<Broadcast>{ id: id, percentComplete: i }).pipe(delay(30)), 1)
+      ),
+      of(<Broadcast>{ id: id, completed: true }).pipe(delay(300)),)
+      .pipe(
+        takeUntil(this.cancelFake.pipe(filter(b => b === id)))
+      )
+      .subscribe(bc => this.fakeBroadcasts.next(bc));
+    return true;
+  }
+
+  UserCancel(id: string): boolean {
+    this.cancelFake.next(id);
     return true;
   }
 }
