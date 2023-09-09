@@ -1,15 +1,18 @@
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
+using Shoutr.Tests.Reactive;
 
 namespace Shoutr.Tests
 {
     public class ListenerTests
     {
+        private TestSchedulerLocator _schedulerLocator;
         private TestScheduler _scheduler;
         [SetUp]
         public void Setup()
         {
-            _scheduler = new TestScheduler();
+            _schedulerLocator = new TestSchedulerLocator();
+            _scheduler = _schedulerLocator.TestScheduler;
         }
 
         /*[Test]
@@ -65,7 +68,7 @@ namespace Shoutr.Tests
 
         private Listener CreateListener()
         {
-            return new Listener();
+            return new Listener(_schedulerLocator);
         }
     }
 }

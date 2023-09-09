@@ -3,30 +3,32 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
+using Shoutr.Tests.Reactive;
 
 namespace Shoutr.Tests
 {
     [TestFixture]
     public class BroadcasterTests
     {
+        private TestSchedulerLocator _schedulerLocator;
         private TestScheduler _scheduler;
         [SetUp]
         public void Setup()
         {
-            _scheduler = new TestScheduler();
+            _schedulerLocator = new TestSchedulerLocator();
+            _scheduler = _schedulerLocator.TestScheduler;
         }
 
         [Test]
         public async Task GetHeaderObservable_ReturnsFirstAndLast_WhenOnePayloads()
         {   
-            var bc = new Broadcaster();
+            var bc = new Broadcaster(_schedulerLocator);
             var serializedHeader = new byte[] { 1, 2, 3, 4};
             const int rebroadcastSeconds = 1;
             var payloadObservable = Observable.Return(new byte[] { 9, 9, 9});
             var observable = bc.GetHeaderObservable(serializedHeader,
                 TimeSpan.FromSeconds(rebroadcastSeconds),
-                payloadObservable,
-                _scheduler);
+                payloadObservable);
 
             var headers = await observable.ToArray();
             Assert.AreEqual(2, headers.Length);
@@ -37,7 +39,7 @@ namespace Shoutr.Tests
         [Test]
         public void GetHeaderObservable_ReturnsExtra_WhenOnePayloadDelayed()
         {   
-            var bc = new Broadcaster();
+            var bc = new Broadcaster(_schedulerLocator);
             var serializedHeader = new byte[] { 1, 2, 3, 4};
             var rebroadcastSeconds = TimeSpan.FromSeconds(1);
             var payloadObservable = Observable
@@ -49,8 +51,7 @@ namespace Shoutr.Tests
             int count = 0;
             var sub = bc.GetHeaderObservable(serializedHeader,
                     rebroadcastSeconds,
-                payloadObservable,
-                _scheduler)
+                payloadObservable)
                 .Subscribe(b =>
                 {
                     mostRecent = b;

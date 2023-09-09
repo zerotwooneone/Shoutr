@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Shoutr.Contracts;
+using Shoutr.Reactive;
 
 namespace Shoutr.Console
 {
@@ -26,10 +27,11 @@ namespace Shoutr.Console
             
             try
             {
+                var schedulerLocator = new SchedulerLocator();
                 if (config["listen"] != null)
                 {
                     System.Console.WriteLine("Going to listen");
-                    IListener l = new Listener();
+                    IListener l = new Listener(schedulerLocator);
                     l.BroadcastEnded += (s, r) =>
                     {
                         System.Console.WriteLine($"bcid:{r.BroadcastId} file:{r.FileName}");
@@ -41,7 +43,7 @@ namespace Shoutr.Console
                     const string fileName = "test.7z";
 
                     System.Console.WriteLine($"Going to broadcast {fileName}");
-                    var b = new Broadcaster();
+                    var b = new Broadcaster(schedulerLocator);
                     b.BroadcastFileUdp(fileName, cancellationToken: tokenSource.Token).Wait(tokenSource.Token);
                 }
             }

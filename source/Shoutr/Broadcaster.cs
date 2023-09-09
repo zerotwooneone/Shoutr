@@ -3,10 +3,8 @@ using Shoutr.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Security.Cryptography;
@@ -16,31 +14,21 @@ using Google.Protobuf;
 using Shoutr.Contracts.ByteTransport;
 using Shoutr.Contracts.Io;
 using Shoutr.Io;
+using Shoutr.Reactive;
 
 namespace Shoutr
 {
     public class Broadcaster : IBroadcaster
     {
-        public async Task BroadcastFile(string fileName,
-            IByteSender byteSender,
-            IStreamFactory streamFactory,
-            float headerRebroadcastSeconds = 1,
-            CancellationToken cancellationToken = default)
-        {
-            var taskPoolScheduler =
-                Scheduler.Default; //new TaskPoolScheduler(new TaskFactory(cancellationToken)); 
-            await BroadcastFile(fileName,
-                byteSender,
-                streamFactory,
-                taskPoolScheduler,
-                headerRebroadcastSeconds,
-                cancellationToken);
-        }
+        private readonly ISchedulerLocator _schedulerLocator;
 
+        public Broadcaster(ISchedulerLocator schedulerLocator)
+        {
+            _schedulerLocator = schedulerLocator;
+        }
         public async Task BroadcastFile(string fileName,
             IByteSender byteSender,
             IStreamFactory streamFactory,
-            IScheduler scheduler,
             float headerRebroadcastSeconds = 1,
             CancellationToken cancellationToken = default)
         {
@@ -65,7 +53,7 @@ namespace Shoutr
             var packetSize = byteSender.MaximumTransmittableBytes - broadcastIdByteCount - fudgeAmount;
             var partialPacketCache = new ConcurrentDictionary<long, byte[]>();
             var payloadObservable = pageObservable
-                .ObserveOn(scheduler)
+                .ObserveOn(_schedulerLocator.GetScheduler("broadcast"))
                 .SelectMany(page =>
                 {
                     var firstPacketIndex = page.PageIndex / packetSize;
@@ -161,7 +149,7 @@ namespace Shoutr
 
             var byteArray = protoMessage.ToByteArray();
             var headerObservable =
-                GetHeaderObservable(byteArray, rebroadcastTime, serializedPayloadObservable, scheduler);
+                GetHeaderObservable(byteArray, rebroadcastTime, serializedPayloadObservable);
 
             var packetObservable = headerObservable
                 .Merge(serializedPayloadObservable);
@@ -169,7 +157,7 @@ namespace Shoutr
             serializedPayloadObservable.Connect();
 
             var sendObservable = packetObservable
-                .ObserveOn(scheduler)
+                .ObserveOn(_schedulerLocator.GetScheduler("broadcast packet"))
                 .SelectMany((array, index) =>
                 {
                     return Observable.FromAsync(async c =>
@@ -184,13 +172,12 @@ namespace Shoutr
 
         public IObservable<byte[]> GetHeaderObservable(byte[] serializedHeader,
             TimeSpan rebroadcastTime,
-            IObservable<byte[]> payloadObservable,
-            IScheduler scheduler)
+            IObservable<byte[]> payloadObservable)
         {
             return Observable
                 .Return(serializedHeader)
                 .Concat(
-                    Observable.Interval(rebroadcastTime, scheduler)
+                    Observable.Interval(rebroadcastTime, _schedulerLocator.GetScheduler("broadcast header"))
                         .TakeUntil(payloadObservable.LastOrDefaultAsync())
                         .Select(_ => { return serializedHeader; })
                 )

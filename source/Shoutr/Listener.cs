@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Security.Cryptography;
@@ -18,23 +17,14 @@ namespace Shoutr
 {
     public class Listener : IListener
     {
-        public async Task Listen(IByteReceiver byteReceiver,
-            IStreamFactory streamFactory,
-            string destinationPath = "",
-            CancellationToken cancellationToken = default)
-        {
-            var observableScheduler =
-                new TaskPoolScheduler(new TaskFactory(cancellationToken)); //Scheduler.Default; // 
-            await Listen(byteReceiver,
-                streamFactory,
-                observableScheduler,
-                destinationPath,
-                cancellationToken).ConfigureAwait(false);
-        }
+        private readonly ISchedulerLocator _schedulerLocator;
 
+        public Listener(ISchedulerLocator schedulerLocator)
+        {
+            _schedulerLocator = schedulerLocator;
+        }
         public async Task Listen(IByteReceiver byteReceiver,
             IStreamFactory streamFactory,
-            IScheduler scheduler,
             string destinationPath = "",
             CancellationToken cancellationToken = default)
         {
@@ -54,7 +44,7 @@ namespace Shoutr
             IObservable<ProtoMessage> GetProtoMessages()
             {
                 return packetBufferObservable
-                    .ObserveOn(scheduler)
+                    .ObserveOn(_schedulerLocator.GetScheduler("listen packet"))
                     .Select(bytes =>
                     {
                         var message = ProtoMessage.Parser.ParseFrom(bytes);
@@ -116,7 +106,7 @@ namespace Shoutr
             }
 
             headerObservable
-                .ObserveOn(scheduler)
+                .ObserveOn(_schedulerLocator.GetScheduler("listen header"))
                 .Subscribe(protoHeader => headerCache.AddOrUpdate(protoHeader.GetBroadcastId().Value,
                     bcid =>
                     {
@@ -163,7 +153,7 @@ namespace Shoutr
             }
 
             payloadObservable
-                .ObserveOn(scheduler)
+                .ObserveOn(_schedulerLocator.GetScheduler("listen payload"))
                 .Subscribe(payload =>
                 {
                     if (!CheckHash(payload))
@@ -214,12 +204,12 @@ namespace Shoutr
                 }).Merge(1);
 
             var fileWriteObservable = writeCompleteObservable
-                .ObserveOn(scheduler)
+                .ObserveOn(_schedulerLocator.GetScheduler("listen write"))
                 .GroupBy(w => w.BroadcastId);
 
             const int fileCompleteTimeout = 10;
             var fileTimeout = TimeSpan.FromSeconds(fileCompleteTimeout);
-            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable, scheduler);
+            var fileStoppedObservable = CreateTimeoutObservable(fileTimeout, fileWriteObservable);
 
             var fileStoppedSub = fileStoppedObservable.Subscribe(header =>
             {
@@ -238,8 +228,7 @@ namespace Shoutr
         }
 
         private IObservable<Header> CreateTimeoutObservable(TimeSpan completeTimeout,
-            IObservable<IGroupedObservable<Guid, Header>> observable,
-            IScheduler scheduler)
+            IObservable<IGroupedObservable<Guid, Header>> observable)
         {
             var fileStoppedObservable = observable
                 .SelectMany(fileWriteObservable =>
@@ -252,7 +241,7 @@ namespace Shoutr
                             return Observable.Empty<Header>();
                         }
 
-                        return fileWriteObservable.RepeatWhile((Header) first, completeTimeout, scheduler);
+                        return fileWriteObservable.RepeatWhile((Header) first, completeTimeout, _schedulerLocator.GetScheduler("listen file stopped"));
                     });
                 })
                 .Merge();
