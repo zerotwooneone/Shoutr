@@ -50,12 +50,23 @@ namespace Shoutr
             var token = cancellationTokenSource.Token;
 
             var packetBufferObservable = new Subject<byte[]>();
-            var protoMessageObservable = packetBufferObservable
-                .ObserveOn(scheduler)
-                .Select(bytes =>
+
+            IObservable<ProtoMessage> GetProtoMessages()
+            {
+                return packetBufferObservable
+                    .ObserveOn(scheduler)
+                    .Select(bytes =>
+                    {
+                        var message = ProtoMessage.Parser.ParseFrom(bytes);
+                        return message;
+                    });
+            }
+
+            var protoMessageObservable = GetProtoMessages()
+                .Catch((Exception e) =>
                 {
-                    var message = ProtoMessage.Parser.ParseFrom(bytes);
-                    return message;
+                    //todo:log these errors
+                    return GetProtoMessages();
                 });
 
             var headerCache = new ConcurrentDictionary<Guid, Header>();
