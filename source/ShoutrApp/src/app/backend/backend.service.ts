@@ -37,9 +37,6 @@ export class BackendService {
   public readonly BroadcastChanged$: Observable<Broadcast>;
   public readonly HubConfig$: Observable<HubConfig>;
 
-  private readonly fakeBroadcasts = new Subject<Broadcast>();
-  private readonly cancelFake = new Subject<string>();
-
   constructor() {
     this._hub = new Hub("frontend");
     this.PeerChanged$ = this._hub.PeerChanged$.pipe(
@@ -122,24 +119,12 @@ export class BackendService {
 
     return true;
   }
-  public Download(id: string): boolean {
-
-    concat(
-      of(<Broadcast>{ id: id }).pipe(delay(1300)),
-      range(0, 101).pipe(
-        mergeMap(i => of(<Broadcast>{ id: id, percentComplete: i }).pipe(delay(30)), 1)
-      ),
-      of(<Broadcast>{ id: id, completed: true }).pipe(delay(300)),)
-      .pipe(
-        takeUntil(this.cancelFake.pipe(filter(b => b === id)))
-      )
-      .subscribe(bc => this.fakeBroadcasts.next(bc));
-    return true;
+  public async Download(id: string): Promise<boolean> {
+    return await this._hub.Download(id);
   }
 
-  UserCancel(id: string): boolean {
-    this.cancelFake.next(id);
-    return true;
+  public async UserCancel(id: string): Promise<boolean> {
+    return await this._hub.UserCancel(id);
   }
 }
 

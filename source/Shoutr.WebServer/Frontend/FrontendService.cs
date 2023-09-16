@@ -10,19 +10,21 @@ namespace Shoutr.WebServer.Frontend;
 
 public class FrontendService
 {
-    private readonly FrontEndHub _frontEndHub;
+    private readonly IFrontEndHub _frontEndHub;
     private readonly SchedulerProvider _schedulerProvider;
     private CompositeDisposable _disposable = new();
     private readonly Subject<Unit> _cancelFake = new();
 
     public FrontendService(
-        FrontEndHub frontEndHub,
+        IFrontEndHub frontEndHub,
         SchedulerProvider schedulerProvider)
     {
         _frontEndHub = frontEndHub;
         _schedulerProvider = schedulerProvider;
         _disposable.Add(_frontEndHub.Connected.SubscribeAsync(OnConnected));
         _disposable.Add(_frontEndHub.Disconnected.Subscribe(OnDisconnected));
+        _disposable.Add(_frontEndHub.DownloadRequest.Subscribe(OnDownloadRequest));
+        _disposable.Add(_frontEndHub.CancelRequest.Subscribe(OnCancelRequest));
     }
 
     private async Task OnConnected(string connectionId)
@@ -79,5 +81,31 @@ public class FrontendService
     private void OnDisconnected(string connectionId)
     {
         
+    }
+
+    private void OnDownloadRequest(string broadcastId)
+    {
+        Observable.Return(new HubBroadcast(broadcastId))
+            .Concat(Observable.Range(0,101)
+                .Select(pct => 
+                    Observable.Return(new HubBroadcast(broadcastId){ PercentComplete = pct})
+                        .Delay(TimeSpan.FromSeconds(0.3)))
+                .Concat())
+            .Concat(Observable.Return(new HubBroadcast(broadcastId){ Completed = true}).Delay(TimeSpan.FromSeconds(0.3)))
+            .TakeUntil(_cancelFake)
+            .SubscribeAsync( async p =>
+                {
+                    await _frontEndHub.SendBroadcastChanged(p);
+                },
+                ex =>
+                {
+                    //todo: log this
+                    int x = 0;
+                });
+    }
+    
+    private void OnCancelRequest(string broadcastId)
+    {
+        _cancelFake.OnNext();
     }
 }

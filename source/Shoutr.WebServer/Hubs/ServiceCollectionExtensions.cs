@@ -5,6 +5,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddHubs(this IServiceCollection serviceCollection)
     {
         return serviceCollection
-            .AddSingleton<FrontEndHub>();
+            .AddSingleton<IFrontEndHub,FrontEndHub>();
     }
 }

@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr"
-import { NEVER, Observable, Subject, concat, delay, interval, map, merge, mergeMap, of, range } from "rxjs";
+import { NEVER, Observable, Subject, concat, delay, interval, map, takeUntil, mergeMap, of, range, tap, switchMap, EMPTY } from "rxjs";
 import { environment } from "src/environments/environment";
 import { HubBroadcast, HubConfig, HubPeer } from "./hubTypes";
 
@@ -11,7 +11,9 @@ export class Hub {
     public readonly ConfigChanged$: Observable<HubConfig>;
 
     /**todo:delete this*/
-    private readonly useFakeData: boolean = true;    
+    private readonly useFakeData: boolean = true;
+    private readonly _cancelFake = new Subject<void>();
+    private readonly _fakeBroadcasts = new Subject<HubBroadcast>();
 
     constructor(private readonly hubName: string) {
         const logLevel = environment.production
@@ -20,6 +22,7 @@ export class Hub {
         this._connection = new signalR.HubConnectionBuilder()
             .configureLogging(logLevel)
             .withUrl(environment.baseUrl + this.hubName)
+            .withAutomaticReconnect()
             .build();
         const sendConfigHandler = this.GetHandler<HubConfig>("SendConfigToClient");
         const peerchangedHandler = this.GetHandler<HubPeer>("PeerChanged");
@@ -49,21 +52,72 @@ export class Hub {
     }
     private GetFakeBroadcastData(): Observable<HubBroadcast> {
         return concat(
-            of(<HubBroadcast>{ id: "first" }),
-            of(<HubBroadcast>{ id: "second" }).pipe(delay(1300)),
-            of(<HubBroadcast>{ id: "third" }).pipe(delay(900)),
-            range(0, 100).pipe(
-                mergeMap(
-                    i => of(<HubBroadcast>{ id: "second", percentComplete: i }).pipe(delay(300)),
-                    1)
-            ),
-            of(<HubBroadcast>{ id: "second", completed: true }).pipe(delay(300)),
-            of(<HubBroadcast>{ id: "third", completed: true }).pipe(delay(1300)))
+            concat(
+                of(<HubBroadcast>{ id: "first" }),
+                of(<HubBroadcast>{ id: "second" }).pipe(delay(1300)),
+                of(<HubBroadcast>{ id: "third" }).pipe(delay(900)),
+                range(0, 100).pipe(
+                    mergeMap(
+                        i => of(<HubBroadcast>{ id: "second", percentComplete: i }).pipe(delay(300)),
+                        1)
+                ),
+                of(<HubBroadcast>{ id: "second", completed: true }).pipe(delay(300)),
+                of(<HubBroadcast>{ id: "third", completed: true }).pipe(delay(1300)))
+                .pipe(
+                    takeUntil(this._cancelFake),
+                ),
+            this._fakeBroadcasts);
     }
     private GetFakePeerChanged(): Observable<HubPeer> {
         return interval(1000).pipe(
-            map(n => <HubPeer>{ id: "some id", nickname: "This is the user's nickname", publicKey: "fdlksfsljkfdsjlkfdj sfj sdfjsdfj;sdfjkdfj fsdjkldfj sdfjdsflk sdjdsjkfsj dfsfd f" })
+            map(n => <HubPeer>{ id: "some id", nickname: "This is the user's nickname", publicKey: "fdlksfsljkfdsjlkfdj sfj sdfjsdfj;sdfjkdfj fsdjkldfj sdfjdsflk sdjdsjkfsj dfsfd f" }),
+            takeUntil(this._cancelFake)
         );
+    }
+
+    public async Start(): Promise<void> {
+        if (this.useFakeData) {
+            await of(1).pipe(delay(80));
+            return;
+        }
+        await this._connection
+            .start()
+            .then(() => console.debug('SignalR Started'));
+        for (const handler of this._handlers) {
+            if (!handler) {
+                continue;
+            }
+            if (!handler.methodName) {
+                continue;
+            }
+            if (!handler.handler) {
+                continue;
+            }
+            this._connection.on(handler.methodName, handler.handler)
+        }
+    }
+    async Download(id: string): Promise<boolean> {
+        if (this.useFakeData) {
+            concat(
+                of(<HubBroadcast>{ id: id }).pipe(delay(1300)),
+                range(0, 101).pipe(
+                    mergeMap(i => of(<HubBroadcast>{ id: id, percentComplete: i }).pipe(delay(30)), 1)
+                ),
+                of(<HubBroadcast>{ id: id, completed: true }).pipe(delay(300)),)
+                .pipe(
+                    takeUntil(this._cancelFake)
+                )
+                .subscribe(bc => this._fakeBroadcasts.next(bc));
+            return true;
+        }
+        return this._connection.invoke<boolean>("Download", id);
+    }
+    async UserCancel(id: string): Promise<boolean> {
+        this._cancelFake.next();
+        if (this.useFakeData) {
+            return true;
+        }
+        return this._connection.invoke<boolean>("UserCancel", id);
     }
 
     GetHandler<T>(
@@ -108,27 +162,6 @@ export class Hub {
             return false;
         }
         return true;
-    }
-    public async Start(): Promise<void> {
-        if (this.useFakeData) {
-            await of(1).pipe(delay(80));
-            return;
-        }
-        await this._connection
-            .start()
-            .then(() => console.debug('SignalR Started'));
-        for (const handler of this._handlers) {
-            if (!handler) {
-                continue;
-            }
-            if (!handler.methodName) {
-                continue;
-            }
-            if (!handler.handler) {
-                continue;
-            }
-            this._connection.on(handler.methodName, handler.handler)
-        }
     }
 }
 

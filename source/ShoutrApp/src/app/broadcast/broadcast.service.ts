@@ -78,7 +78,7 @@ export class BroadcastService {
     }
   }
 
-  public Download(id: string) {
+  public async Download(id: string): Promise<void> {
     if (!id) {
       return;
     }
@@ -87,11 +87,11 @@ export class BroadcastService {
       console.warn(`Cannot download. Unknown broadcast id:${id}`);
       return;
     }
-    if (this.backendService.Download(id)) {
+    if (await this.backendService.Download(id)) {
       found.SetDownloadState("started but unknown");
     }    
   }
-  public UserCancel(id: string): boolean {
+  public async UserCancel(id: string): Promise<boolean> {
     if (!id) {
       return false;
     }
@@ -99,7 +99,7 @@ export class BroadcastService {
     if (!found) {
       return false;
     }
-    const result = this.backendService.UserCancel(id);
+    const result = await this.backendService.UserCancel(id);
     if (result) {
       found.SetDownloadState("user stopped");
     }

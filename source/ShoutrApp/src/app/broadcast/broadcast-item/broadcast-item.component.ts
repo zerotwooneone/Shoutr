@@ -92,10 +92,10 @@ export class BroadcastItemComponent implements OnChanges, OnDestroy {
     }
     this.broadcastService.Download(this.broadcast.id);
   }
-  StopClick() {
+  async StopClick() {
     if (!this.broadcast) {
       return;
     }
-    this.broadcastService.UserCancel(this.broadcast.id);
+    await this.broadcastService.UserCancel(this.broadcast.id);
   }
 }
